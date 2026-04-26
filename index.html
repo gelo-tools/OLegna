@@ -63,6 +63,43 @@
             color: var(--text-secondary);
             text-align: right;
             line-height: 1.4;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        /* --- TUTORIAL TOGGLE SWITCH --- */
+        .theme-switch-wrapper { display: flex; align-items: center; gap: 10px; }
+        .theme-switch { display: inline-block; height: 24px; position: relative; width: 44px; margin: 0; }
+        .theme-switch input { display: none; }
+        .slider { background-color: var(--border-color); bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .3s; border-radius: 24px; }
+        .slider:before { background-color: #fff; bottom: 4px; content: ""; height: 16px; left: 4px; position: absolute; transition: .3s; width: 16px; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--accent-blue); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* --- TUTORIAL CONTEXTUAL TIPS --- */
+        .tutorial-tip {
+            display: none;
+            background-color: #f0f9ff;
+            border-left: 3px solid var(--accent-blue);
+            padding: 14px 18px;
+            border-radius: 4px var(--radius-md) var(--radius-md) 4px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #0369a1;
+            margin-bottom: 16px;
+            align-items: flex-start;
+            gap: 10px;
+            animation: fadeInDown 0.3s ease-out;
+            box-shadow: var(--shadow-sm);
+        }
+        body.tutorial-active .tutorial-tip { display: flex; }
+        .tutorial-icon { flex-shrink: 0; margin-top: 1px; color: var(--accent-blue); }
+        .tutorial-tip strong { color: #075985; font-weight: 600; }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* --- LAYOUT --- */
@@ -90,7 +127,6 @@
             z-index: 1000;
             padding: 24px 0 0 0; 
             box-shadow: var(--shadow-md); 
-            /* OVERFLOW HIDDEN REMOVED HERE TO FIX STICKY GLITCH */
         }
 
         .sticky-padding { padding: 0 24px; }
@@ -319,7 +355,6 @@
         /* --- DATA TABLE --- */
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; background-color: var(--surface-color); }
         
-        /* RESTORED POSITION STICKY WITH CORRECT Z-INDEX */
         th {
             position: sticky;
             z-index: 999;
@@ -370,8 +405,36 @@
         }
         #error-toast.show { visibility: visible; opacity: 1; top: 40px; }
 
-        #dynamicFilters { background: var(--bg-color) !important; border: 1px solid var(--border-color) !important; border-radius: var(--radius-md) !important; padding: 20px !important;}
-        #dynamicFilters > div:first-child { color: var(--text-primary) !important; font-size: 14px; }
+        /* --- DYNAMIC SMART FILTERS (NORMAL VS COMPACT) --- */
+        #dynamicFilters {
+            background: var(--bg-color); border: 1px solid var(--border-color); 
+            border-radius: var(--radius-md); padding: 20px; margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        .df-header { color: var(--text-primary); font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+        .df-layout { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .df-group { display: flex; align-items: center; gap: 12px; }
+        .df-label { font-size: 13px; font-weight: 500; }
+        .df-subtext { margin-top: 12px; font-size: 12px; color: var(--text-secondary); }
+        .compact-icon { display: none; }
+        
+        /* Compact specific styles when injected into the sticky bar */
+        #dynamicFilters.compact-mode {
+            padding: 4px 8px; margin-top: 0; background: #f0f9ff; border-color: #bae6fd;
+            display: flex; align-items: center; gap: 12px;
+        }
+        #dynamicFilters.compact-mode .df-header, 
+        #dynamicFilters.compact-mode .df-label, 
+        #dynamicFilters.compact-mode .df-subtext {
+            display: none; 
+        }
+        #dynamicFilters.compact-mode .df-layout { gap: 8px; }
+        #dynamicFilters.compact-mode .compact-icon {
+            display: inline-flex; font-size: 12px; font-weight: 600; color: var(--accent-blue); align-items: center; gap: 4px;
+        }
+        #dynamicFilters.compact-mode select {
+            padding: 6px 28px 6px 8px; height: 32px; font-size: 12px; border-color: #bae6fd;
+        }
 
         /* --- PDF PRINT STYLES --- */
         #printHeader, #signatureBlock { display: none; }
@@ -466,9 +529,20 @@
         </a>
         <div class="app-branding">SPX / SUN / Others Scanner</div>
     </div>
+    
     <div class="user-info">
-        <strong style="color:var(--text-primary);">Status:</strong> Active Session<br>
-        <strong style="color:var(--text-primary);">Module:</strong> Reconciliation
+        <div class="theme-switch-wrapper">
+            <span style="font-weight: 600; color: var(--text-primary);">Tutorial Mode</span>
+            <label class="theme-switch" for="tutorialToggle" title="Enable to see helpful guides">
+                <input type="checkbox" id="tutorialToggle" onchange="toggleTutorial()">
+                <div class="slider"></div>
+            </label>
+        </div>
+
+        <div style="border-left: 1px solid var(--border-color); padding-left: 20px;">
+            <strong style="color:var(--text-primary);">Status:</strong> Active Session<br>
+            <strong style="color:var(--text-primary);">Module:</strong> Reconciliation
+        </div>
     </div>
 </div>
 
@@ -487,6 +561,14 @@
 
     <div class="content-panel">
         <div class="step-title">1. Encode System Data</div>
+        
+        <div class="tutorial-tip">
+            <svg class="tutorial-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <div>
+                <strong>How to start:</strong> Paste data directly from your MB52 / ZSTK_IT Excel spreadsheet into the text box below and click <strong>Encode Data</strong>. Alternatively, you can click <strong>Upload File</strong> to upload the saved CSV or XLSX directly. <em>Note: Contact Lenses and Spare Parts are automatically hidden for cleaner auditing.</em>
+            </div>
+        </div>
+
         <label style="font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 12px;">Copy your columns directly from your MB52 or ZSTK_IT spreadsheet and <b><u>paste them below</u></b>, OR <b><u>drag and drop</u></b> the unedited file here:</label>
         <textarea id="pasteArea" title="Paste your raw Excel data here or drag and drop your file" placeholder="Example format:&#10;000000000000099250	3.000&#10;920000000000002005	1.000&#10;000000000198848003	1.000"></textarea>
         
@@ -499,39 +581,60 @@
             <button class="btn-secondary" id="btnToggleLenses" onclick="toggleLenses()" title="Click to put back the Contact Lenses, Ophthalmic Lenses, and Spare Parts that were removed by the auto-filter" style="margin-left: auto;">Restore CL & OL</button>
         </div>
 
-        <div id="dynamicFilters" style="display: none; margin-top: 20px;">
-            <div style="font-weight: 600; margin-bottom: 12px;">Dynamic Smart Filters</div>
-            
-            <div id="intransitFilters" style="display: none; align-items: center; gap: 12px;">
-                <label style="font-size: 13px; font-weight: 500;">S.T.O. #:</label>
-                <select id="stoDropdown" onchange="applyDynamicFilters()"></select>
-            </div>
-            
-            <div id="mb52Filters" style="display: none; align-items: center; gap: 20px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <label style="font-size: 13px; font-weight: 500;">Category:</label>
-                    <select id="categoryDropdown" onchange="updateBrandDropdown(); applyDynamicFilters();" style="width: auto;">
-                        <option value="ALL">ALL</option>
-                        <option value="SUN">SUN (S;)</option>
-                        <option value="SPX">SPX (O;)</option>
-                        <option value="OTHERS">Others (OA;, etc.)</option>
-                    </select>
+        <div id="filtersOriginalPlaceholder">
+            <div id="dynamicFilters" style="display: none;">
+                <div class="df-header">Dynamic Smart Filters</div>
+                
+                <div class="tutorial-tip" style="margin-top:-6px; margin-bottom:12px;">
+                    <svg class="tutorial-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <div><strong>Smart Filter Magic:</strong> Changing these dropdowns updates your *target system numbers* on the fly. It does not erase your physical scanned counts! (As you scroll down, this filter will snap to the top right of your screen).</div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <label style="font-size: 13px; font-weight: 500;">Brand:</label>
-                    <select id="brandDropdown" onchange="applyDynamicFilters()" style="min-width: 200px;">
-                        <option value="ALL">ALL BRANDS</option>
-                    </select>
+
+                <div class="compact-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    Smart Filter
                 </div>
+                
+                <div class="df-layout" id="intransitFilters" style="display: none;">
+                    <div class="df-group">
+                        <label class="df-label">S.T.O. #:</label>
+                        <select id="stoDropdown" onchange="applyDynamicFilters()"></select>
+                    </div>
+                </div>
+                
+                <div class="df-layout" id="mb52Filters" style="display: none;">
+                    <div class="df-group">
+                        <label class="df-label">Category:</label>
+                        <select id="categoryDropdown" onchange="updateBrandDropdown(); applyDynamicFilters();">
+                            <option value="ALL">ALL</option>
+                            <option value="SUN">SUN (S;)</option>
+                            <option value="SPX">SPX (O;)</option>
+                            <option value="OTHERS">Others (OA;, etc.)</option>
+                        </select>
+                    </div>
+                    <div class="df-group">
+                        <label class="df-label">Brand:</label>
+                        <select id="brandDropdown" onchange="applyDynamicFilters()" style="min-width: 180px;">
+                            <option value="ALL">ALL BRANDS</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="df-subtext"><i>Changing these filters will instantly update the target system quantities without deleting your current scanned counts.</i></div>
             </div>
-            <div style="margin-top:12px; font-size: 12px; color: var(--text-secondary);"><i>Changing these filters will instantly update the target system quantities without deleting your current scanned counts.</i></div>
         </div>
-    </div>
+        </div>
 
     <div id="stickyGroup" class="sticky-group">
         <div class="sticky-padding">
             <div class="step-title" style="margin-top: 0;">2. Physical Items Scanned</div>
             
+            <div class="tutorial-tip">
+                <svg class="tutorial-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <div>
+                    <strong>Scanning time:</strong> Use your barcode scanner while clicked inside the text box below. Want to save time? Enable <strong>Fast Scan</strong> to queue up items rapidly without waiting for the table to reload after every beep, then click <strong>Compare</strong> when done.
+                </div>
+            </div>
+
             <div class="scan-input-wrapper">
                 <input type="text" id="scanInput" class="main-scan" placeholder="Scan barcode or type SKU..." autofocus title="Click here and use your scanner, or manually type a SKU and hit Enter">
                 
@@ -564,6 +667,9 @@
                 <button class="btn-compare" id="btnCompare" onclick="processFastScanQueue()" title="Process all the queued items you just scanned">
                     Compare (<span id="queueCount">0</span>)
                 </button>
+
+                <div id="filtersStickyTarget" style="margin-left: auto;"></div>
+
             </div>
 
             <div class="audit-trail-wrapper fast-scan-trail" id="fastScanTrailBox" style="display: none;">
@@ -577,6 +683,11 @@
                 <ul id="auditList">
                     <li style="color:var(--text-secondary); font-style:italic;">Scan history will appear here...</li>
                 </ul>
+            </div>
+
+            <div class="tutorial-tip" style="margin-top: 16px; margin-bottom: 0;">
+                <svg class="tutorial-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <div><strong>Dashboard:</strong> Keep an eye on these numbers. Your goal is to get "Missing" and "Extra" down to zero.</div>
             </div>
 
             <div class="minimalist-dashboard">
@@ -645,6 +756,11 @@
                 Next<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-left: 4px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
         </div>
+    </div>
+
+    <div class="tutorial-tip" style="margin-top:-10px; margin-bottom: 24px;">
+        <svg class="tutorial-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <div><strong>Wrapping up:</strong> Use the action bar at the very bottom of the screen to safely save your progress as a CSV file so you can resume later, or export a formatted PDF report for management. Made a mistake? Use Undo/Redo!</div>
     </div>
 
     <div id="signatureBlock">
@@ -741,6 +857,55 @@
         });
     };
 
+    // --- TUTORIAL TOGGLE LOGIC ---
+    function toggleTutorial() {
+        const isChecked = document.getElementById('tutorialToggle').checked;
+        if (isChecked) {
+            document.body.classList.add('tutorial-active');
+            updateStickyHeaders(); // Readjust heights for the new tutorial boxes
+        } else {
+            document.body.classList.remove('tutorial-active');
+            updateStickyHeaders(); 
+        }
+    }
+
+    // --- MAGIC SCROLLING FILTER LOGIC ---
+    window.addEventListener('scroll', () => {
+        const filtersOrig = document.getElementById('filtersOriginalPlaceholder');
+        const filtersTarget = document.getElementById('filtersStickyTarget');
+        const dynamicFilters = document.getElementById('dynamicFilters');
+        const stickyGroup = document.getElementById('stickyGroup');
+
+        if (!dynamicFilters || dynamicFilters.style.display === 'none') return;
+
+        const origRect = filtersOrig.getBoundingClientRect();
+        const stickyRect = stickyGroup.getBoundingClientRect();
+
+        // Check if the placeholder is sliding underneath the sticky panel
+        const isScrolledPast = origRect.bottom < (stickyRect.top + 5);
+
+        if (isScrolledPast) {
+            if (dynamicFilters.parentNode !== filtersTarget) {
+                // Lock the height to prevent layout jump!
+                filtersOrig.style.height = filtersOrig.offsetHeight + 'px';
+                
+                filtersTarget.appendChild(dynamicFilters);
+                dynamicFilters.classList.add('compact-mode');
+                updateStickyHeaders(); 
+            }
+        } else {
+            // Restore it back to panel 1
+            if (dynamicFilters.parentNode !== filtersOrig) {
+                filtersOrig.appendChild(dynamicFilters);
+                dynamicFilters.classList.remove('compact-mode');
+                
+                // Release the locked height so it behaves naturally
+                filtersOrig.style.height = 'auto';
+                updateStickyHeaders(); 
+            }
+        }
+    });
+
     // --- TOGGLE LENSES FILTER BUTTON LOGIC ---
     function toggleLenses() {
         isLensesFilterActive = !isLensesFilterActive;
@@ -816,7 +981,6 @@
         let upperMerch = (merchRaw || "").replace(/['"]/g, '').toUpperCase().trim();
         let lowerRow = fullRowText.toLowerCase();
 
-        // --- SAFETY NET ---
         if (upperDesc.startsWith('S;') || upperDesc.startsWith('O;') || upperDesc.startsWith('OA;')) {
             return false;
         }
@@ -1055,12 +1219,24 @@
 
     // --- CHROME EXTENSION STORAGE WRAPPER ---
     async function saveData() {
+        let stoVal = document.getElementById('stoDropdown') ? document.getElementById('stoDropdown').value : 'ALL';
+        let catVal = document.getElementById('categoryDropdown') ? document.getElementById('categoryDropdown').value : 'ALL';
+        let brandVal = document.getElementById('brandDropdown') ? document.getElementById('brandDropdown').value : 'ALL';
+        
         let payload = {
             inventory: inventory,
             systemDataEncoded: systemDataEncoded,
             hasWarnedNoSystemData: hasWarnedNoSystemData,
-            auditLog: auditLog
+            auditLog: auditLog,
+            uploadedRawData: uploadedRawData,
+            currentFileType: currentFileType,
+            smartFilters: {
+                sto: stoVal,
+                cat: catVal,
+                brand: brandVal
+            }
         };
+        
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
             await chrome.storage.local.set({ 'posInventoryState': payload });
         } else {
@@ -1098,8 +1274,47 @@
             systemDataEncoded = dataObj.systemDataEncoded || false;
             hasWarnedNoSystemData = dataObj.hasWarnedNoSystemData || false;
             auditLog = dataObj.auditLog || [];
+            
+            uploadedRawData = dataObj.uploadedRawData || [];
+            currentFileType = dataObj.currentFileType || null;
+            
+            if (uploadedRawData.length > 0 && currentFileType) {
+                document.getElementById('dynamicFilters').style.display = 'block';
+                
+                if (currentFileType === 'INTRANSIT') {
+                    document.getElementById('intransitFilters').style.display = 'flex';
+                    document.getElementById('mb52Filters').style.display = 'none';
+                    
+                    let uniqueSTOs = new Set();
+                    uploadedRawData.forEach(row => { if(row.sto) uniqueSTOs.add(row.sto); });
+                    
+                    let stoSelect = document.getElementById('stoDropdown');
+                    stoSelect.innerHTML = '<option value="ALL">ALL S.T.O.</option>';
+                    Array.from(uniqueSTOs).sort().forEach(sto => {
+                        stoSelect.innerHTML += `<option value="${sto}">${sto}</option>`;
+                    });
+                    
+                    if (dataObj.smartFilters && dataObj.smartFilters.sto) {
+                        stoSelect.value = dataObj.smartFilters.sto;
+                    }
+                } else {
+                    document.getElementById('intransitFilters').style.display = 'none';
+                    document.getElementById('mb52Filters').style.display = 'flex';
+                    
+                    if (dataObj.smartFilters && dataObj.smartFilters.cat) {
+                        document.getElementById('categoryDropdown').value = dataObj.smartFilters.cat;
+                    }
+                    updateBrandDropdown(); 
+                    if (dataObj.smartFilters && dataObj.smartFilters.brand) {
+                        document.getElementById('brandDropdown').value = dataObj.smartFilters.brand;
+                    }
+                }
+            }
+
             renderAuditTrail();
             renderTable();
+            
+            setTimeout(() => { window.dispatchEvent(new Event('scroll')); }, 50);
         }
         updateUndoRedoButtons();
     }
@@ -1220,7 +1435,6 @@
         const height = stickyGroup.getBoundingClientRect().height; 
         const ths = document.querySelectorAll('#resultsTable th');
         ths.forEach(th => {
-            // Added exactly 15px to perfectly tuck the header under the sticky panel
             th.style.top = (height + 15) + 'px'; 
         });
     }
@@ -1368,6 +1582,7 @@
         }
 
         document.getElementById('dynamicFilters').style.display = 'block';
+        
         if (currentFileType === 'INTRANSIT') {
             document.getElementById('intransitFilters').style.display = 'flex';
             document.getElementById('mb52Filters').style.display = 'none';
@@ -1959,451 +2174,28 @@
             auditLog = [];
             fastScanQueue = [];
             document.getElementById('queueCount').innerText = "0";
+            
+            // Clear raw data since saved CSVs only represent the final state
+            uploadedRawData = [];
+            currentFileType = null;
+            document.getElementById('dynamicFilters').style.display = 'none';
+
             resetFilterUI();
             document.getElementById('slocFilterUI').value = 'ALL';
             renderAuditTrail();
-            document.getElementById('fastScanTrailBox').style.display = 'none';
-            renderFastScanTrail();
-            
-            document.getElementById('dynamicFilters').style.display = 'none';
-            uploadedRawData = [];
-            
-            await clearData();
+            await saveData(); 
             renderTable();
-            document.getElementById('scanInput').focus();
-        }
-    }
-
-    function renderTable() {
-        const thead = document.querySelector('#resultsTable thead');
-        const tbody = document.querySelector('#resultsTable tbody');
-        tbody.innerHTML = ''; 
-        thead.innerHTML = ''; 
-        
-        let totalSys = 0;
-        let totalScan = 0;
-        let totalMiss = 0;
-        let totalExt = 0;
-        let showDescriptionColumn = false;
-        let showSlocColumn = false;
-
-        const filteredArray = [];
-        let slocDropdownVal = document.getElementById('slocFilterUI').value;
-        
-        let hasSlocData = false;
-        for (let sku in inventory) {
-            if (isLensesFilterActive && inventory[sku].isLens) continue; 
-
-            if (inventory[sku].sloc && inventory[sku].sloc !== "" && inventory[sku].sloc !== "Scanned") {
-                hasSlocData = true;
-                showSlocColumn = true;
-                break;
-            }
-        }
-        document.getElementById('slocFilterUI').style.display = hasSlocData ? 'inline-block' : 'none';
-
-        for (let sku in inventory) {
-            let item = inventory[sku];
             
-            if (isLensesFilterActive && item.isLens) continue;
-
-            let diff = item.scannedQty - item.systemQty;
-
-            totalSys += item.systemQty;
-            totalScan += item.scannedQty;
-            if (diff < 0) totalMiss += Math.abs(diff);
-            if (diff > 0) totalExt += diff;
-
-            if (slocDropdownVal !== 'ALL') {
-                let itemSloc = item.sloc || "";
-                if (itemSloc !== "Scanned" && !itemSloc.includes(slocDropdownVal)) continue;
+            let loadMsg = `Successfully loaded ${loadedCount} valid items from the saved session.`;
+            if (purgedCount > 0) {
+                loadMsg += `<br><br><span style="color:var(--accent-pink); font-weight:bold;">We automatically hid ${purgedCount} contact lens/spare part items from this old save file!</span><br>(Use the 'Restore CL & OL' button if you need them back).`;
             }
-
-            if (currentFilter === 'DISCREPANCIES' && diff === 0) continue;
-            if (currentFilter === 'MISSING' && diff >= 0) continue;
-            if (currentFilter === 'EXTRA' && diff <= 0) continue;
-            if (currentFilter === 'NOT_IN_SYSTEM' && item.systemQty > 0) continue;
-
-            if (currentSearchQuery !== '') {
-                let skuStr = sku.toLowerCase();
-                let descStr = (item.description || '').toLowerCase();
-                if (!skuStr.includes(currentSearchQuery) && !descStr.includes(currentSearchQuery)) {
-                    continue; 
-                }
-            }
-
-            filteredArray.push({ sku: sku, diff: diff, ...item });
-
-            if (item.description && item.description.trim() !== "") {
-                showDescriptionColumn = true;
-            }
-        }
-
-        if (systemDataEncoded) {
-            document.getElementById('dashSystem').innerText = totalSys;
+            await customAlert(loadMsg, "Load Complete");
         } else {
-            document.getElementById('dashSystem').innerHTML = '<span style="font-size: 14px; color: var(--accent-red); font-weight: 600; line-height: 32px; display: inline-block;">No system data</span>';
+            await customAlert("Could not read valid data from the file. Please ensure it is a previously saved CSV from this tool.", "Load Failed");
+            undoAction(); 
         }
-        
-        document.getElementById('dashScanned').innerText = totalScan;
-        document.getElementById('dashMissing').innerText = totalMiss;
-        document.getElementById('dashExtra').innerText = totalExt;
-
-        let headerRow = document.createElement('tr');
-        headerRow.innerHTML = `
-            <th style="border-radius: var(--radius-lg) 0 0 0;">NO.</th>
-            <th>Item # (SKU)</th>
-            ${showDescriptionColumn ? '<th>Description</th>' : ''}
-            ${showSlocColumn ? '<th>SLOC</th>' : ''}
-            <th>System QTY</th>
-            <th>Scanned QTY</th>
-            <th>Difference</th>
-            <th>Status</th>
-            <th style="text-align: center; border-radius: 0 var(--radius-lg) 0 0;">Action</th>
-        `;
-        thead.appendChild(headerRow);
-
-        let totalItems = filteredArray.length;
-        let totalPages = Math.ceil(totalItems / (itemsPerPage === 'All' ? totalItems || 1 : parseInt(itemsPerPage))) || 1;
-        
-        let paginatedItems = filteredArray;
-
-        if (itemsPerPage !== 'All') {
-            let limit = parseInt(itemsPerPage);
-            if (currentPage > totalPages) currentPage = totalPages; 
-            if (currentPage < 1) currentPage = 1;
-            
-            let startIndex = (currentPage - 1) * limit;
-            paginatedItems = filteredArray.slice(startIndex, startIndex + limit);
-        }
-
-        document.getElementById('pageInfoText').innerText = `Page ${currentPage} of ${totalPages} (${totalItems} items)`;
-        document.getElementById('btnPrevPage').disabled = currentPage === 1;
-        document.getElementById('btnNextPage').disabled = currentPage === totalPages || totalPages === 0;
-
-        let counter = itemsPerPage === 'All' ? 1 : ((currentPage - 1) * parseInt(itemsPerPage)) + 1;
-
-        paginatedItems.forEach(item => {
-            let rowClass = '';
-            let statusText = '';
-            let statusColor = 'var(--text-primary)';
-            let diffColor = 'var(--text-primary)';
-            
-            if (item.diff === 0) {
-                rowClass = 'match';
-                statusText = 'Matched';
-                statusColor = 'var(--accent-green)';
-            } else if (item.diff < 0) {
-                rowClass = 'short';
-                statusText = 'Missing Stock';
-                statusColor = 'var(--accent-red)';
-                diffColor = 'var(--accent-red)';
-            } else if (item.diff > 0) {
-                rowClass = 'over';
-                statusText = item.systemQty === 0 ? 'Not in system' : 'Extra Stock';
-                statusColor = 'var(--accent-blue)';
-                diffColor = 'var(--accent-blue)';
-            }
-
-            let sysQtyHtml = '';
-            let parts = [];
-            let q1000 = item.sysQty1000 || 0;
-            let q4000 = item.sysQty4000 || 0;
-            let qOther = item.sysQtyOther || 0;
-            
-            if (q1000 === 0 && q4000 === 0 && qOther === 0 && item.systemQty > 0) {
-                if (item.sloc === '1000') q1000 = item.systemQty;
-                else if (item.sloc === '4000') q4000 = item.systemQty;
-                else if (item.sloc && item.sloc.includes('1000') && item.sloc.includes('4000')) {
-                    qOther = item.systemQty; 
-                } else {
-                    qOther = item.systemQty;
-                }
-            }
-
-            if (q1000 > 0) parts.push(`<span style="color: var(--accent-green); font-weight: 600;">${q1000}</span>`);
-            if (q4000 > 0) parts.push(`<span style="color: var(--accent-red); font-weight: 600;">${q4000}</span>`);
-            if (qOther > 0) parts.push(`<span style="color: var(--text-primary); font-weight: 600;">${qOther}</span>`);
-            
-            if (parts.length === 0) {
-                sysQtyHtml = `<span style="color: var(--text-primary); font-weight: 600;">0</span>`;
-            } else {
-                sysQtyHtml = parts.join(' <span style="color:var(--text-secondary); font-size:12px; font-weight:600;">+</span> ');
-            }
-
-            let displaySloc = (item.sloc || '').split(', ').map(s => {
-                if (s === '1000') return '<span style="color: var(--accent-green); font-weight: 600;">1000</span>';
-                if (s === '4000') return '<span style="color: var(--accent-red); font-weight: 600;">4000</span>';
-                return s;
-            }).join('<span style="color: var(--text-secondary);">, </span>');
-
-            let tr = document.createElement('tr');
-            tr.className = rowClass;
-            tr.id = `row-${item.sku}`; 
-            
-            tr.innerHTML = `
-                <td style="color: var(--text-secondary);">${counter}</td>
-                <td style="font-weight: 500;">${item.sku}</td>
-                ${showDescriptionColumn ? `<td style="color: var(--text-secondary);">${item.description || ''}</td>` : ''}
-                ${showSlocColumn ? `<td>${displaySloc}</td>` : ''}
-                
-                <td>
-                    <div class="qty-container">
-                        <span>${sysQtyHtml}</span>
-                        <button class="btn-edit" onclick="editQuantity('${item.sku}', 'systemQty')" title="Edit System QTY">
-                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </td>
-
-                <td>
-                    <div class="qty-container">
-                        <span style="font-weight:600;">${item.scannedQty}</span>
-                        <button class="btn-edit" onclick="editQuantity('${item.sku}', 'scannedQty')" title="Edit Scanned QTY">
-                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </td>
-
-                <td><strong style="color: ${diffColor};">${item.diff}</strong></td>
-                <td><strong style="color: ${statusColor}; font-weight: 600;">${statusText}</strong></td>
-                <td style="text-align: center;">
-                    <button class="btn-delete" onclick="deleteRow('${item.sku}')" title="Delete Row">
-                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-            counter++;
-        });
-
-        document.getElementById('btnNextPage').onclick = function() {
-            if (currentPage < totalPages) { 
-                currentPage++; 
-                renderTable(); 
-            }
-        };
-        
-        // Ensure header offset updates after rendering new rows
-        setTimeout(updateStickyHeaders, 10);
-    }
-
-    // --- PDF EXPORT LOGIC ---
-    function exportPDF() {
-        if (Object.keys(inventory).length === 0) {
-            customAlert("There is no data to print yet.", "Print Error");
-            return;
-        }
-
-        let oldSize = itemsPerPage;
-        itemsPerPage = 'All'; 
-        renderTable(); 
-        
-        document.getElementById('printDate').innerText = new Date().toLocaleDateString();
-        document.getElementById('printTime').innerText = new Date().toLocaleTimeString();
-        
-        setTimeout(() => {
-            window.print();
-            itemsPerPage = oldSize;
-            renderTable();
-        }, 300);
-    }
-
-    async function exportToCSV() {
-        if (Object.keys(inventory).length === 0) {
-            await customAlert("No data to save!", "Export Error");
-            return;
-        }
-
-        let defaultName = `SavedSession_${new Date().toISOString().split('T')[0]}`;
-        let fileName = await customPrompt("Enter a name for your save file:", defaultName, "Save File");
-        
-        if (!fileName) return; 
-
-        if (!fileName.toLowerCase().endsWith('.csv')) {
-            fileName += '.csv';
-        }
-
-        let hasDescriptions = false;
-        let hasSlocs = false;
-        for (let sku in inventory) {
-            if (isLensesFilterActive && inventory[sku].isLens) continue; 
-
-            if (inventory[sku].description && inventory[sku].description.trim() !== "") hasDescriptions = true;
-            if (inventory[sku].sloc && inventory[sku].sloc.trim() !== "" && inventory[sku].sloc !== "Scanned") hasSlocs = true;
-        }
-
-        let csvContent = "data:text/csv;charset=utf-8,";
-        let headers = ["Item # (SKU)"];
-        if (hasDescriptions) headers.push("Description");
-        if (hasSlocs) headers.push("SLOC");
-        
-        if (hasSlocs) {
-            headers.push("System QTY (Total)", "Sys QTY 1000", "Sys QTY 4000", "Scanned QTY", "Difference", "Status");
-        } else {
-            headers.push("System QTY", "Scanned QTY", "Difference", "Status");
-        }
-        
-        csvContent += headers.join(",") + "\n";
-
-        for (let sku in inventory) {
-            let item = inventory[sku];
-            if (isLensesFilterActive && item.isLens) continue; 
-
-            let diff = item.scannedQty - item.systemQty;
-            let statusText = '';
-            if (diff === 0) statusText = 'Matched';
-            else if (diff < 0) statusText = 'Missing Stock';
-            else statusText = item.systemQty === 0 ? 'Not in system' : 'Extra Stock';
-            
-            let row = [sku];
-            if (hasDescriptions) {
-                let safeDesc = item.description ? item.description.replace(/"/g, '""') : '';
-                row.push(`"${safeDesc}"`);
-            }
-            if (hasSlocs) {
-                row.push(item.sloc || "");
-            }
-            
-            if (hasSlocs) {
-                row.push(item.systemQty, (item.sysQty1000 || 0), (item.sysQty4000 || 0), item.scannedQty, diff, statusText);
-            } else {
-                row.push(item.systemQty, item.scannedQty, diff, statusText);
-            }
-            
-            csvContent += row.join(",") + "\n";
-        }
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", fileName);
-        
-        document.body.appendChild(link); 
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    async function loadFromFile(event) {
-        const file = event.target.files ? event.target.files[0] : null;
-        if (!file) return;
-
-        const reader = new FileReader();
-        
-        reader.onload = async function(e) {
-            const text = e.target.result;
-            const lines = text.split(/\r?\n/);
-
-            if (lines.length < 2) {
-                await customAlert("Invalid or empty file.", "File Error");
-                if(event.target) event.target.value = ''; 
-                return;
-            }
-
-            if (Object.keys(inventory).length > 0) {
-                const confirmed = await customConfirm("Loading this file will overwrite your current progress. Do you want to continue?");
-                if (!confirmed) {
-                    if(event.target) event.target.value = ''; 
-                    return;
-                }
-            }
-
-            saveState();
-
-            let headLine = lines[0];
-            let delim = headLine.indexOf('\t') !== -1 ? '\t' : ',';
-            let rawHeaders = parseCSVLine(headLine, delim).map(h => h.toLowerCase().replace(/['"]/g, ''));
-
-            let skuIdx = -1, descIdx = -1, slocIdx = -1, sysIdx = -1, sys1000Idx = -1, sys4000Idx = -1, scanIdx = -1;
-            rawHeaders.forEach((h, idx) => {
-                if (h.includes('sku')) skuIdx = idx;
-                else if (h.includes('desc')) descIdx = idx;
-                else if (h.includes('sloc')) slocIdx = idx;
-                else if (h.includes('1000')) sys1000Idx = idx;
-                else if (h.includes('4000')) sys4000Idx = idx;
-                else if (h.includes('system') || h.includes('total')) sysIdx = idx;
-                else if (h.includes('scan')) scanIdx = idx;
-            });
-
-            if (sysIdx === -1) sysIdx = descIdx !== -1 ? 2 : 1;
-            if (scanIdx === -1) scanIdx = descIdx !== -1 ? 3 : 2;
-            if (skuIdx === -1) skuIdx = 0;
-
-            let newInventory = {};
-            let loadedCount = 0;
-            let purgedCount = 0;
-
-            for (let i = 1; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (!line) continue;
-
-                let cols = parseCSVLine(line, delim);
-
-                if (cols.length > Math.max(skuIdx, sysIdx, scanIdx)) {
-                    let sku = cols[skuIdx].trim();
-                    let desc = descIdx !== -1 && cols.length > descIdx ? cols[descIdx].trim() : "";
-                    let sloc = slocIdx !== -1 && cols.length > slocIdx ? cols[slocIdx].trim() : "";
-                    let sysQty = parseInt(cols[sysIdx], 10);
-                    let scanQty = parseInt(cols[scanIdx], 10);
-                    
-                    let q1000 = sys1000Idx !== -1 ? parseInt(cols[sys1000Idx], 10) : (sloc === '1000' ? sysQty : 0);
-                    let q4000 = sys4000Idx !== -1 ? parseInt(cols[sys4000Idx], 10) : (sloc === '4000' ? sysQty : 0);
-
-                    let isLens = isExcludedItem(line, desc, "");
-                    if (isLens) purgedCount++;
-
-                    if (sku && !isNaN(sysQty) && !isNaN(scanQty)) {
-                        newInventory[sku] = {
-                            description: desc,
-                            sloc: sloc,
-                            systemQty: sysQty,
-                            sysQty1000: q1000,
-                            sysQty4000: q4000,
-                            sysQtyOther: (q1000 === 0 && q4000 === 0 && sysQty > 0) ? sysQty : 0,
-                            scannedQty: scanQty,
-                            isLens: isLens
-                        };
-                        loadedCount++;
-                    }
-                }
-            }
-
-            if (loadedCount > 0) {
-                inventory = newInventory;
-                systemDataEncoded = true;
-                hasWarnedNoSystemData = true;
-                auditLog = [];
-                fastScanQueue = [];
-                document.getElementById('queueCount').innerText = "0";
-                resetFilterUI();
-                document.getElementById('slocFilterUI').value = 'ALL';
-                renderAuditTrail();
-                await saveData(); 
-                renderTable();
-                
-                let loadMsg = `Successfully loaded ${loadedCount} valid items from the saved session.`;
-                if (purgedCount > 0) {
-                    loadMsg += `<br><br><span style="color:var(--accent-pink); font-weight:bold;">We automatically hid ${purgedCount} contact lens/spare part items from this old save file!</span><br>(Use the 'Restore CL & OL' button if you need them back).`;
-                }
-                await customAlert(loadMsg, "Load Complete");
-            } else {
-                await customAlert("Could not read valid data from the file. Please ensure it is a previously saved CSV from this tool.", "Load Failed");
-                undoAction(); 
-            }
-            if(event.target) event.target.value = ''; 
-        };
-        reader.readAsText(file);
+        if(event.target) event.target.value = ''; 
     }
 </script>
 
