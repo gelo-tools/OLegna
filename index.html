@@ -103,7 +103,7 @@
 
     <div class="p-6 flex-1 flex flex-col overflow-y-auto">
         
-        <div class="canvas-wrapper p-2 mb-2 w-full" id="dropZone">
+        <div class="canvas-wrapper p-2 mb-2 w-full">
             
             <div id="dragHint" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-100 border border-blue-300 text-blue-800 text-[10px] font-bold px-4 py-1.5 rounded-full shadow-sm pointer-events-none transition-opacity duration-500 opacity-90 z-10 flex items-center gap-1.5">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l4-4 4 4M9 5v14M19 15l-4 4-4-4M15 9v10"/></svg>
@@ -450,25 +450,25 @@
             const pathStr = shape === 'Aviator' 
                 ? 'M 56, 6 C 54, 3, 46, 0, 28, 0 C 6, 1, 0, 6, 0, 25 C 0, 40, 9, 50, 21, 50 C 34, 50, 49, 43, 58, 15 C 58, 10, 56.84, 7.5, 56, 6 Z'
                 : 'M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z';
-            const matrix = new DOMMatrix().translate(-r, -b).scale(A / 58, B / 50);
-            path.addPath(new Path2D(pathStr), matrix);
+            const matrix = new DOMMatrix().translate(-r, -b).scale(w / 58, h / 50);
+            const scaledPath = new Path2D();
+            scaledPath.addPath(new Path2D(pathStr), matrix);
+            ctx.stroke(scaledPath);
+            
         } else if (shape === 'Rectangle') {
-            const trueHypot = Math.hypot(r, b);
-            let dynR = 8;
-            if (trueHypot > userED / 2) {
-                dynR = Math.max(0, Math.min((trueHypot - userED / 2) * 2.5, r, b));
-            }
-            if (path.roundRect) path.roundRect(-r, -b, A, B, dynR); 
-            else path.rect(-r, -b, A, B);
-        } else if (shape === 'Round') {
-            if (path.ellipse) path.ellipse(0, 0, r, b, 0, 0, Math.PI * 2);
-            else path.arc(0, 0, r, 0, Math.PI * 2);
+            if (ctx.roundRect) ctx.roundRect(-r, -b, w, h, dynR); 
+            else ctx.rect(-r, -b, w, h);
+            ctx.stroke();
+        } else if (shape === 'Round') { 
+            ctx.ellipse(0, 0, r, b, 0, 0, Math.PI * 2);
+            ctx.stroke();
         } else if (shape === 'Geometric') {
-            const inset = (Math.hypot(r, b) > userED / 2) ? (1 - ((userED / 2) / Math.hypot(r, b))) * r : 0;
-            const cX = A * 0.08 + inset, cY = B * 0.11 + inset;
-            path.moveTo(-r + cX, -b); path.lineTo(r - cX, -b); path.lineTo(r, -b + cY); path.lineTo(r, b - cY); path.lineTo(r - cX, b); path.lineTo(-r + cX, b); path.lineTo(-r, b - cY); path.lineTo(-r, -b + cY); path.closePath();
+            const inset = (trueHypot > edRadius) ? (1 - (edRadius / trueHypot)) * r : 0;
+            const cX = w * 0.08 + inset;
+            const cY = h * 0.11 + inset;
+            ctx.moveTo(-r + cX, -b); ctx.lineTo(r - cX, -b); ctx.lineTo(r, -b + cY); ctx.lineTo(r, b - cY); ctx.lineTo(r - cX, b); ctx.lineTo(-r + cX, b); ctx.lineTo(-r, b - cY); ctx.lineTo(-r, -b + cY); ctx.closePath();
+            ctx.stroke();
         }
-        ctx.stroke(path);
         ctx.restore();
     }
 
@@ -716,6 +716,8 @@
 
         // --- CALCULATE AND DISPLAY RESULTS DATA (MIRRORING SLIDERS) ---
         
+        let diaPadding = (activeLiveMode === 'plus') ? 2 : 0;
+
         // OD Added Decentration Vector
         const hValOD = getVal('odHDec');
         const hDirTextOD = document.getElementById('odHDir').options[document.getElementById('odHDir').selectedIndex].text;
@@ -730,8 +732,6 @@
         let magOD = Math.hypot(xOD, yOD);
         let angOD = Math.atan2(yOD, xOD) * 180 / Math.PI;
         if (angOD < 0) angOD += 360;
-
-        let diaPadding = (activeLiveMode === 'plus') ? 2 : 0;
 
         document.getElementById('resOD_H').innerText = `${hValOD.toFixed(1)} mm ${hValOD === 0 ? '' : hDirTextOD}`;
         document.getElementById('resOD_V').innerText = `${vValOD.toFixed(1)} mm ${vValOD === 0 ? '' : vDirTextOD}`;
