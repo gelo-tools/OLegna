@@ -11,8 +11,8 @@
         .container { flex: 1; display: flex; flex-direction: column; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; padding: 10px; gap: 8px; }
         
         /* CANVAS AREA - Increased height for non-Surface laptops */
-        .canvas-wrapper { display: flex; justify-content: center; overflow: hidden; background: #fff; border: 1px solid #ccc; border-radius: 6px; position: relative; min-height: 420px; }
-        canvas { width: 100%; max-height: 420px; object-fit: contain; cursor: grab; }
+        .canvas-wrapper { display: flex; justify-content: center; overflow: hidden; background: #fff; border: 1px solid #ccc; border-radius: 6px; position: relative; min-height: 480px; }
+        canvas { width: 100%; max-height: 480px; object-fit: contain; cursor: grab; }
         canvas:active { cursor: grabbing; }
         
         /* CUSTOM VISUAL SHAPE DROPDOWN */
@@ -39,6 +39,7 @@
 </head>
 <body class="bg-gray-100 p-4 md:p-8 font-sans min-h-screen flex flex-col">
 
+<!-- DEVICE DETECT MODAL -->
 <div id="deviceModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-50 hidden flex items-center justify-center backdrop-filter backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full border border-blue-300 border-2">
         <h3 class="text-lg font-bold text-blue-800 mb-2 flex items-center gap-2">🖥️ Device Mismatch</h3>
@@ -77,6 +78,7 @@
 <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden flex-1 flex flex-col w-full">
     
     <div class="bg-blue-900 text-white px-6 py-4 flex-shrink-0 flex justify-between items-center">
+        <!-- Add Back Button and Link Name -->
         <div class="flex items-center gap-4">
             <button onclick="window.history.back()" class="bg-blue-800 hover:bg-blue-700 text-white p-2 rounded-full transition-colors focus:outline-none" title="Go Back">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -85,7 +87,7 @@
             </button>
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Decentration and Diameter Recommendation Tool</h1>
-                <p class="text-sm text-blue-200">Designed by <a href="https://www.linkedin.com/in/angelo-dacanay/" target="_blank" class="underline hover:text-white transition-colors">Angelo Dacanay</a></p>
+                <p class="text-sm text-blue-200">Designed by <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" class="underline hover:text-white transition-colors">Angelo Dacanay</a></p>
             </div>
         </div>
         
@@ -157,6 +159,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
             
+            <!-- OD (RIGHT EYE) PANEL -->
             <div class="border border-gray-200 rounded shadow-sm p-4 bg-white flex flex-col justify-between">
                 <div>
                     <h3 class="text-center font-bold text-gray-800 border-b border-gray-200 pb-2 mb-3">OD (Right Eye)</h3>
@@ -186,8 +189,9 @@
                     </div>
                 </div>
 
+                <!-- OD RESULTS BOX -->
                 <div class="mt-4 pt-3 border-t border-gray-200">
-                    <p class="text-[11px] font-black text-blue-900 uppercase tracking-widest mb-2 text-center">Added Decentration</p>
+                    <p class="text-[11px] font-black text-blue-900 uppercase tracking-widest mb-2 text-center">Recommendations for OD</p>
                     <div class="bg-gray-50 rounded border border-gray-200 p-2 text-[11px] font-mono text-gray-800 shadow-inner">
                         <div class="flex justify-between mb-1"><span>Add Decentration H:</span> <span class="font-bold text-blue-700" id="resOD_H">-</span></div>
                         <div class="flex justify-between mb-2"><span>Add Decentration V:</span> <span class="font-bold text-blue-700" id="resOD_V">-</span></div>
@@ -197,10 +201,12 @@
                         <div class="flex justify-between mb-2 pb-2 border-b border-gray-200"><span>Add Decentration Custom:</span> <span class="font-black text-indigo-700" id="resOD_Vec">-</span></div>
                         
                         <div class="flex justify-between mt-1"><span>Special Diameter:</span> <span class="font-black text-blue-800 text-xs" id="resOD_Dia">-</span></div>
+                        <div id="resOD_Warning" class="text-center text-[10px] text-red-600 font-bold mt-1" style="display:none;"></div>
                     </div>
                 </div>
             </div>
 
+            <!-- CENTER ACTIONS PANEL -->
             <div class="border border-blue-200 bg-blue-50 rounded shadow-sm p-4 flex flex-col gap-3">
                 <button onclick="copyODtoOS()" class="w-full bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-1.5 rounded text-[10px] uppercase transition-colors shadow-sm">⮂ Copy OD to OS ⮂</button>
                 
@@ -241,6 +247,7 @@
                 </div>
             </div>
 
+            <!-- OS (LEFT EYE) PANEL -->
             <div class="border border-gray-200 rounded shadow-sm p-4 bg-white flex flex-col justify-between">
                 <div>
                     <h3 class="text-center font-bold text-gray-800 border-b border-gray-200 pb-2 mb-3">OS (Left Eye)</h3>
@@ -270,8 +277,9 @@
                     </div>
                 </div>
 
+                <!-- OS RESULTS BOX -->
                 <div class="mt-4 pt-3 border-t border-gray-200">
-                    <p class="text-[11px] font-black text-blue-900 uppercase tracking-widest mb-2 text-center">Added Decentration</p>
+                    <p class="text-[11px] font-black text-blue-900 uppercase tracking-widest mb-2 text-center">Recommendations for OS</p>
                     <div class="bg-gray-50 rounded border border-gray-200 p-2 text-[11px] font-mono text-gray-800 shadow-inner">
                         <div class="flex justify-between mb-1"><span>Add Decentration H:</span> <span class="font-bold text-blue-700" id="resOS_H">-</span></div>
                         <div class="flex justify-between mb-2"><span>Add Decentration V:</span> <span class="font-bold text-blue-700" id="resOS_V">-</span></div>
@@ -281,6 +289,7 @@
                         <div class="flex justify-between mb-2 pb-2 border-b border-gray-200"><span>Add Decentration Custom:</span> <span class="font-black text-indigo-700" id="resOS_Vec">-</span></div>
                         
                         <div class="flex justify-between mt-1"><span>Special Diameter:</span> <span class="font-black text-blue-800 text-xs" id="resOS_Dia">-</span></div>
+                        <div id="resOS_Warning" class="text-center text-[10px] text-red-600 font-bold mt-1" style="display:none;"></div>
                     </div>
                 </div>
             </div>
@@ -304,11 +313,11 @@
             svg: '<polygon points="5,4 23,4 26,7 26,13 23,16 5,16 2,13 2,7"/><line x1="26" y1="10" x2="34" y2="10"/><polygon points="37,4 55,4 58,7 58,13 55,16 37,16 34,13 34,7"/>' 
         },
         'Aviator': {
-            name: 'True Aviator',
+            name: 'Aviator',
             svg: '<path d="M 56,6 C 54,3 46,0 28,0 C 6,1 0,6 0,25 C 0,40 9,50 21,50 C 34,50 49,43 58,15 C 58,10 56.84,7.5 56,6 Z" transform="scale(0.4) translate(4, 0)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/><line x1="26" y1="10" x2="34" y2="10"/><path d="M 56,6 C 54,3 46,0 28,0 C 6,1 0,6 0,25 C 0,40 9,50 21,50 C 34,50 49,43 58,15 C 58,10 56.84,7.5 56,6 Z" transform="scale(-0.4, 0.4) translate(-146, 0)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/>'
         },
         'CatEye': {
-            name: 'Vintage Cat-Eye',
+            name: 'Cat-Eye',
             svg: '<path d="M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z" transform="scale(0.4) translate(4, -2)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/><line x1="26" y1="10" x2="34" y2="10"/><path d="M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z" transform="scale(-0.4, 0.4) translate(-146, -2)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/>'
         }
     };
@@ -441,7 +450,6 @@
             const pathStr = shape === 'Aviator' 
                 ? 'M 56, 6 C 54, 3, 46, 0, 28, 0 C 6, 1, 0, 6, 0, 25 C 0, 40, 9, 50, 21, 50 C 34, 50, 49, 43, 58, 15 C 58, 10, 56.84, 7.5, 56, 6 Z'
                 : 'M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z';
-            
             const matrix = new DOMMatrix().translate(-r, -b).scale(w / 58, h / 50);
             const scaledPath = new Path2D();
             scaledPath.addPath(new Path2D(pathStr), matrix);
@@ -708,6 +716,8 @@
 
         // --- CALCULATE AND DISPLAY RESULTS DATA (MIRRORING SLIDERS) ---
         
+        let diaPadding = (activeLiveMode === 'plus') ? 2 : 0;
+
         // OD Added Decentration Vector
         const hValOD = getVal('odHDec');
         const hDirTextOD = document.getElementById('odHDir').options[document.getElementById('odHDir').selectedIndex].text;
@@ -723,12 +733,18 @@
         let angOD = Math.atan2(yOD, xOD) * 180 / Math.PI;
         if (angOD < 0) angOD += 360;
 
-        let diaPadding = (activeLiveMode === 'plus') ? 2 : 0;
-
         document.getElementById('resOD_H').innerText = `${hValOD.toFixed(1)} mm ${hValOD === 0 ? '' : hDirTextOD}`;
         document.getElementById('resOD_V').innerText = `${vValOD.toFixed(1)} mm ${vValOD === 0 ? '' : vDirTextOD}`;
         document.getElementById('resOD_Vec').innerText = `${magOD.toFixed(1)} mm @ ${magOD === 0 ? 0 : Math.round(angOD)}°`;
         document.getElementById('resOD_Dia').innerText = `${lensDia + diaPadding} mm`;
+        
+        const odWarn = document.getElementById('resOD_Warning');
+        if (activeLiveMode === 'plus' && magOD > 5) {
+            odWarn.innerHTML = "(Warning: Decentration over 5mm. Choose a smaller frame or bigger diameter blank, then move the uncut lens to lessen the needed decentration)";
+            odWarn.style.display = 'block';
+        } else {
+            odWarn.style.display = 'none';
+        }
 
         // OS Added Decentration Vector
         const hValOS = getVal('osHDec');
@@ -748,6 +764,14 @@
         document.getElementById('resOS_V').innerText = `${vValOS.toFixed(1)} mm ${vValOS === 0 ? '' : vDirTextOS}`;
         document.getElementById('resOS_Vec').innerText = `${magOS.toFixed(1)} mm @ ${magOS === 0 ? 0 : Math.round(angOS)}°`;
         document.getElementById('resOS_Dia').innerText = `${lensDia + diaPadding} mm`;
+
+        const osWarn = document.getElementById('resOS_Warning');
+        if (activeLiveMode === 'plus' && magOS > 5) {
+            osWarn.innerHTML = "(Warning: Decentration over 5mm. Choose a smaller frame or bigger diameter blank, then move the uncut lens to lessen the needed decentration)";
+            osWarn.style.display = 'block';
+        } else {
+            osWarn.style.display = 'none';
+        }
 
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
