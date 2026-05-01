@@ -15,6 +15,80 @@
         canvas { width: 100%; max-height: 480px; object-fit: contain; cursor: grab; }
         canvas:active { cursor: grabbing; }
         
+        /* ANIMATED DRAG DEMONSTRATION */
+        .drag-demo-bubble {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 246, 255, 0.95);
+            border: 1px solid #93c5fd;
+            color: #1e3a8a;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            z-index: 10;
+            animation: float-and-fade 4s ease-in-out infinite;
+        }
+
+        .animated-hand {
+            animation: swipe-left-right 2s ease-in-out infinite;
+        }
+
+        @keyframes float-and-fade {
+            0%, 100% { opacity: 0.9; transform: translate(-50%, 0); }
+            50% { opacity: 1; transform: translate(-50%, -5px); }
+        }
+
+        @keyframes swipe-left-right {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            50% { transform: translateX(-15px) rotate(-10deg); }
+        }
+
+        /* CUSTOM SLIDER TOOLTIP CONTAINER */
+        .slider-container {
+            position: relative;
+            padding-top: 15px; /* Room for tooltip */
+        }
+        
+        .slider-tooltip {
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1e3a8a;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .slider-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -3px;
+            border-width: 3px;
+            border-style: solid;
+            border-color: #1e3a8a transparent transparent transparent;
+        }
+
+        .slider-container:hover .slider-tooltip {
+            opacity: 1;
+        }
+
         /* CUSTOM VISUAL SHAPE DROPDOWN */
         .custom-select { position: relative; width: 100%; height: 32px; user-select: none; }
         .select-selected { background: #fff; border: 1px solid #d1d5db; border-radius: 0.25rem; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; cursor: pointer; transition: 0.2s; font-size: 0.75rem; }
@@ -105,9 +179,12 @@
         
         <div class="canvas-wrapper p-2 mb-2 w-full">
             
-            <div id="dragHint" class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-100 border border-blue-300 text-blue-800 text-[10px] font-bold px-4 py-1.5 rounded-full shadow-sm pointer-events-none transition-opacity duration-500 opacity-90 z-10 flex items-center gap-1.5">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l4-4 4 4M9 5v14M19 15l-4 4-4-4M15 9v10"/></svg>
-                Hint: Click and drag the dashed lens to manually decenter
+            <div id="dragHint" class="drag-demo-bubble">
+                <svg class="animated-hand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+                Click & Drag dashed lens to decenter
             </div>
 
             <canvas id="lensCanvas" width="900" height="340"></canvas>
@@ -210,12 +287,13 @@
             <div class="border border-blue-200 bg-blue-50 rounded shadow-sm p-4 flex flex-col gap-3">
                 <button onclick="copyODtoOS()" class="w-full bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-1.5 rounded text-[10px] uppercase transition-colors shadow-sm">⮂ Copy OD to OS ⮂</button>
                 
-                <div>
+                <div class="slider-container">
+                    <div class="slider-tooltip">Slide to size up/down</div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="font-bold text-xs text-blue-800">Uncut Lens Dia</label>
                         <span id="valLensDia" class="text-sm font-black text-blue-800">65 mm</span>
                     </div>
-                    <input type="range" id="lensDia" min="40" max="100" step="1" value="65" class="w-full mb-2">
+                    <input type="range" id="lensDia" min="40" max="100" step="1" value="65" class="w-full mb-2 cursor-pointer">
                 </div>
                 <div id="mbsDisplay" class="bg-white border border-blue-200 text-blue-800 text-sm font-bold text-center py-2 rounded shadow-sm">MBS (Centered): 60 mm</div>
                 
@@ -830,11 +908,17 @@
         const bM = document.getElementById('btnMinus');
         const ind = document.getElementById('liveIndicatorContainer');
         const warningEl = document.getElementById('sizeWarning');
+        const dragHint = document.getElementById('dragHint');
         
         bP.innerText = activeLiveMode === 'plus' ? "Stop Recommendation" : "Recommend for Plus Lens";
         bM.innerText = activeLiveMode === 'minus' ? "Stop Recommendation" : "Recommend for Minus Lens";
         ind.className = activeLiveMode === 'none' ? "invisible" : "flex justify-center items-center h-4 mt-1";
         
+        // Hide the animated drag hint if live mode is active (since clicking auto-disables it anyway)
+        if (dragHint) {
+            dragHint.style.opacity = activeLiveMode !== 'none' ? '0' : '1';
+        }
+
         if (activeLiveMode !== 'minus') {
             warningEl.classList.add('hidden');
         }
