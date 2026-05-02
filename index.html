@@ -12,65 +12,20 @@
     <style>
         /* --- MODERN MINIMALIST STYLING --- */
         :root {
-            --bg-color: #f9fafb;
-            --surface-color: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-            --accent-blue: #0ea5e9;
-            --accent-blue-hover: #0284c7;
-            --accent-pink: #ec4899;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --accent-orange: #f59e0b;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --bg-color: #f9fafb; --surface-color: #ffffff; --text-primary: #111827; --text-secondary: #6b7280;
+            --border-color: #e5e7eb; --accent-blue: #0ea5e9; --accent-blue-hover: #0284c7;
+            --accent-pink: #ec4899; --accent-green: #10b981; --accent-red: #ef4444; --accent-orange: #f59e0b;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05); --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --radius-md: 8px;
-            --radius-lg: 12px;
+            --radius-md: 8px; --radius-lg: 12px;
         }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color); 
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            padding-bottom: 90px; 
-            color: var(--text-primary);
-            -webkit-font-smoothing: antialiased;
-        }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 90px; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
         
-        /* --- NAVBAR --- */
-        .navbar {
-            background-color: var(--surface-color);
-            padding: 16px 32px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .app-branding {
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: -0.5px; 
-            color: var(--text-primary);
-        }
+        .navbar { background-color: var(--surface-color); padding: 16px 32px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .app-branding { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-primary); }
+        .user-info { font-size: 13px; color: var(--text-secondary); text-align: right; line-height: 1.4; display: flex; align-items: center; gap: 24px; }
 
-        .user-info {
-            font-size: 13px;
-            color: var(--text-secondary);
-            text-align: right;
-            line-height: 1.4;
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        /* --- TUTORIAL TOGGLE SWITCH --- */
         .theme-switch-wrapper { display: flex; align-items: center; gap: 10px; }
         .theme-switch { display: inline-block; height: 24px; position: relative; width: 44px; margin: 0; }
         .theme-switch input { display: none; }
@@ -79,161 +34,43 @@
         input:checked + .slider { background-color: var(--accent-blue); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* --- TUTORIAL CONTEXTUAL TIPS --- */
-        .tutorial-tip {
-            display: none;
-            background-color: #f0f9ff;
-            border-left: 3px solid var(--accent-blue);
-            padding: 14px 18px;
-            border-radius: 4px var(--radius-md) var(--radius-md) 4px;
-            font-size: 13px;
-            line-height: 1.5;
-            color: #0369a1;
-            margin-bottom: 16px;
-            align-items: flex-start;
-            gap: 10px;
-            animation: fadeInDown 0.3s ease-out;
-            box-shadow: var(--shadow-sm);
-        }
+        .tutorial-tip { display: none; background-color: #f0f9ff; border-left: 3px solid var(--accent-blue); padding: 14px 18px; border-radius: 4px var(--radius-md) var(--radius-md) 4px; font-size: 13px; line-height: 1.5; color: #0369a1; margin-bottom: 16px; align-items: flex-start; gap: 10px; animation: fadeInDown 0.3s ease-out; box-shadow: var(--shadow-sm); }
         body.tutorial-active .tutorial-tip { display: flex; }
         .tutorial-icon { flex-shrink: 0; margin-top: 1px; color: var(--accent-blue); }
         .tutorial-tip strong { color: #075985; font-weight: 600; }
 
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- LAYOUT --- */
-        .container {
-            max-width: 1200px; 
-            margin: 32px auto;
-            flex: 1; 
-            width: 95%;
-            position: relative;
-        }
-
-        /* --- PANELS --- */
-        .content-panel, .sticky-group {
-            background-color: var(--surface-color);
-            padding: 24px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 24px;
-        }
-
-        .sticky-group {
-            position: sticky;
-            top: 16px; 
-            z-index: 1000;
-            padding: 24px 0 0 0; 
-            box-shadow: var(--shadow-md); 
-        }
-
+        .container { max-width: 1200px; margin: 32px auto; flex: 1; width: 95%; position: relative; }
+        .content-panel, .sticky-group { background-color: var(--surface-color); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); margin-bottom: 24px; }
+        .sticky-group { position: sticky; top: 16px; z-index: 1000; padding: 24px 0 0 0; box-shadow: var(--shadow-md); }
         .sticky-padding { padding: 0 24px; }
 
-        .step-title {
-            color: var(--text-primary);
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .step-title::before {
-            content: '';
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background-color: var(--accent-blue);
-            border-radius: 50%;
-        }
+        .step-title { color: var(--text-primary); font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .step-title::before { content: ''; display: inline-block; width: 8px; height: 8px; background-color: var(--accent-blue); border-radius: 50%; }
 
-        /* --- INPUTS --- */
-        textarea, input[type="text"], select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            background-color: var(--bg-color);
-            transition: all 0.2s ease;
-            outline: none;
-            color: var(--text-primary);
-        }
-
+        textarea, input[type="text"], select { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-family: 'Inter', sans-serif; font-size: 14px; background-color: var(--bg-color); transition: all 0.2s ease; outline: none; color: var(--text-primary); }
         textarea { height: 100px; resize: vertical; font-family: monospace; }
+        textarea:focus, input[type="text"]:focus, select:focus { background-color: var(--surface-color); border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15); }
+        .drag-over { background-color: #f0f9ff !important; border: 2px dashed var(--accent-blue) !important; }
         
-        textarea:focus, input[type="text"]:focus, select:focus {
-            background-color: var(--surface-color);
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
-        }
-
-        .drag-over {
-            background-color: #f0f9ff !important;
-            border: 2px dashed var(--accent-blue) !important;
-        }
+        .scan-input-wrapper { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        input[type="text"].main-scan { flex: 1; max-width: 400px; min-width: 200px; font-size: 16px; }
         
-        .scan-input-wrapper {
-            display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;
-        }
-        
-        input[type="text"].main-scan {
-            flex: 1; max-width: 400px; min-width: 200px; font-size: 16px;
-        }
-        
-        /* --- BUTTONS --- */
-        .btn, .btn-secondary, .custom-modal-btn {
-            padding: 10px 18px;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-            border: none;
-            outline: none;
-            white-space: nowrap;
-        }
-
+        .btn, .btn-secondary, .custom-modal-btn { padding: 10px 18px; border-radius: var(--radius-md); cursor: pointer; font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; border: none; outline: none; white-space: nowrap; }
         .btn { background-color: var(--accent-blue); color: #fff; box-shadow: var(--shadow-sm); }
         .btn:hover:not(:disabled) { background-color: var(--accent-blue-hover); transform: translateY(-1px); }
         .btn:disabled { background-color: #e5e7eb; cursor: not-allowed; color: #9ca3af; box-shadow: none; }
         
-        .btn-secondary {
-            background-color: var(--surface-color);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            height: 42px;
-        }
+        .btn-secondary { background-color: var(--surface-color); color: var(--text-primary); border: 1px solid var(--border-color); height: 42px; }
         .btn-secondary:hover { background-color: var(--bg-color); border-color: #d1d5db; }
-        
-        .btn-fast-scan.active {
-            background-color: #fef3c7; border-color: #f59e0b; color: #b45309;
-        }
+        .btn-fast-scan.active { background-color: #fef3c7; border-color: #f59e0b; color: #b45309; }
         .btn-fast-scan.active svg { stroke: #d97706; }
         
-        .btn-compare {
-            background-color: var(--accent-blue); color: #fff; border: none; height: 42px; border-radius: var(--radius-md);
-            cursor: pointer; font-weight: 600; font-size: 14px; display: none; align-items: center; justify-content: center;
-            gap: 8px; transition: background-color 0.2s; animation: pulseBlue 2s infinite; padding: 0 24px;
-        }
+        .btn-compare { background-color: var(--accent-blue); color: #fff; border: none; height: 42px; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; font-size: 14px; display: none; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s; animation: pulseBlue 2s infinite; padding: 0 24px; }
         .btn-compare:hover { background-color: var(--accent-blue-hover); }
 
-        @keyframes pulseBlue {
-            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(14, 165, 233, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
-        }
+        @keyframes pulseBlue { 0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(14, 165, 233, 0); } 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); } }
 
         .btn-pdf { background-color: var(--surface-color); color: var(--accent-pink); border: 1px solid var(--border-color); }
         .btn-pdf:hover:not(:disabled) { border-color: var(--accent-pink); background-color: #fdf2f8; }
@@ -244,18 +81,9 @@
         .btn-history { background-color: var(--surface-color); color: var(--text-primary); border: 1px solid var(--border-color); }
         .btn-history:hover:not(:disabled) { background-color: var(--bg-color); }
 
-        /* --- AUDIT TRAILS --- */
-        .audit-trail-wrapper {
-            margin-top: 12px; background-color: var(--bg-color); border: 1px solid var(--border-color);
-            border-radius: var(--radius-md); padding: 12px; height: 90px; overflow-y: auto;
-            font-family: 'Inter', monospace; font-size: 12px; color: var(--text-secondary);
-        }
+        .audit-trail-wrapper { margin-top: 12px; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; height: 90px; overflow-y: auto; font-family: 'Inter', monospace; font-size: 12px; color: var(--text-secondary); }
         .fast-scan-trail { background-color: #fffbeb; border: 1px solid #fde68a; }
-        .fast-scan-header {
-            font-weight: 600; color: #b45309; margin-bottom: 8px; font-size: 12px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        
+        .fast-scan-header { font-weight: 600; color: #b45309; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .audit-trail-wrapper ul { list-style: none; padding: 0; margin: 0; }
         .audit-trail-wrapper li { padding: 6px 0; border-bottom: 1px solid #f3f4f6; }
         .audit-trail-wrapper li:last-child { border-bottom: none; }
@@ -263,41 +91,18 @@
         .audit-success { color: var(--accent-green); font-weight: 500; }
         .audit-error { color: var(--accent-red); font-weight: 500; }
 
-        /* --- BOTTOM ACTION BAR --- */
-        .action-buttons-wrapper {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px);
-            border-top: 1px solid var(--border-color); padding: 16px 32px;
-            z-index: 2000; display: flex; justify-content: space-between; align-items: center;
-        }
+        .action-buttons-wrapper { position: fixed; bottom: 0; left: 0; right: 0; background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px); border-top: 1px solid var(--border-color); padding: 16px 32px; z-index: 2000; display: flex; justify-content: space-between; align-items: center; }
         .action-group { display: flex; gap: 12px; }
 
-        /* --- MODALS --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(17, 24, 39, 0.4); backdrop-filter: blur(2px);
-            z-index: 4000; display: flex; align-items: center; justify-content: center;
-        }
-        .custom-modal-box {
-            background-color: var(--surface-color); width: 450px; max-width: 90%;
-            border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
-            display: flex; flex-direction: column; text-align: left; overflow: hidden;
-        }
-        .custom-modal-header {
-            padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border-color); background-color: var(--surface-color);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.4); backdrop-filter: blur(2px); z-index: 4000; display: flex; align-items: center; justify-content: center; }
+        .custom-modal-box { background-color: var(--surface-color); width: 450px; max-width: 90%; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; text-align: left; overflow: hidden; }
+        .custom-modal-header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background-color: var(--surface-color); }
         .custom-modal-header h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-primary); }
-        .custom-modal-close {
-            color: var(--text-secondary); font-size: 18px; line-height: 1; cursor: pointer; border: none; background: transparent; padding: 4px; border-radius: 4px; transition: background 0.2s;
-        }
+        .custom-modal-close { color: var(--text-secondary); font-size: 18px; line-height: 1; cursor: pointer; border: none; background: transparent; padding: 4px; border-radius: 4px; transition: background 0.2s; }
         .custom-modal-close:hover { background-color: var(--bg-color); color: var(--text-primary); }
         .custom-modal-body { padding: 24px; color: var(--text-primary); font-size: 14px; line-height: 1.6; }
         .custom-modal-input { margin-top: 16px; }
-        .custom-modal-footer {
-            padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px;
-            background-color: var(--bg-color); border-top: 1px solid var(--border-color);
-        }
+        .custom-modal-footer { padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px; background-color: var(--bg-color); border-top: 1px solid var(--border-color); }
         
         #slocModalBox .custom-modal-footer { flex-direction: column; gap: 8px; }
         .sloc-btn-filter { background-color: var(--surface-color); color: var(--text-primary); border: 1px solid var(--border-color); }
@@ -308,111 +113,58 @@
         #cameraModalBox { width: 500px; }
         #reader { width: 100%; margin-top: 10px; border-radius: var(--radius-md); overflow: hidden; }
 
-        /* --- DASHBOARD --- */
-        .minimalist-dashboard {
-            display: flex; justify-content: space-between; margin-top: 24px;
-            padding-top: 24px; border-top: 1px solid var(--border-color); gap: 16px;
-        }
-        .dash-card {
-            flex: 1; padding: 16px; border-radius: var(--radius-md); background-color: var(--bg-color);
-            display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-color);
-        }
+        .minimalist-dashboard { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-color); gap: 16px; }
+        .dash-card { flex: 1; padding: 16px; border-radius: var(--radius-md); background-color: var(--bg-color); display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--border-color); }
         .dash-card h3 { margin: 0; font-size: 12px; color: var(--text-secondary); font-weight: 500; }
         .dash-card p { margin: 8px 0 0 0; font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -1px; }
-        
         .dash-missing { background-color: #fef2f2; border-color: #fecaca; }
         .dash-missing p { color: var(--accent-red); }
         .dash-extra { background-color: #f0f9ff; border-color: #bae6fd; }
         .dash-extra p { color: var(--accent-blue); }
 
-        /* --- TABLE AREA --- */
-        .table-header-controls {
-            display: flex; justify-content: space-between; align-items: center;
-            background-color: var(--surface-color); padding: 16px 24px;
-            border-bottom: 1px solid var(--border-color); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        }
+        .table-header-controls { display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-color); padding: 16px 24px; border-bottom: 1px solid var(--border-color); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
         .table-title { color: var(--text-primary); font-weight: 600; font-size: 16px; margin: 0; }
         .pagination-select { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; }
         .pagination-select select { padding: 6px 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-weight: 500; }
 
-        .filter-bar {
-            display: flex; align-items: center; background-color: var(--surface-color);
-            border-bottom: 1px solid var(--border-color); padding: 0 16px; gap: 8px;
-        }
-        .filter-btn {
-            background: none; border: none; padding: 16px 12px; font-size: 13px; font-weight: 500;
-            color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent;
-            transition: all 0.2s; white-space: nowrap;
-        }
+        .filter-bar { display: flex; align-items: center; background-color: var(--surface-color); border-bottom: 1px solid var(--border-color); padding: 0 16px; gap: 8px; }
+        .filter-btn { background: none; border: none; padding: 16px 12px; font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; }
         .filter-btn:hover { color: var(--text-primary); }
         .filter-btn.active { color: var(--accent-blue); border-bottom: 2px solid var(--accent-blue); font-weight: 600; }
 
         .search-container { display: flex; align-items: center; margin-left: auto; gap: 12px; padding: 8px 0; }
         .sloc-dropdown { padding: 8px 12px; font-size: 13px; border-radius: var(--radius-md); }
-        .search-box {
-            min-width: 240px; padding: 10px 36px 10px 16px; border-radius: 20px; font-size: 13px;
-            background: var(--bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat right 12px center; 
-        }
+        .search-box { min-width: 240px; padding: 10px 36px 10px 16px; border-radius: 20px; font-size: 13px; background: var(--bg-color) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat right 12px center; }
 
-        /* --- DATA TABLE --- */
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; background-color: var(--surface-color); }
-        
-        th {
-            position: sticky;
-            z-index: 999;
-            background-color: var(--bg-color); color: var(--text-secondary); padding: 14px 24px;
-            text-align: left; border-bottom: 1px solid var(--border-color); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
-        }
-        td {
-            padding: 16px 24px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); vertical-align: middle; transition: background 0.2s;
-        }
+        th { position: sticky; z-index: 999; background-color: var(--bg-color); color: var(--text-secondary); padding: 14px 24px; text-align: left; border-bottom: 1px solid var(--border-color); font-weight: 500; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        td { padding: 16px 24px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); vertical-align: middle; transition: background 0.2s; }
         tr:hover td { background-color: #f8fafc; }
-
         .highlight-flash td { animation: flashRow 2s ease-out; }
-        @keyframes flashRow {
-            0% { background-color: #e0f2fe; }
-            100% { background-color: transparent; }
-        }
+        @keyframes flashRow { 0% { background-color: #e0f2fe; } 100% { background-color: transparent; } }
 
         .qty-container { display: flex; align-items: center; gap: 12px; min-width: 80px; }
-
-        .btn-edit, .btn-delete {
-            background-color: transparent; border: none; cursor: pointer; display: inline-flex;
-            align-items: center; justify-content: center; transition: all 0.2s; border-radius: 6px; padding: 6px;
-        }
+        .btn-edit, .btn-delete { background-color: transparent; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; border-radius: 6px; padding: 6px; }
         .btn-edit { color: var(--text-secondary); }
         .btn-edit:hover { background-color: var(--bg-color); color: var(--accent-blue); }
         .btn-delete { color: var(--text-secondary); }
         .btn-delete:hover { background-color: #fef2f2; color: var(--accent-red); }
 
-        .pagination-nav {
-            display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;
-            background-color: var(--surface-color); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-        }
+        .pagination-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background-color: var(--surface-color); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
         .pagination-nav span { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
         .pagination-nav .btn { padding: 8px 16px; background-color: var(--surface-color); color: var(--text-primary); border: 1px solid var(--border-color); box-shadow: none; }
         .pagination-nav .btn:hover:not(:disabled) { background-color: var(--bg-color); }
         
         .clearfix::after { content: ""; clear: both; display: table; }
-
         .footer { text-align: center; padding: 32px 20px; color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; }
         .footer a { font-weight: 500; color: var(--text-primary); text-decoration: none; border-bottom: 1px solid transparent; transition: border 0.2s; }
         .footer a:hover { border-color: var(--text-primary); }
 
-        #error-toast {
-            visibility: hidden; min-width: 250px; background-color: var(--text-primary); color: #fff; text-align: center;
-            border-radius: var(--radius-md); padding: 16px; position: fixed; z-index: 5000; left: 50%; top: 20px;
-            transform: translateX(-50%); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg);
-            opacity: 0; transition: opacity 0.3s, top 0.3s;
-        }
+        #error-toast { visibility: hidden; min-width: 250px; background-color: var(--text-primary); color: #fff; text-align: center; border-radius: var(--radius-md); padding: 16px; position: fixed; z-index: 5000; left: 50%; top: 20px; transform: translateX(-50%); font-size: 14px; font-weight: 500; box-shadow: var(--shadow-lg); opacity: 0; transition: opacity 0.3s, top 0.3s; }
         #error-toast.show { visibility: visible; opacity: 1; top: 40px; }
 
         /* --- DYNAMIC SMART FILTERS (NORMAL VS COMPACT) --- */
-        #dynamicFilters {
-            background: var(--bg-color); border: 1px solid var(--border-color); 
-            border-radius: var(--radius-md); padding: 20px; margin-top: 20px;
-            transition: all 0.3s ease;
-        }
+        #dynamicFilters { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-top: 20px; transition: all 0.3s ease; }
         .df-header { color: var(--text-primary); font-size: 14px; font-weight: 600; margin-bottom: 12px; }
         .df-layout { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
         .df-group { display: flex; align-items: center; gap: 12px; }
@@ -420,27 +172,14 @@
         .df-subtext { margin-top: 12px; font-size: 12px; color: var(--text-secondary); }
         .compact-icon { display: none; }
         
-        /* Compact specific styles when injected into the sticky bar */
-        #dynamicFilters.compact-mode {
-            padding: 4px 8px; margin-top: 0; background: #f0f9ff; border-color: #bae6fd;
-            display: flex; align-items: center; gap: 12px;
-        }
-        #dynamicFilters.compact-mode .df-header, 
-        #dynamicFilters.compact-mode .df-label, 
-        #dynamicFilters.compact-mode .df-subtext {
-            display: none; 
-        }
+        #dynamicFilters.compact-mode { padding: 4px 8px; margin-top: 0; background: #f0f9ff; border-color: #bae6fd; display: flex; align-items: center; gap: 12px; }
+        #dynamicFilters.compact-mode .df-header, #dynamicFilters.compact-mode .df-label, #dynamicFilters.compact-mode .df-subtext { display: none; }
         #dynamicFilters.compact-mode .df-layout { gap: 8px; }
-        #dynamicFilters.compact-mode .compact-icon {
-            display: inline-flex; font-size: 12px; font-weight: 600; color: var(--accent-blue); align-items: center; gap: 4px;
-        }
-        #dynamicFilters.compact-mode select {
-            padding: 6px 28px 6px 8px; height: 32px; font-size: 12px; border-color: #bae6fd;
-        }
+        #dynamicFilters.compact-mode .compact-icon { display: inline-flex; font-size: 12px; font-weight: 600; color: var(--accent-blue); align-items: center; gap: 4px; }
+        #dynamicFilters.compact-mode select { padding: 6px 28px 6px 8px; height: 32px; font-size: 12px; border-color: #bae6fd; }
 
         /* --- PDF PRINT STYLES --- */
         #printHeader, #signatureBlock { display: none; }
-        
         @media print {
             body { background-color: #fff; padding: 0; margin: 0; color: #000; font-family: sans-serif; }
             .navbar, .content-panel:first-child, .filter-bar, .action-buttons-wrapper, .pagination-nav, .footer, .btn-edit, .btn-delete, .audit-trail-wrapper, #dynamicFilters { display: none !important; }
@@ -448,15 +187,12 @@
             .content-panel { border: none; padding: 0; margin: 0; box-shadow: none; }
             .sticky-group { position: static; box-shadow: none; border: none; padding: 0; margin-bottom: 20px; }
             .step-title, .scan-input-wrapper, .table-header-controls { display: none !important; }
-            
             #printHeader { display: block !important; margin-bottom: 30px; text-align: center; }
             #printHeader h1 { font-size: 28px; margin: 0; color: #000; font-weight: bold;}
             #printHeader h2 { margin: 4px 0 16px 0; font-size: 16px; color: #444; font-weight: normal;}
             .print-meta { display: flex; justify-content: flex-end; border-bottom: 2px solid #000; padding-bottom: 8px; font-size: 12px;}
-            
             #signatureBlock { display: flex !important; justify-content: space-between; margin-top: 40px; padding-top: 20px; page-break-inside: avoid;}
             .sig-line { width: 40%; border-top: 1px solid #000; text-align: center; padding-top: 6px; font-size: 14px; font-weight: bold; }
-            
             table { width: 100%; border-collapse: collapse; font-size: 11px; }
             th { background-color: #f3f4f6 !important; color: #000 !important; border: 1px solid #999 !important; padding: 8px; box-shadow: none; position: static; font-weight: bold;}
             td { border: 1px solid #ccc !important; padding: 8px; color: #000; }
@@ -624,7 +360,7 @@
                 <div class="df-subtext"><i>Changing these filters will instantly update the target system quantities without deleting your current scanned counts.</i></div>
             </div>
         </div>
-        </div>
+    </div>
 
     <div id="stickyGroup" class="sticky-group">
         <div class="sticky-padding">
@@ -781,13 +517,13 @@
     <div class="action-group">
         <button class="btn btn-reset" onclick="resetSession()" title="Delete all current data and start a brand new session">Reset Session</button>
         <button class="btn btn-history" id="btnUndo" onclick="undoAction()" disabled title="Undo your last scan or edit">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="9 14 4 9 9 4"></polyline>
                 <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
             </svg> Undo
         </button>
         <button class="btn btn-history" id="btnRedo" onclick="redoAction()" disabled title="Redo your last undone action">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="15 14 20 9 15 4"></polyline>
                 <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
             </svg> Redo
@@ -857,6 +593,20 @@
                 handleFileUpload({ target: { files: [file] } });
             }
         });
+
+        document.getElementById('scanInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                let val = this.value;
+                this.value = '';
+                e.preventDefault();
+                
+                if (isFastScanMode) {
+                    queueFastScan(val);
+                } else {
+                    processScanLogic(val);
+                }
+            }
+        });
     };
 
     // --- TUTORIAL TOGGLE LOGIC ---
@@ -864,7 +614,7 @@
         const isChecked = document.getElementById('tutorialToggle').checked;
         if (isChecked) {
             document.body.classList.add('tutorial-active');
-            updateStickyHeaders(); // Readjust heights for the new tutorial boxes
+            updateStickyHeaders(); 
         } else {
             document.body.classList.remove('tutorial-active');
             updateStickyHeaders(); 
@@ -883,25 +633,19 @@
         const origRect = filtersOrig.getBoundingClientRect();
         const stickyRect = stickyGroup.getBoundingClientRect();
 
-        // Check if the placeholder is sliding underneath the sticky panel
         const isScrolledPast = origRect.bottom < (stickyRect.top + 5);
 
         if (isScrolledPast) {
             if (dynamicFilters.parentNode !== filtersTarget) {
-                // Lock the height to prevent layout jump!
                 filtersOrig.style.height = filtersOrig.offsetHeight + 'px';
-                
                 filtersTarget.appendChild(dynamicFilters);
                 dynamicFilters.classList.add('compact-mode');
                 updateStickyHeaders(); 
             }
         } else {
-            // Restore it back to panel 1
             if (dynamicFilters.parentNode !== filtersOrig) {
                 filtersOrig.appendChild(dynamicFilters);
                 dynamicFilters.classList.remove('compact-mode');
-                
-                // Release the locked height so it behaves naturally
                 filtersOrig.style.height = 'auto';
                 updateStickyHeaders(); 
             }
@@ -916,12 +660,15 @@
             btn.innerText = "Restore CL & OL";
             btn.style.backgroundColor = "var(--surface-color)";
             btn.style.color = "var(--text-primary)";
+            btn.style.borderColor = "var(--border-color)";
         } else {
             btn.innerText = "Hide CL & OL";
             btn.style.backgroundColor = "#fef2f2";
             btn.style.color = "var(--accent-red)";
             btn.style.borderColor = "#fecaca";
         }
+        
+        saveState();
         applyDynamicFilters();
     }
 
@@ -942,6 +689,26 @@
     }
 
     // --- BRAND NORMALIZER ---
+    function extractBrandAndCategory(desc) {
+        let category = "OTHERS";
+        let brand = "UNKNOWN";
+        if (!desc) return { category, brand };
+
+        let parts = desc.split(';');
+        if (parts.length >= 2) {
+            let prefix = parts[0].trim().toUpperCase();
+            if (prefix === 'S') category = 'SUN';
+            else if (prefix === 'O') category = 'SPX';
+            else if (prefix === 'OA') category = 'OTHERS';
+            else category = 'OTHERS';
+
+            if (category === 'SUN' || category === 'SPX' || prefix === 'OA') {
+                brand = parts[1].trim().toUpperCase();
+            }
+        }
+        return { category, brand };
+    }
+
     function normalizeDescription(desc) {
         if (!desc) return desc;
         let parts = desc.split(';');
@@ -983,6 +750,7 @@
         let upperMerch = (merchRaw || "").replace(/['"]/g, '').toUpperCase().trim();
         let lowerRow = fullRowText.toLowerCase();
 
+        // --- SAFETY NET ---
         if (upperDesc.startsWith('S;') || upperDesc.startsWith('O;') || upperDesc.startsWith('OA;')) {
             return false;
         }
@@ -1214,32 +982,32 @@
     function resetFilterUI() {
         currentFilter = 'ALL';
         document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelector('.filter-btn').classList.add('active');
+        document.querySelector('.filter-btn[onclick*="ALL"]').classList.add('active');
         
         currentSearchQuery = '';
         document.getElementById('tableSearchInput').value = '';
     }
 
-    // --- CHROME EXTENSION STORAGE WRAPPER ---
-    async function saveData() {
-        let stoVal = document.getElementById('stoDropdown') ? document.getElementById('stoDropdown').value : 'ALL';
-        let catVal = document.getElementById('categoryDropdown') ? document.getElementById('categoryDropdown').value : 'ALL';
-        let brandVal = document.getElementById('brandDropdown') ? document.getElementById('brandDropdown').value : 'ALL';
-        
-        let payload = {
-            inventory: inventory,
-            systemDataEncoded: systemDataEncoded,
-            hasWarnedNoSystemData: hasWarnedNoSystemData,
-            auditLog: auditLog,
-            uploadedRawData: uploadedRawData,
-            currentFileType: currentFileType,
+    // --- ENHANCED MEMORY STATE WRAPPER ---
+    function getCurrentState() {
+        return {
+            inventory: JSON.parse(JSON.stringify(inventory)), 
+            systemDataEncoded,
+            hasWarnedNoSystemData,
+            auditLog: JSON.parse(JSON.stringify(auditLog)),
+            uploadedRawData: JSON.parse(JSON.stringify(uploadedRawData)),
+            currentFileType,
+            isLensesFilterActive,
             smartFilters: {
-                sto: stoVal,
-                cat: catVal,
-                brand: brandVal
+                sto: document.getElementById('stoDropdown') ? document.getElementById('stoDropdown').value : 'ALL',
+                cat: document.getElementById('categoryDropdown') ? document.getElementById('categoryDropdown').value : 'ALL',
+                brand: document.getElementById('brandDropdown') ? document.getElementById('brandDropdown').value : 'ALL'
             }
         };
-        
+    }
+
+    async function saveData() {
+        let payload = getCurrentState();
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
             await chrome.storage.local.set({ 'posInventoryState': payload });
         } else {
@@ -1273,51 +1041,7 @@
         }
 
         if (dataObj) {
-            inventory = dataObj.inventory || {};
-            systemDataEncoded = dataObj.systemDataEncoded || false;
-            hasWarnedNoSystemData = dataObj.hasWarnedNoSystemData || false;
-            auditLog = dataObj.auditLog || [];
-            
-            uploadedRawData = dataObj.uploadedRawData || [];
-            currentFileType = dataObj.currentFileType || null;
-            
-            if (uploadedRawData.length > 0 && currentFileType) {
-                document.getElementById('dynamicFilters').style.display = 'block';
-                
-                if (currentFileType === 'INTRANSIT') {
-                    document.getElementById('intransitFilters').style.display = 'flex';
-                    document.getElementById('mb52Filters').style.display = 'none';
-                    
-                    let uniqueSTOs = new Set();
-                    uploadedRawData.forEach(row => { if(row.sto) uniqueSTOs.add(row.sto); });
-                    
-                    let stoSelect = document.getElementById('stoDropdown');
-                    stoSelect.innerHTML = '<option value="ALL">ALL S.T.O.</option>';
-                    Array.from(uniqueSTOs).sort().forEach(sto => {
-                        stoSelect.innerHTML += `<option value="${sto}">${sto}</option>`;
-                    });
-                    
-                    if (dataObj.smartFilters && dataObj.smartFilters.sto) {
-                        stoSelect.value = dataObj.smartFilters.sto;
-                    }
-                } else {
-                    document.getElementById('intransitFilters').style.display = 'none';
-                    document.getElementById('mb52Filters').style.display = 'flex';
-                    
-                    if (dataObj.smartFilters && dataObj.smartFilters.cat) {
-                        document.getElementById('categoryDropdown').value = dataObj.smartFilters.cat;
-                    }
-                    updateBrandDropdown(); 
-                    if (dataObj.smartFilters && dataObj.smartFilters.brand) {
-                        document.getElementById('brandDropdown').value = dataObj.smartFilters.brand;
-                    }
-                }
-            }
-
-            renderAuditTrail();
-            renderTable();
-            
-            setTimeout(() => { window.dispatchEvent(new Event('scroll')); }, 50);
+            applyState(dataObj, true); 
         }
         updateUndoRedoButtons();
     }
@@ -1333,7 +1057,7 @@
     }
 
     function saveState() {
-        undoStack.push(JSON.stringify({ inventory, systemDataEncoded, hasWarnedNoSystemData, auditLog }));
+        undoStack.push(JSON.stringify(getCurrentState()));
         if (undoStack.length > MAX_HISTORY) {
             undoStack.shift(); 
         }
@@ -1341,33 +1065,76 @@
         updateUndoRedoButtons();
     }
 
+    function applyState(state, isInitialLoad = false) {
+        inventory = state.inventory || {};
+        systemDataEncoded = state.systemDataEncoded || false;
+        hasWarnedNoSystemData = state.hasWarnedNoSystemData || false;
+        auditLog = state.auditLog || [];
+        uploadedRawData = state.uploadedRawData || [];
+        currentFileType = state.currentFileType || null;
+        isLensesFilterActive = state.isLensesFilterActive !== undefined ? state.isLensesFilterActive : true;
+
+        if (uploadedRawData.length > 0 && currentFileType) {
+            document.getElementById('dynamicFilters').style.display = 'block';
+            
+            if (currentFileType === 'INTRANSIT') {
+                document.getElementById('intransitFilters').style.display = 'flex';
+                document.getElementById('mb52Filters').style.display = 'none';
+                
+                let uniqueSTOs = new Set();
+                uploadedRawData.forEach(row => { if(row.sto) uniqueSTOs.add(row.sto); });
+                
+                let stoSelect = document.getElementById('stoDropdown');
+                stoSelect.innerHTML = '<option value="ALL">ALL S.T.O.</option>';
+                Array.from(uniqueSTOs).sort().forEach(sto => {
+                    stoSelect.innerHTML += `<option value="${sto}">${sto}</option>`;
+                });
+                if (state.smartFilters && state.smartFilters.sto) stoSelect.value = state.smartFilters.sto;
+
+            } else {
+                document.getElementById('intransitFilters').style.display = 'none';
+                document.getElementById('mb52Filters').style.display = 'flex';
+                
+                if (state.smartFilters && state.smartFilters.cat) document.getElementById('categoryDropdown').value = state.smartFilters.cat;
+                updateBrandDropdown(); 
+                if (state.smartFilters && state.smartFilters.brand) document.getElementById('brandDropdown').value = state.smartFilters.brand;
+            }
+        } else {
+            document.getElementById('dynamicFilters').style.display = 'none';
+        }
+
+        const btn = document.getElementById('btnToggleLenses');
+        if (isLensesFilterActive) {
+            btn.innerText = "Restore CL & OL";
+            btn.style.backgroundColor = "var(--surface-color)";
+            btn.style.color = "var(--text-primary)";
+            btn.style.borderColor = "var(--border-color)";
+        } else {
+            btn.innerText = "Hide CL & OL";
+            btn.style.backgroundColor = "#fef2f2";
+            btn.style.color = "var(--accent-red)";
+            btn.style.borderColor = "#fecaca";
+        }
+
+        if (!isInitialLoad) saveData();
+        renderAuditTrail();
+        renderTable();
+        updateUndoRedoButtons();
+    }
+
     function undoAction() {
         if (undoStack.length > 0) {
-            redoStack.push(JSON.stringify({ inventory, systemDataEncoded, hasWarnedNoSystemData, auditLog }));
+            redoStack.push(JSON.stringify(getCurrentState()));
             let previousState = JSON.parse(undoStack.pop());
-            inventory = previousState.inventory;
-            systemDataEncoded = previousState.systemDataEncoded;
-            hasWarnedNoSystemData = previousState.hasWarnedNoSystemData;
-            auditLog = previousState.auditLog;
-            saveData(); 
-            renderAuditTrail();
-            renderTable(); 
-            updateUndoRedoButtons();
+            applyState(previousState);
         }
     }
 
     function redoAction() {
         if (redoStack.length > 0) {
-            undoStack.push(JSON.stringify({ inventory, systemDataEncoded, hasWarnedNoSystemData, auditLog }));
+            undoStack.push(JSON.stringify(getCurrentState()));
             let nextState = JSON.parse(redoStack.pop());
-            inventory = nextState.inventory;
-            systemDataEncoded = nextState.systemDataEncoded;
-            hasWarnedNoSystemData = nextState.hasWarnedNoSystemData;
-            auditLog = nextState.auditLog;
-            saveData();
-            renderAuditTrail();
-            renderTable();
-            updateUndoRedoButtons();
+            applyState(nextState);
         }
     }
 
@@ -1442,7 +1209,6 @@
         });
     }
 
-    // Live-monitor the sticky panel for any height changes
     const resizeObserver = new ResizeObserver(() => {
         updateStickyHeaders();
     });
@@ -1482,7 +1248,6 @@
             let headerRowIndex = -1;
             let skuCol = -1, qtyCol = -1, descCol = -1, slocCol = -1, stoCol = -1, merchCol = -1;
 
-            // Find headers dynamically
             for (let i = 0; i < Math.min(aoa.length, 25); i++) {
                 let cols = aoa[i];
                 if (!cols || !cols.length) continue;
@@ -1528,7 +1293,6 @@
                 combineBrands = await customConfirm("Do you want to combine similar brand names and fix misspellings (e.g., Rayban and Rayban Junior)?", "Combine Similar Brands");
             }
             
-            // Allow the UI to visually hide the modal before we freeze the thread with heavy data loops
             await new Promise(r => setTimeout(r, 50));
 
             let uniqueSTOs = new Set();
@@ -1564,6 +1328,7 @@
                         }
                         
                         let valNoCommas = val.replace(/,/g, '');
+                        // Strictly demand SKU is purely numerical
                         if (/^\d+$/.test(valNoCommas) && valNoCommas.length >= 4) {
                             possibleSkus.push({val: valNoCommas, index: j});
                         }
@@ -1579,7 +1344,6 @@
                     let slocIndex = possibleSlocs.length > 0 ? possibleSlocs[0].index : -1;
                     let searchStartIndex = Math.max(skuIndex, slocIndex);
                     
-                    // 1. Try Left-to-Right after Sloc/Sku to find Unrestricted QTY
                     if (searchStartIndex !== -1) {
                         for(let j = searchStartIndex + 1; j < cols.length; j++) {
                             if(cols[j] == null) continue;
@@ -1593,7 +1357,6 @@
                         }
                     }
 
-                    // 2. If LTR fails, try Right-to-Left
                     if (foundQtyIndex === -1) {
                         for (let j = cols.length - 1; j >= 0; j--) {
                             if (cols[j] == null) continue;
@@ -1611,7 +1374,6 @@
                         }
                     }
 
-                    // Grab Description
                     if (skuIndex !== -1) {
                         for (let j = skuIndex + 1; j < cols.length; j++) {
                             if (cols[j] == null) continue;
@@ -1664,6 +1426,8 @@
 
             if (uploadedRawData.length === 0) {
                 await customAlert(`No valid rows found to encode.`, "Upload Result");
+                undoStack.pop(); 
+                updateUndoRedoButtons();
                 if(event && event.target) event.target.value = '';
                 return;
             }
@@ -1696,6 +1460,8 @@
             
         } catch (error) {
             console.error(error);
+            undoStack.pop(); 
+            updateUndoRedoButtons();
             await customAlert("A critical error occurred while parsing the data: " + error.message, "Parsing Error");
             if(event && event.target) event.target.value = '';
         }
@@ -1707,7 +1473,6 @@
 
         const fileName = file.name.toLowerCase();
 
-        // 1. Text-based manual parser (Guaranteed not to corrupt CSVs)
         if (fileName.endsWith('.csv') || fileName.endsWith('.txt') || fileName.endsWith('.tsv')) {
             const reader = new FileReader();
             reader.onload = async function(e) {
@@ -1733,7 +1498,6 @@
             return;
         }
 
-        // 2. SheetJS parser for XLS / XLSX
         if (typeof XLSX === 'undefined') {
             await customAlert("The Excel parser library couldn't load (your network might be blocking it). Please open your file, save it as a .CSV, and upload the CSV instead.", "Library Blocked");
             if(event.target) event.target.value = '';
@@ -1752,7 +1516,6 @@
             } catch (err) {
                 console.error("SheetJS error:", err);
                 
-                // Fallback: SAP exports HTML or TSV disguised as XLS
                 try {
                     let text = new TextDecoder("utf-8").decode(new Uint8Array(e.target.result));
                     if(text.includes('<table') || text.includes('\t') || text.includes(',')) {
@@ -1797,7 +1560,6 @@
     }
 
     function applyDynamicFilters() {
-        // Zero-out current system quantities cleanly (Preserves Scanned data!)
         for (let sku in inventory) {
             inventory[sku].systemQty = 0;
             inventory[sku].sysQty1000 = 0;
@@ -1842,7 +1604,6 @@
             }
         });
 
-        // Cleanup any rows that now have 0 System AND 0 Scanned
         for (let sku in inventory) {
             if (inventory[sku].systemQty === 0 && inventory[sku].scannedQty === 0) {
                 delete inventory[sku];
@@ -1856,8 +1617,6 @@
         renderTable();
     }
 
-
-    // --- STANDARD PASTE LOGIC ---
     async function loadPastedData() {
         try {
             const text = document.getElementById('pasteArea').value;
@@ -1882,6 +1641,545 @@
         }
     }
 
+    async function queueFastScan(skuRawInput) {
+        if (!systemDataEncoded && !hasWarnedNoSystemData) {
+            const proceed = await customConfirm("There is no encoded system quantity. Make sure to copy it from the excel files of MB52 or Intransit and paste it in the upper box.<br><br>Do you want to proceed to scan barcodes and add them anyway?", "Warning: No System Data Encoded");
+            if (!proceed) return;
+            hasWarnedNoSystemData = true;
+        }
+        
+        let skuRaw = skuRawInput.trim();
+        let sku = skuRaw.replace(/^0+/, '') || '0';
+        
+        if (sku !== "" && sku !== "0") {
+            fastScanQueue.push(sku);
+            document.getElementById('queueCount').innerText = fastScanQueue.length;
+            renderFastScanTrail();
+            playSound('success'); 
+        }
+    }
+
+    async function processFastScanQueue() {
+        if (fastScanQueue.length === 0) {
+            await customAlert("No items in the fast scan queue.", "Empty Queue");
+            return;
+        }
+
+        saveState(); 
+        let errorCount = 0;
+        let successCount = 0;
+
+        resetFilterUI();
+        document.getElementById('slocFilterUI').value = 'ALL';
+
+        fastScanQueue.forEach(sku => {
+            let isError = false;
+            if (!inventory[sku]) {
+                inventory[sku] = { 
+                    description: "Manually Scanned", 
+                    systemQty: 0, sysQty1000: 0, sysQty4000: 0, sysQtyOther: 0, 
+                    scannedQty: 0, sloc: 'Scanned', isLens: false
+                };
+                isError = true;
+                errorCount++;
+            } else {
+                successCount++;
+            }
+            
+            inventory[sku].scannedQty += 1; 
+            appendAuditLog(sku, isError);
+        });
+
+        let totalProcessed = fastScanQueue.length;
+        fastScanQueue = [];
+        document.getElementById('queueCount').innerText = "0";
+        
+        document.getElementById('fastScanTrailBox').style.display = 'none';
+        renderFastScanTrail();
+        
+        isFastScanMode = false;
+        const btnToggle = document.getElementById('btnFastScanToggle');
+        const compareBtn = document.getElementById('btnCompare');
+        const iconSvg = `<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+        btnToggle.innerHTML = `${iconSvg} Fast Scan: OFF`;
+        btnToggle.classList.remove('active');
+        compareBtn.style.display = 'none';
+        
+        await saveData();
+        renderTable();
+
+        if (errorCount > 0) {
+            playSound('error');
+            await customAlert(`Fast Scan complete.<br><br>Processed: ${totalProcessed} items.<br><br><span style="color:var(--accent-red);font-weight:bold;">${errorCount} items were NOT in the system list.</span><br><br>Check the audit trail or filter by "Not in System".`, "Scan Results");
+        } else {
+            playSound('success');
+            await customAlert(`Fast Scan complete.<br><br>Successfully processed ${totalProcessed} items.`, "Scan Results");
+        }
+        
+        setTimeout(updateStickyHeaders, 10);
+        document.getElementById('scanInput').focus();
+    }
+
+    async function processScanLogic(skuRawInput) {
+        if (!systemDataEncoded && !hasWarnedNoSystemData) {
+            const proceed = await customConfirm("There is no encoded system quantity. Make sure to copy it from the excel files of MB52 or Intransit and paste it in the upper box.<br><br>Do you want to proceed to scan barcodes and add them anyway?", "Warning: No System Data Encoded");
+            if (!proceed) {
+                return;
+            }
+            hasWarnedNoSystemData = true;
+        }
+
+        let skuRaw = skuRawInput.trim();
+        let sku = skuRaw.replace(/^0+/, '') || '0';
+        
+        if (sku !== "" && sku !== "0") {
+            let isVisible = true;
+            let slocDropdownVal = document.getElementById('slocFilterUI').value;
+
+            if (currentFilter !== 'ALL' || currentSearchQuery !== '' || slocDropdownVal !== 'ALL') {
+                let item = inventory[sku];
+                if (isLensesFilterActive && item && item.isLens) {
+                    isVisible = false;
+                } else {
+                    let currentScannedQty = item ? item.scannedQty : 0;
+                    let sysQty = item ? item.systemQty : 0;
+                    let currentDiff = currentScannedQty - sysQty;
+                    let sloc = item ? item.sloc || "" : "Scanned";
+                    let desc = item ? (item.description || "").toLowerCase() : "manually scanned";
+                    
+                    if (slocDropdownVal !== 'ALL') {
+                        if (sloc !== "Scanned" && !sloc.includes(slocDropdownVal)) isVisible = false;
+                    }
+                    if (currentFilter === 'DISCREPANCIES' && currentDiff === 0) isVisible = false;
+                    if (currentFilter === 'MISSING' && currentDiff >= 0) isVisible = false;
+                    if (currentFilter === 'EXTRA' && currentDiff <= 0) isVisible = false;
+                    if (currentFilter === 'NOT_IN_SYSTEM' && sysQty > 0) isVisible = false;
+                    
+                    if (currentSearchQuery !== '') {
+                        let skuStr = sku.toLowerCase();
+                        if (!skuStr.includes(currentSearchQuery) && !desc.includes(currentSearchQuery)) {
+                            isVisible = false;
+                        }
+                    }
+                }
+            }
+
+            if (!isVisible) {
+                const proceed = await customConfirm(`Since the scanned item (<b>${sku}</b>) is not in the filtered list (or is hidden), should we proceed with searching the whole system data encoded?`, "Search Whole System?");
+                if (proceed) {
+                    resetFilterUI();
+                    document.getElementById('slocFilterUI').value = 'ALL';
+                } else {
+                    return; 
+                }
+            }
+
+            saveState();
+            let isError = false;
+
+            if (!inventory[sku]) {
+                playSound('error');
+                showErrorToast(`⚠️ Alert: SKU ${sku} is NOT in the encoded list!`);
+                inventory[sku] = { 
+                    description: "Manually Scanned", 
+                    systemQty: 0, sysQty1000: 0, sysQty4000: 0, sysQtyOther: 0, 
+                    scannedQty: 0, sloc: 'Scanned', isLens: false
+                };
+                isError = true;
+            } else {
+                playSound('success');
+            }
+            
+            inventory[sku].scannedQty += 1; 
+            appendAuditLog(sku, isError);
+            await saveData(); 
+
+            let tempFiltered = [];
+            let sVal = document.getElementById('slocFilterUI').value;
+            for (let k in inventory) {
+                let itm = inventory[k];
+                if (isLensesFilterActive && itm.isLens) continue;
+
+                let df = itm.scannedQty - itm.systemQty;
+                if (sVal !== 'ALL') {
+                    let itemSloc = itm.sloc || "";
+                    if (itemSloc !== "Scanned" && !itemSloc.includes(sVal)) continue;
+                }
+                if (currentFilter === 'DISCREPANCIES' && df === 0) continue;
+                if (currentFilter === 'MISSING' && df >= 0) continue;
+                if (currentFilter === 'EXTRA' && df <= 0) continue;
+                if (currentFilter === 'NOT_IN_SYSTEM' && itm.systemQty > 0) continue;
+                if (currentSearchQuery !== '') {
+                    let skuStr = k.toLowerCase();
+                    let descStr = (itm.description || '').toLowerCase();
+                    if (!skuStr.includes(currentSearchQuery) && !descStr.includes(currentSearchQuery)) continue;
+                }
+                tempFiltered.push(k);
+            }
+            
+            let itemIndex = tempFiltered.indexOf(sku);
+            if (itemIndex !== -1 && itemsPerPage !== 'All') {
+                let limit = parseInt(itemsPerPage);
+                currentPage = Math.floor(itemIndex / limit) + 1;
+            }
+            
+            renderTable();
+
+            setTimeout(() => {
+                let row = document.getElementById('row-' + sku);
+                if (row) {
+                    const stickyGroup = document.getElementById('stickyGroup');
+                    const offset = stickyGroup ? stickyGroup.getBoundingClientRect().height + 50 : 200;
+                    const bodyRect = document.body.getBoundingClientRect().top;
+                    const rowRect = row.getBoundingClientRect().top;
+                    const rowPosition = rowRect - bodyRect;
+                    const offsetPosition = rowPosition - offset;
+
+                    window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+                    row.classList.add('highlight-flash');
+                    setTimeout(() => { row.classList.remove('highlight-flash'); }, 2000);
+                }
+            }, 50); 
+        }
+    }
+
+    async function editQuantity(sku, type) {
+        let typeName = type === 'systemQty' ? 'System QTY' : 'Scanned QTY';
+        
+        if (type === 'systemQty') {
+            let item = inventory[sku];
+            if (item.sloc && item.sloc.includes('1000') && item.sloc.includes('4000')) {
+                const confirmed = await customConfirm(`This item is split between 1000 and 4000. Do you want to edit these quantities to keep the breakdown accurate?`);
+                if (!confirmed) return;
+                
+                let new1000 = await customPrompt(`Enter the new SLOC 1000 QTY for SKU ${sku}:`, item.sysQty1000, "Edit 1000 QTY");
+                if (new1000 === null) return;
+                
+                let new4000 = await customPrompt(`Enter the new SLOC 4000 QTY for SKU ${sku}:`, item.sysQty4000, "Edit 4000 QTY");
+                if (new4000 === null) return;
+
+                let q1 = Math.round(parseFloat(new1000.replace(/,/g, ''))) || 0;
+                let q4 = Math.round(parseFloat(new4000.replace(/,/g, ''))) || 0;
+
+                if (q1 >= 0 && q4 >= 0) {
+                    saveState();
+                    inventory[sku].sysQty1000 = q1;
+                    inventory[sku].sysQty4000 = q4;
+                    inventory[sku].systemQty = q1 + q4;
+                    await saveData();
+                    renderTable();
+                } else {
+                    await customAlert("Invalid quantity entered.", "Error");
+                }
+                return;
+            }
+        }
+        
+        let currentQty = inventory[sku][type];
+        const confirmed = await customConfirm(`Are you sure you want to manually edit the ${typeName} for SKU ${sku}?`);
+        
+        if (confirmed) {
+            let newQtyRaw = await customPrompt(`Enter the new ${typeName} for SKU ${sku}:`, currentQty, "Edit Quantity");
+            
+            if (newQtyRaw !== null && newQtyRaw.trim() !== "") {
+                let qtyClean = newQtyRaw.replace(/,/g, '');
+                let newQty = Math.round(parseFloat(qtyClean));
+                
+                if (!isNaN(newQty) && newQty >= 0) {
+                    saveState(); 
+                    
+                    if (type === 'systemQty') {
+                        if (inventory[sku].sysQty4000 === 0 && (inventory[sku].sysQtyOther === 0 || !inventory[sku].sysQtyOther)) {
+                            inventory[sku].sysQty1000 = newQty;
+                        } else if (inventory[sku].sysQty1000 === 0 && (inventory[sku].sysQtyOther === 0 || !inventory[sku].sysQtyOther)) {
+                            inventory[sku].sysQty4000 = newQty;
+                        } else {
+                            inventory[sku].sysQtyOther = newQty;
+                            inventory[sku].sysQty1000 = 0;
+                            inventory[sku].sysQty4000 = 0;
+                        }
+                    }
+                    
+                    inventory[sku][type] = newQty;
+                    await saveData();
+                    renderTable();
+                } else {
+                    await customAlert("Invalid quantity. Please enter a valid positive number.", "Invalid Input");
+                }
+            }
+        }
+    }
+
+    async function deleteRow(sku) {
+        const confirmed = await customConfirm(`Are you sure you want to completely remove SKU ${sku} from the list?`);
+        if (confirmed) {
+            saveState();
+            delete inventory[sku];
+            await saveData();
+            renderTable();
+        }
+    }
+
+    async function resetSession() {
+        const confirmed = await customConfirm("Are you sure you want to completely reset the session? ALL scanned data and encoded lists will be permanently deleted.");
+        if (confirmed) {
+            saveState(); 
+            
+            inventory = {};
+            systemDataEncoded = false;
+            hasWarnedNoSystemData = false;
+            auditLog = [];
+            fastScanQueue = [];
+            uploadedRawData = [];
+            currentFileType = null;
+            isLensesFilterActive = true;
+
+            document.getElementById('queueCount').innerText = "0";
+            document.getElementById('fastScanTrailBox').style.display = 'none';
+            document.getElementById('dynamicFilters').style.display = 'none';
+            
+            resetFilterUI();
+            document.getElementById('slocFilterUI').value = 'ALL';
+
+            const btn = document.getElementById('btnToggleLenses');
+            btn.innerText = "Restore CL & OL";
+            btn.style.backgroundColor = "var(--surface-color)";
+            btn.style.color = "var(--text-primary)";
+            btn.style.borderColor = "var(--border-color)";
+
+            await clearData();
+            
+            renderAuditTrail();
+            renderFastScanTrail();
+            renderTable();
+            
+            document.getElementById('scanInput').focus();
+        }
+    }
+
+    function renderTable() {
+        const thead = document.querySelector('#resultsTable thead');
+        const tbody = document.querySelector('#resultsTable tbody');
+        tbody.innerHTML = ''; 
+        thead.innerHTML = ''; 
+        
+        let totalSys = 0;
+        let totalScan = 0;
+        let totalMiss = 0;
+        let totalExt = 0;
+        let showDescriptionColumn = false;
+        let showSlocColumn = false;
+
+        const filteredArray = [];
+        let slocDropdownVal = document.getElementById('slocFilterUI').value;
+        
+        let hasSlocData = false;
+        for (let sku in inventory) {
+            if (isLensesFilterActive && inventory[sku].isLens) continue;
+
+            if (inventory[sku].sloc && inventory[sku].sloc !== "" && inventory[sku].sloc !== "Scanned") {
+                hasSlocData = true;
+                showSlocColumn = true;
+                break;
+            }
+        }
+        document.getElementById('slocFilterUI').style.display = hasSlocData ? 'inline-block' : 'none';
+
+        for (let sku in inventory) {
+            let item = inventory[sku];
+            
+            if (isLensesFilterActive && item.isLens) continue;
+
+            let diff = item.scannedQty - item.systemQty;
+
+            totalSys += item.systemQty;
+            totalScan += item.scannedQty;
+            if (diff < 0) totalMiss += Math.abs(diff);
+            if (diff > 0) totalExt += diff;
+
+            if (slocDropdownVal !== 'ALL') {
+                let itemSloc = item.sloc || "";
+                if (itemSloc !== "Scanned" && !itemSloc.includes(slocDropdownVal)) continue;
+            }
+
+            if (currentFilter === 'DISCREPANCIES' && diff === 0) continue;
+            if (currentFilter === 'MISSING' && diff >= 0) continue;
+            if (currentFilter === 'EXTRA' && diff <= 0) continue;
+            if (currentFilter === 'NOT_IN_SYSTEM' && item.systemQty > 0) continue;
+
+            if (currentSearchQuery !== '') {
+                let skuStr = sku.toLowerCase();
+                let descStr = (item.description || '').toLowerCase();
+                if (!skuStr.includes(currentSearchQuery) && !descStr.includes(currentSearchQuery)) {
+                    continue; 
+                }
+            }
+
+            filteredArray.push({ sku: sku, diff: diff, ...item });
+
+            if (item.description && item.description.trim() !== "") {
+                showDescriptionColumn = true;
+            }
+        }
+
+        if (systemDataEncoded) {
+            document.getElementById('dashSystem').innerText = totalSys;
+        } else {
+            document.getElementById('dashSystem').innerHTML = '<span style="font-size: 14px; color: var(--accent-red); font-weight: 600; line-height: 32px; display: inline-block;">No system data</span>';
+        }
+        
+        document.getElementById('dashScanned').innerText = totalScan;
+        document.getElementById('dashMissing').innerText = totalMiss;
+        document.getElementById('dashExtra').innerText = totalExt;
+
+        let headerRow = document.createElement('tr');
+        headerRow.innerHTML = `
+            <th style="border-radius: var(--radius-lg) 0 0 0;">NO.</th>
+            <th>Item # (SKU)</th>
+            ${showDescriptionColumn ? '<th>Description</th>' : ''}
+            ${showSlocColumn ? '<th>SLOC</th>' : ''}
+            <th>System QTY</th>
+            <th>Scanned QTY</th>
+            <th>Difference</th>
+            <th>Status</th>
+            <th style="text-align: center; border-radius: 0 var(--radius-lg) 0 0;">Action</th>
+        `;
+        thead.appendChild(headerRow);
+
+        let totalItems = filteredArray.length;
+        let totalPages = Math.ceil(totalItems / (itemsPerPage === 'All' ? totalItems || 1 : parseInt(itemsPerPage))) || 1;
+        
+        let paginatedItems = filteredArray;
+
+        if (itemsPerPage !== 'All') {
+            let limit = parseInt(itemsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages; 
+            if (currentPage < 1) currentPage = 1;
+            
+            let startIndex = (currentPage - 1) * limit;
+            paginatedItems = filteredArray.slice(startIndex, startIndex + limit);
+        }
+
+        document.getElementById('pageInfoText').innerText = `Page ${currentPage} of ${totalPages} (${totalItems} items)`;
+        document.getElementById('btnPrevPage').disabled = currentPage === 1;
+        document.getElementById('btnNextPage').disabled = currentPage === totalPages || totalPages === 0;
+
+        let counter = itemsPerPage === 'All' ? 1 : ((currentPage - 1) * parseInt(itemsPerPage)) + 1;
+
+        paginatedItems.forEach(item => {
+            let rowClass = '';
+            let statusText = '';
+            let statusColor = 'var(--text-primary)';
+            let diffColor = 'var(--text-primary)';
+            
+            if (item.diff === 0) {
+                rowClass = 'match';
+                statusText = 'Matched';
+                statusColor = 'var(--accent-green)';
+            } else if (item.diff < 0) {
+                rowClass = 'short';
+                statusText = 'Missing Stock';
+                statusColor = 'var(--accent-red)';
+                diffColor = 'var(--accent-red)';
+            } else if (item.diff > 0) {
+                rowClass = 'over';
+                statusText = item.systemQty === 0 ? 'Not in system' : 'Extra Stock';
+                statusColor = 'var(--accent-blue)';
+                diffColor = 'var(--accent-blue)';
+            }
+
+            let sysQtyHtml = '';
+            let parts = [];
+            let q1000 = item.sysQty1000 || 0;
+            let q4000 = item.sysQty4000 || 0;
+            let qOther = item.sysQtyOther || 0;
+            
+            if (q1000 === 0 && q4000 === 0 && qOther === 0 && item.systemQty > 0) {
+                if (item.sloc === '1000') q1000 = item.systemQty;
+                else if (item.sloc === '4000') q4000 = item.systemQty;
+                else if (item.sloc && item.sloc.includes('1000') && item.sloc.includes('4000')) {
+                    qOther = item.systemQty; 
+                } else {
+                    qOther = item.systemQty;
+                }
+            }
+
+            if (q1000 > 0) parts.push(`<span style="color: var(--accent-green); font-weight: 600;">${q1000}</span>`);
+            if (q4000 > 0) parts.push(`<span style="color: var(--accent-red); font-weight: 600;">${q4000}</span>`);
+            if (qOther > 0) parts.push(`<span style="color: var(--text-primary); font-weight: 600;">${qOther}</span>`);
+            
+            if (parts.length === 0) {
+                sysQtyHtml = `<span style="color: var(--text-primary); font-weight: 600;">0</span>`;
+            } else {
+                sysQtyHtml = parts.join(' <span style="color:var(--text-secondary); font-size:12px; font-weight:600;">+</span> ');
+            }
+
+            let displaySloc = (item.sloc || '').split(', ').map(s => {
+                if (s === '1000') return '<span style="color: var(--accent-green); font-weight: 600;">1000</span>';
+                if (s === '4000') return '<span style="color: var(--accent-red); font-weight: 600;">4000</span>';
+                return s;
+            }).join('<span style="color: var(--text-secondary);">, </span>');
+
+            let tr = document.createElement('tr');
+            tr.className = rowClass;
+            tr.id = `row-${item.sku}`; 
+            
+            tr.innerHTML = `
+                <td style="color: var(--text-secondary);">${counter}</td>
+                <td style="font-weight: 500;">${item.sku}</td>
+                ${showDescriptionColumn ? `<td style="color: var(--text-secondary);">${item.description || ''}</td>` : ''}
+                ${showSlocColumn ? `<td>${displaySloc}</td>` : ''}
+                
+                <td>
+                    <div class="qty-container">
+                        <span>${sysQtyHtml}</span>
+                        <button class="btn-edit" onclick="editQuantity('${item.sku}', 'systemQty')" title="Edit System QTY">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+
+                <td>
+                    <div class="qty-container">
+                        <span style="font-weight:600;">${item.scannedQty}</span>
+                        <button class="btn-edit" onclick="editQuantity('${item.sku}', 'scannedQty')" title="Edit Scanned QTY">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+
+                <td><strong style="color: ${diffColor};">${item.diff}</strong></td>
+                <td><strong style="color: ${statusColor}; font-weight: 600;">${statusText}</strong></td>
+                <td style="text-align: center;">
+                    <button class="btn-delete" onclick="deleteRow('${item.sku}')" title="Delete Row">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            counter++;
+        });
+
+        document.getElementById('btnNextPage').onclick = function() {
+            if (currentPage < totalPages) { 
+                currentPage++; 
+                renderTable(); 
+            }
+        };
+        
+        setTimeout(updateStickyHeaders, 10);
+    }
 </script>
 
 </body>
