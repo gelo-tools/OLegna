@@ -48,7 +48,7 @@
         .step-title::before { content: ''; display: inline-block; width: 8px; height: 8px; background-color: var(--accent-blue); border-radius: 50%; }
 
         textarea, input[type="text"], select { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); box-sizing: border-box; font-family: 'Inter', sans-serif; font-size: 14px; background-color: var(--bg-color); transition: all 0.2s ease; outline: none; color: var(--text-primary); }
-        textarea { height: 100px; resize: vertical; font-family: monospace; }
+        textarea { height: 120px; resize: vertical; font-family: monospace; }
         textarea:focus, input[type="text"]:focus, select:focus { background-color: var(--surface-color); border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15); }
         .drag-over { background-color: #f0f9ff !important; border: 2px dashed var(--accent-blue) !important; }
         
@@ -262,7 +262,7 @@
         <a href="index.html" style="text-decoration: none; color: var(--text-secondary); transition: color 0.2s;" title="Back to Home" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </a>
-        <div class="app-branding">SPX / SUN / Others Scanner</div>
+        <div class="app-branding">SPX / SUN and Others - BARCODE SCANNING TOOL</div>
     </div>
     
     <div class="user-info">
@@ -272,11 +272,6 @@
                 <input type="checkbox" id="tutorialToggle" onchange="toggleTutorial()">
                 <div class="slider"></div>
             </label>
-        </div>
-
-        <div style="border-left: 1px solid var(--border-color); padding-left: 20px;">
-            <strong style="color:var(--text-primary);">Status:</strong> Active Session<br>
-            <strong style="color:var(--text-primary);">Module:</strong> Reconciliation
         </div>
     </div>
 </div>
@@ -300,20 +295,20 @@
         <div class="tutorial-tip">
             <svg class="tutorial-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             <div>
-                <strong>How to start:</strong> Paste data directly from your MB52 / ZSTK_IT Excel spreadsheet into the text box below and click <strong>Encode Data</strong>. Alternatively, you can click <strong>Upload File</strong> to upload the saved CSV or XLSX directly. <em>Note: Contact Lenses and Spare Parts are automatically hidden for cleaner auditing.</em>
+                <strong>How to start:</strong> Paste data directly from your MB52 / ZSTK_IT Excel spreadsheet into the text box below and click <strong>Encode Data</strong>. Alternatively, you can click <strong>Upload File</strong> to upload the saved CSV, XLS, XLSX, or XML file directly. <em>Note: Contact Lenses and Spare Parts are automatically hidden for cleaner auditing.</em>
             </div>
         </div>
 
-        <label style="font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 12px;">Copy your columns directly from your MB52 or ZSTK_IT spreadsheet and <b><u>paste them below</u></b>, OR <b><u>drag and drop</u></b> the unedited file here:</label>
-        <textarea id="pasteArea" title="Paste your raw Excel data here or drag and drop your file" placeholder="Example format:&#10;000000000000099250	3.000&#10;920000000000002005	1.000&#10;000000000198848003	1.000"></textarea>
+        <label style="font-size: 13px; color: var(--text-secondary); display: block; margin-bottom: 12px;">Copy your columns directly from your MB52 or ZSTK_IT spreadsheet and <b><u>paste them below</u></b>, OR <b><u>you can drag and drop or upload</u></b> the unedited MB52 (/abdou) or ZSTK_IT exported spreadsheet file here:</label>
+        <textarea id="pasteArea" title="Paste your raw Excel data here or drag and drop your file" placeholder="Example format:&#10;000000000052787002	O;LINDBERG;BASIC145, 53, P10/ P10	EA	1.000&#10;000000000198657001	O;MONOSTROM;MONO206, 53, DBLUE	        EA	1.000&#10;&#10;OR&#10;&#10;94760001	O;RAY BAN;8724, 54, 1000	    1000	1&#10;97697006	O;RAY BAN JUNIOR;1536, 48, 3600	    1000	2"></textarea>
         
         <div style="display: flex; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 12px;">
-            <button class="btn btn-encode" onclick="loadPastedData()" title="Click to process the data you pasted above" style="margin: 0;">Encode Data</button>
-            <span style="font-weight: 500; color: var(--text-secondary); font-size: 13px;">OR</span>
-            <input type="file" id="sysDataUpload" accept=".csv, .xls, .xlsx, .xlsm, .xlsb, .txt, .tsv" style="display: none;" onchange="handleFileUpload(event)">
-            <button class="btn btn-encode" style="background-color: var(--accent-green); margin: 0;" onclick="document.getElementById('sysDataUpload').click()" title="Upload unedited MB52 or Intransit Excel Sheet (CSV, XLSX, XLS format)">Upload File</button>
+            <button class="btn btn-encode" onclick="loadPastedData()" title="Encode COPY / PASTED Data" style="margin: 0;">Encode Data</button>
+            <span style="font-weight: 500; color: var(--text-secondary); font-size: 13px; margin: 0 10px;">Alternatively</span>
+            <input type="file" id="sysDataUpload" accept=".csv, .xls, .xlsx, .xlsm, .xlsb, .txt, .tsv, .xml" style="display: none;" onchange="handleFileUpload(event)">
+            <button class="btn btn-encode" style="background-color: var(--accent-green); margin: 0;" onclick="document.getElementById('sysDataUpload').click()" title="Upload ZSTK_IT or MB52 Excel File Instead">Upload File</button>
             
-            <button class="btn-secondary" id="btnToggleLenses" onclick="toggleLenses()" title="Click to put back the Contact Lenses, Ophthalmic Lenses, and Spare Parts that were removed by the auto-filter" style="margin-left: auto;">Restore CL & OL</button>
+            <button class="btn-secondary" id="btnToggleLenses" onclick="toggleLenses()" title="Click to put back the Contact Lenses, Ophthalmic Lenses, and Spare Parts that were removed by the auto-filter" style="margin-left: auto;">Unhide CL & OL</button>
         </div>
 
         <div id="filtersOriginalPlaceholder">
@@ -773,7 +768,7 @@
         isLensesFilterActive = !isLensesFilterActive;
         const btn = document.getElementById('btnToggleLenses');
         if (isLensesFilterActive) {
-            btn.innerText = "Restore CL & OL";
+            btn.innerText = "Unhide CL & OL";
             btn.style.backgroundColor = "var(--surface-color)";
             btn.style.color = "var(--text-primary)";
             btn.style.borderColor = "var(--border-color)";
@@ -1002,7 +997,12 @@
                 sto: document.getElementById('stoDropdown') ? document.getElementById('stoDropdown').value : 'ALL',
                 cat: document.getElementById('categoryDropdown') ? document.getElementById('categoryDropdown').value : 'ALL',
                 brand: document.getElementById('brandDropdown') ? document.getElementById('brandDropdown').value : 'ALL'
-            }
+            },
+            // CAPTURE UI STATE SO IT RESTORES PERFECTLY ON UNDO
+            currentPage,
+            itemsPerPage,
+            currentFilter,
+            currentSearchQuery
         };
     }
 
@@ -1074,6 +1074,23 @@
         currentFileType = state.currentFileType || null;
         isLensesFilterActive = state.isLensesFilterActive !== undefined ? state.isLensesFilterActive : true;
 
+        // RESTORE EXACT UI STATE 
+        currentPage = state.currentPage || 1;
+        itemsPerPage = state.itemsPerPage || 'All';
+        currentFilter = state.currentFilter || 'ALL';
+        currentSearchQuery = state.currentSearchQuery || '';
+
+        // Sync the HTML Elements with restored UI state
+        let pageSizeSelect = document.getElementById('pageSize');
+        if(pageSizeSelect) pageSizeSelect.value = itemsPerPage;
+
+        let searchInput = document.getElementById('tableSearchInput');
+        if(searchInput) searchInput.value = currentSearchQuery;
+
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        let activeFilterBtn = document.querySelector(`.filter-btn[onclick*="'${currentFilter}'"]`);
+        if(activeFilterBtn) activeFilterBtn.classList.add('active');
+
         if (uploadedRawData.length > 0 && currentFileType) {
             document.getElementById('dynamicFilters').style.display = 'block';
             
@@ -1105,7 +1122,7 @@
 
         const btn = document.getElementById('btnToggleLenses');
         if (isLensesFilterActive) {
-            btn.innerText = "Restore CL & OL";
+            btn.innerText = "Unhide CL & OL";
             btn.style.backgroundColor = "var(--surface-color)";
             btn.style.color = "var(--text-primary)";
             btn.style.borderColor = "var(--border-color)";
@@ -1304,87 +1321,115 @@
                     // FALLBACK LOGIC
                     let possibleSkus = [];
                     let possibleSlocs = [];
-                    let descParts = [];
+                    let uomIndex = -1;
+                    let uomKeywords = ['PAK', 'EA', 'PC', 'ST', 'PR'];
 
                     for (let j = 0; j < cols.length; j++) {
                         if (cols[j] == null) continue;
                         let val = String(cols[j]).trim();
                         if (!val) continue;
 
-                        if (val === "1000" || val === "2000" || val === "3000" || val === "4000") {
-                            possibleSlocs.push({val: val, index: j});
+                        let valUpper = val.toUpperCase();
+                        if (uomKeywords.includes(valUpper)) {
+                            uomIndex = j;
                         }
-                        
+
                         let valNoCommas = val.replace(/,/g, '');
-                        // BUG FIX: Strictly demand SKU is purely numerical
-                        if (/^\d+$/.test(valNoCommas) && valNoCommas.length >= 4) {
-                            possibleSkus.push({val: valNoCommas, index: j});
+                        // Check if it's purely digits for classification
+                        if (/^\d+$/.test(valNoCommas)) {
+                            if (valNoCommas === "1000" || valNoCommas === "2000" || valNoCommas === "3000" || valNoCommas === "4000" || valNoCommas === "5000") {
+                                possibleSlocs.push({val: valNoCommas, index: j});
+                            } else if (valNoCommas.length >= 5) {
+                                // Likely SKU
+                                possibleSkus.push({val: valNoCommas, index: j});
+                            }
                         }
                     }
 
                     if (possibleSlocs.length > 0) slocRaw = possibleSlocs[0].val;
                     
-                    possibleSkus = possibleSkus.filter(s => s.val !== slocRaw);
+                    // The best SKU candidate is the longest numeric string.
+                    // Filter out exactly 4 digits to avoid store codes mapping as SKU if no real SKU exists
+                    possibleSkus = possibleSkus.filter(s => s.val.length !== 4 && s.val !== slocRaw);
+                    possibleSkus.sort((a, b) => b.val.length - a.val.length);
                     if (possibleSkus.length > 0) skuRaw = possibleSkus[0].val;
 
                     let foundQtyIndex = -1;
                     let skuIndex = possibleSkus.length > 0 ? possibleSkus[0].index : -1;
                     let slocIndex = possibleSlocs.length > 0 ? possibleSlocs[0].index : -1;
-                    let searchStartIndex = Math.max(skuIndex, slocIndex);
-                    
-                    // 1. Try Left-to-Right after Sloc/Sku to find Unrestricted QTY
-                    if (searchStartIndex !== -1) {
-                        for(let j = searchStartIndex + 1; j < cols.length; j++) {
+
+                    // 1. ZSTK_IT Strategy: Try right after the UOM indicator
+                    if (uomIndex !== -1) {
+                        for (let j = uomIndex + 1; j < cols.length; j++) {
+                            if (cols[j] == null) continue;
+                            let val = String(cols[j]).trim();
+                            let valNoCommas = val.replace(/,/g, '');
+                            if (val !== "" && !isNaN(valNoCommas)) {
+                                qtyRaw = valNoCommas;
+                                foundQtyIndex = j;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 2. MB52 Strategy: Scan for the first valid quantity AFTER the SKU
+                    if (foundQtyIndex === -1 && skuIndex !== -1) {
+                        let potentialQtys = [];
+                        for(let j = skuIndex + 1; j < cols.length; j++) {
                             if(cols[j] == null) continue;
                             let val = String(cols[j]).trim();
                             let valNoCommas = val.replace(/,/g, '');
-                            if(val !== "" && !isNaN(valNoCommas)) {
-                                qtyRaw = valNoCommas;
-                                foundQtyIndex = j;
-                                break;
+                            
+                            // Check for trailing negatives just in case (e.g. 3.000-)
+                            let numCheck = valNoCommas.endsWith('-') ? '-' + valNoCommas.slice(0, -1) : valNoCommas;
+                            
+                            if (numCheck !== "" && !isNaN(numCheck)) {
+                                let isVendorShape = /^\d+$/.test(numCheck) && numCheck.length >= 7 && numCheck.length <= 10 && val.startsWith("000");
+                                let isStoreShape = /^\d+$/.test(numCheck) && numCheck.length === 4;
+                                let isSlocShape = (numCheck === "1000" || numCheck === "2000" || numCheck === "3000" || numCheck === "4000" || numCheck === "5000");
+
+                                if (!isVendorShape && !isStoreShape && !isSlocShape && j !== slocIndex) {
+                                    potentialQtys.push({ val: numCheck, index: j, isFloat: numCheck.includes('.') });
+                                }
+                            }
+                        }
+
+                        if (potentialQtys.length > 0) {
+                            // Prioritize floats (like 3.000) to avoid catching stray integers in descriptions like "1 DAY"
+                            let floatMatch = potentialQtys.find(q => q.isFloat);
+                            if (floatMatch) {
+                                qtyRaw = floatMatch.val;
+                                foundQtyIndex = floatMatch.index;
+                            } else {
+                                qtyRaw = potentialQtys[0].val;
+                                foundQtyIndex = potentialQtys[0].index;
                             }
                         }
                     }
 
-                    // 2. If LTR fails, try Right-to-Left
-                    if (foundQtyIndex === -1) {
-                        for (let j = cols.length - 1; j >= 0; j--) {
+                    // Extract Description safely
+                    let descParts = [];
+                    if (skuIndex !== -1) {
+                        let endIndex = uomIndex !== -1 ? uomIndex : (foundQtyIndex !== -1 ? foundQtyIndex : cols.length);
+                        for (let j = skuIndex + 1; j < endIndex; j++) {
                             if (cols[j] == null) continue;
+                            if (j === foundQtyIndex || j === slocIndex) continue;
+                            
                             let val = String(cols[j]).trim();
                             let valNoCommas = val.replace(/,/g, '');
-                            
-                            if (val !== "" && !isNaN(valNoCommas)) {
-                                if (val === slocRaw && possibleSlocs.some(s => s.index === j)) continue; 
-                                if (valNoCommas === skuRaw && possibleSkus.some(s => s.index === j)) continue; 
-                                
-                                qtyRaw = valNoCommas;
-                                foundQtyIndex = j;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Grab Description
-                    if (skuIndex !== -1) {
-                        for (let j = skuIndex + 1; j < cols.length; j++) {
-                            if (cols[j] == null) continue;
-                            if (j === foundQtyIndex) continue;
-                            if (j === slocIndex) continue;
-                            
-                            let val = String(cols[j]).trim();
-                            if(val === "" || !isNaN(val.replace(/,/g, ''))) continue; 
+                            if(val === "" || (!isNaN(valNoCommas) && !val.includes(';'))) continue; 
                             descParts.push(val);
                         }
                         descRaw = descParts.join(' ');
                     }
                     
                     if (!descRaw) {
-                       for (let j = 0; j < cols.length; j++) {
-                           if (cols[j] && String(cols[j]).includes(';')) {
-                               descRaw = String(cols[j]).trim();
-                               break;
-                           }
-                       }
+                        for (let j = 0; j < cols.length; j++) {
+                            if (cols[j] && String(cols[j]).includes(';')) {
+                                descRaw = String(cols[j]).trim();
+                                break;
+                            }
+                        }
                     }
                 }
 
@@ -1895,7 +1940,7 @@
             resetFilterUI(); document.getElementById('slocFilterUI').value = 'ALL';
             
             const btn = document.getElementById('btnToggleLenses');
-            btn.innerText = "Restore CL & OL"; btn.style.backgroundColor = "var(--surface-color)"; btn.style.color = "var(--text-primary)"; btn.style.borderColor = "var(--border-color)";
+            btn.innerText = "Unhide CL & OL"; btn.style.backgroundColor = "var(--surface-color)"; btn.style.color = "var(--text-primary)"; btn.style.borderColor = "var(--border-color)";
 
             await clearData();
             renderAuditTrail(); renderFastScanTrail(); renderTable();
