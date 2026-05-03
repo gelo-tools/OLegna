@@ -118,6 +118,16 @@
         .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
         .toggle-checkbox:checked + .toggle-label::after { transform: translateX(20px); }
 
+        /* LENS TYPE TOGGLE CSS */
+        .type-label {
+            box-shadow: inset 0 0 0 1px transparent;
+        }
+        input[type="radio"]:checked + .type-label {
+            background-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
         /* Remove Number Input Spinners for cleaner look */
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -310,6 +320,20 @@
             <div class="border border-blue-200 bg-blue-50 rounded shadow-sm p-4 flex flex-col gap-3">
                 <button onclick="copyODtoOS()" class="w-full bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-1.5 rounded text-[10px] uppercase transition-colors shadow-sm">⮂ Copy OD to OS ⮂</button>
                 
+                <!-- LENS TYPE TOGGLE -->
+                <div class="flex justify-center mt-2 mb-1 bg-white rounded border border-blue-200 shadow-sm p-1">
+                    <div class="relative flex w-full">
+                        <input type="radio" name="lensType" id="typeSV" value="SV" class="hidden" checked onchange="handleLensTypeChange()">
+                        <label for="typeSV" class="flex-1 text-center py-1.5 text-xs font-bold text-gray-600 cursor-pointer rounded transition-colors type-label">Single Vision</label>
+                        
+                        <input type="radio" name="lensType" id="typePAL" value="PAL" class="hidden" onchange="handleLensTypeChange()">
+                        <label for="typePAL" class="flex-1 text-center py-1.5 text-xs font-bold text-gray-600 cursor-pointer rounded transition-colors type-label">PAL</label>
+                        
+                        <input type="radio" name="lensType" id="typePALTLD" value="PAL_TLD" class="hidden" onchange="handleLensTypeChange()">
+                        <label for="typePALTLD" class="flex-1 text-center py-1.5 text-xs font-bold text-gray-600 cursor-pointer rounded transition-colors type-label">PAL TLD</label>
+                    </div>
+                </div>
+
                 <div class="slider-container">
                     <div class="slider-tooltip">Slide to resize</div>
                     <div class="flex justify-between items-center mb-1">
@@ -436,6 +460,7 @@
     let activeLiveMode = 'none'; 
     let isSurfaceMode = true; 
     let scale = 10.5118; 
+    let lensType = 'SV'; // Toggle state
     
     const canvas = document.getElementById('lensCanvas');
     const ctx = canvas.getContext('2d');
@@ -455,6 +480,16 @@
 
     function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
     function setVal(id, val) { document.getElementById(id).value = val; }
+
+    function handleLensTypeChange() {
+        lensType = document.querySelector('input[name="lensType"]:checked').value;
+        if (activeLiveMode !== 'none') {
+            if (activeLiveMode === 'plus') executeRecommendPlus();
+            else executeRecommendMinus(false);
+        } else {
+            updateUI();
+        }
+    }
 
     // --- DEVICE DETECTION LOGIC ---
     function checkDeviceCompatibility() {
@@ -688,6 +723,11 @@
 
         document.getElementById('sizeWarning').classList.add('hidden');
 
+        // PAL OFFSET CALCULATION
+        let palOffset = (lensType === 'PAL') ? 2 : (lensType === 'PAL_TLD') ? 4 : 0;
+        const targetBlankY_OD = odPupilY + palOffset;
+        const targetBlankY_OS = osPupilY + palOffset;
+
         // TRUE POINT-CLOUD SCANNER
         const r = A / 2;
         const b = B / 2;
@@ -750,7 +790,7 @@
             window.osOCX_val = osPupilX; 
             window.osOCY_val = osPupilY;
             
-            setSlidersFromOffset(odPupilX - gcOD, odPupilY - 0, osPupilX - gcOS, osPupilY - 0);
+            setSlidersFromOffset(odPupilX - gcOD, targetBlankY_OD - 0, osPupilX - gcOS, targetBlankY_OS - 0);
 
         } else if (activeLiveMode === 'minus') {
             window.odOCX_val = odPupilX; 
@@ -760,12 +800,12 @@
             
             const R = lensDia / 2;
             
-            const findMinusBlank = (pupilX, pupilY, gcX, gcY, pointsArray) => {
+            const findMinusBlank = (pupilX, targetY, gcX, gcY, pointsArray) => {
                 const cx = pupilX - gcX;
-                const cy = pupilY - gcY;
+                const cy = targetY - gcY;
                 
                 if (R >= getMaxRadius(pointsArray, cx, cy)) {
-                    return {x: pupilX, y: pupilY, valid: true}; 
+                    return {x: pupilX, y: targetY, valid: true}; 
                 }
                 
                 if (R < getMaxRadius(pointsArray, 0, 0)) {
@@ -775,7 +815,7 @@
                 for (let i = 0; i <= 100; i++) {
                     const t = i / 100;
                     const testX = pupilX + t * (gcX - pupilX);
-                    const testY = pupilY + t * (gcY - pupilY);
+                    const testY = targetY + t * (gcY - targetY);
                     if (R >= getMaxRadius(pointsArray, testX - gcX, testY - gcY)) {
                         return {x: testX, y: testY, valid: true};
                     }
@@ -783,12 +823,12 @@
                 return {x: gcX, y: gcY, valid: false};
             };
 
-            const resOD = findMinusBlank(odPupilX, odPupilY, gcOD, 0, shapePointsOD);
+            const resOD = findMinusBlank(odPupilX, targetBlankY_OD, gcOD, 0, shapePointsOD);
             odBlankX = resOD.x; 
             odBlankY = resOD.y; 
             const validOD = resOD.valid;
 
-            const resOS = findMinusBlank(osPupilX, osPupilY, gcOS, 0, shapePointsOS);
+            const resOS = findMinusBlank(osPupilX, targetBlankY_OS, gcOS, 0, shapePointsOS);
             osBlankX = resOS.x; 
             osBlankY = resOS.y; 
             const validOS = resOS.valid;
@@ -797,13 +837,13 @@
                 document.getElementById('sizeWarning').classList.remove('hidden');
             }
             
-            setSlidersFromOffset(odPupilX - resOD.x, odPupilY - resOD.y, osPupilX - resOS.x, osPupilY - resOS.y);
+            setSlidersFromOffset(odPupilX - resOD.x, targetBlankY_OD - resOD.y, osPupilX - resOS.x, targetBlankY_OS - resOS.y);
 
         } else {
             window.odOCX_val = odBlankX + getHDecSliderVal('OD');
-            window.odOCY_val = odBlankY + getVDecSliderVal('OD');
+            window.odOCY_val = odBlankY + getVDecSliderVal('OD') - palOffset;
             window.osOCX_val = osBlankX + getHDecSliderVal('OS');
-            window.osOCY_val = osBlankY + getVDecSliderVal('OS');
+            window.osOCY_val = osBlankY + getVDecSliderVal('OS') - palOffset;
             
             const R = lensDia / 2;
             const checkManual = (blankX, blankY, gcX, gcY, pointsArray) => {
@@ -850,7 +890,7 @@
         document.getElementById('resOD_Dia').innerText = `${lensDia + diaPadding} mm`;
         
         const odWarn = document.getElementById('resOD_Warning');
-        if (activeLiveMode === 'plus' && magOD > 5) {
+        if (activeLiveMode !== 'minus' && magOD > 5) {
             odWarn.innerHTML = "(Warning: Decentration over 5mm. Choose a smaller frame or bigger diameter blank, then move the uncut lens to lessen the needed decentration)";
             odWarn.style.display = 'block';
         } else {
@@ -877,7 +917,7 @@
         document.getElementById('resOS_Dia').innerText = `${lensDia + diaPadding} mm`;
 
         const osWarn = document.getElementById('resOS_Warning');
-        if (activeLiveMode === 'plus' && magOS > 5) {
+        if (activeLiveMode !== 'minus' && magOS > 5) {
             osWarn.innerHTML = "(Warning: Decentration over 5mm. Choose a smaller frame or bigger diameter blank, then move the uncut lens to lessen the needed decentration)";
             osWarn.style.display = 'block';
         } else {
@@ -1206,14 +1246,16 @@
             const mX = ((e.clientX - r.left) * cssScaleX - 450) / scale;
             const mY = ((e.clientY - r.top) * cssScaleY - 170) / scale;
             
+            let palOffset = (lensType === 'PAL') ? 2 : (lensType === 'PAL_TLD') ? 4 : 0;
+
             if (dragTarget === 'OD') { 
                 odBlankX = mX; 
                 odBlankY = mY;
-                setSlidersFromOffset(window.odPupilX_val - mX, window.odPupilY_val - mY, null, null);
+                setSlidersFromOffset(window.odPupilX_val - mX, (window.odPupilY_val + palOffset) - mY, null, null);
             } else {
                 osBlankX = mX; 
                 osBlankY = mY;
-                setSlidersFromOffset(null, null, window.osPupilX_val - mX, window.osPupilY_val - mY);
+                setSlidersFromOffset(null, null, window.osPupilX_val - mX, (window.osPupilY_val + palOffset) - mY);
             }
             updateUI();
         });
