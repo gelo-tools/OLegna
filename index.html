@@ -175,7 +175,7 @@
 <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden flex-1 flex flex-col w-full">
     
     <div class="bg-blue-900 text-white px-6 py-4 flex-shrink-0 flex justify-between items-center">
-        <!-- Add Back Button and Link Name -->
+        <!-- Updated Back Button and Link Name -->
         <div class="flex items-center gap-4">
             <button onclick="window.history.back()" class="bg-blue-800 hover:bg-blue-700 text-white p-2 rounded-full transition-colors focus:outline-none" title="Go Back">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -184,7 +184,10 @@
             </button>
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">Decentration and Diameter Recommendation Tool</h1>
-                <p class="text-sm text-blue-200">Designed by <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" class="underline hover:text-white transition-colors">Angelo Dacanay</a></p>
+                <p class="text-sm text-blue-200">
+                    For any comments and suggestions <a href="mailto:3393@magrabi.com" class="underline hover:text-white transition-colors">email me</a>. 
+                    <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" class="font-bold text-green-300 hover:text-green-100 transition-colors">-gelotools</a>
+                </p>
             </div>
         </div>
         
@@ -200,7 +203,7 @@
 
     <div class="p-6 flex-1 flex flex-col overflow-y-auto">
         
-        <div class="canvas-wrapper p-2 mb-2 w-full">
+        <div class="canvas-wrapper p-2 mb-1 w-full">
             
             <div id="dragHint" class="drag-demo-bubble">
                 <svg class="animated-hand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -212,9 +215,16 @@
 
             <canvas id="lensCanvas" width="900" height="340"></canvas>
         </div>
-        <p class="text-center text-xs text-gray-500 font-bold mb-6">
-            <span id="physicalLabel">Physical 1:1 Scale. </span><span class="text-red-500">X = Pupil</span>, <span class="text-blue-500">+ = OC</span>
-        </p>
+        
+        <div class="flex justify-between items-center mb-6 px-4">
+            <p class="text-xs text-gray-500 font-bold">
+                <span id="physicalLabel">Physical 1:1 Scale. </span><span class="text-red-500">X = Pupil</span>, <span class="text-blue-500">+ = OC</span>
+            </p>
+            <!-- High Cylinder Warning Label -->
+            <p class="text-[10px] text-gray-500 italic">
+                <strong class="text-orange-500">Note on High Cylinder:</strong> For Rx with cylinder &ge; 2.00 D, actual cut-out may vary due to elliptical blank shapes. Consult lab for borderline sizes.
+            </p>
+        </div>
 
         <!-- FRAME CONTROLS -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
@@ -1142,7 +1152,7 @@
             if (htLeader === null || htLeader === 'OS') {
                 htLeader = 'OS';
                 setVal('odOCHt', getVal('osOCHt'));
-                setVal('odOCHt_slide', getVal('osOCHt'));
+                setVal('osOCHt_slide', getVal('osOCHt'));
             } else if (htLeader === 'OD') {
                 htLeader = 'broken';
             }
