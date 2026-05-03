@@ -21,7 +21,12 @@
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; padding-bottom: 90px; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
         
         .navbar { background-color: var(--surface-color); padding: 16px 32px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-        .app-branding { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-primary); }
+        
+        /* MODERN BRANDING UPDATES */
+        .app-branding-container { display: flex; align-items: center; gap: 12px; }
+        .branding-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-primary); }
+        .branding-badge { background-color: #f0f9ff; color: var(--accent-blue); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid #bae6fd; }
+        
         .user-info { font-size: 13px; color: var(--text-secondary); text-align: right; line-height: 1.4; display: flex; align-items: center; gap: 24px; }
 
         .theme-switch-wrapper { display: flex; align-items: center; gap: 10px; }
@@ -262,7 +267,10 @@
         <a href="index.html" style="text-decoration: none; color: var(--text-secondary); transition: color 0.2s;" title="Back to Home" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </a>
-        <div class="app-branding">SPX / SUN and Others - BARCODE SCANNING TOOL</div>
+        <div class="app-branding-container">
+            <span class="branding-title">SPX / SUN & Others</span>
+            <span class="branding-badge">Scanner</span>
+        </div>
     </div>
     
     <div class="user-info">
@@ -501,8 +509,7 @@
 </div>
 
 <div class="footer">
-    <p style="margin: 4px 0;">Created by <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank">Angelo</a></p>
-    <p style="margin: 4px 0;">For any comments and suggestions <a href="mailto:3393@magrabi.com">email me</a>.</p>
+    <p style="margin: 4px 0;">For any comments and suggestions <a href="mailto:3393@magrabi.com">email me</a>. - <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" style="font-weight: 600; color: var(--accent-blue);">gelotools</a></p>
 </div>
 
 <div class="action-buttons-wrapper">
