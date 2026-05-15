@@ -138,6 +138,33 @@
         .btn-primary { background: var(--primary); }
         .btn-success { background: var(--success); }
         .btn:disabled { background: #BDC3C7; cursor: not-allowed; }
+
+        /* Autocomplete Styles */
+        .autocomplete-container { position: relative; }
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #CCC;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #EEE;
+            font-size: 0.85rem;
+            color: #333;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: #EAF2F8; color: var(--accent); font-weight: bold; }
+
     </style>
 </head>
 <body>
@@ -194,8 +221,11 @@
                         </div>
                         
                         <div class="form-group">
-                            <label style="font-weight: bold; font-size: 0.9rem;">AI Translated Description:</label>
-                            <input type="text" id="predictedDesc" placeholder="AI prediction / Database Match" readonly style="background: #F4F7F6;">
+                            <label style="font-weight: bold; font-size: 0.9rem;">AI Translated Description (Type to search):</label>
+                            <div class="autocomplete-container">
+                                <input type="text" id="predictedDesc" placeholder="Type to search database..." autocomplete="off">
+                                <div id="descSuggestions" class="suggestions-dropdown"></div>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -213,23 +243,21 @@
 <script>
     // System Variables
     let database = {
-        specs: {}, // Regular items (FO, FS, etc.)
-        lenses: {} // Contact lenses (CL, CS)
+        specs: {}, // Regular items
+        lenses: {} // Contact lenses
     };
     let currentMode = 'specs';
     let html5QrcodeScanner;
-    
-    // Load previously mapped lenses from LocalStorage so you don't lose them on refresh
     let lensMappings = JSON.parse(localStorage.getItem('magrabi_lens_mappings')) || {};
 
-    // --- 1. Database Initialization (PapaParse) ---
+    // --- 1. Database Initialization ---
     function processCSV() {
         const fileInput = document.getElementById('csvFileInput').files[0];
         if (!fileInput) return alert("Please select the 'Combined SKU' CSV file.");
 
         const btn = document.getElementById('loadBtn');
         btn.disabled = true;
-        btn.innerText = "Parsing 77,000+ Items (Please Wait)...";
+        btn.innerText = "Parsing Data (Please Wait)...";
 
         Papa.parse(fileInput, {
             header: true,
@@ -245,12 +273,10 @@
 
                     if (!article) return;
 
-                    // Group based on Magrabi Prefix Logic
                     if (category.startsWith('CL') || category.startsWith('CS')) {
                         database.lenses[article] = desc;
                         lensCount++;
                     } else {
-                        // Anything not a contact lens (Frames, Lenses, Accessories) goes to specs
                         database.specs[article] = desc;
                         specsCount++;
                     }
@@ -266,15 +292,60 @@
         });
     }
 
+    // --- Custom Autocomplete Search Logic ---
+    const predictedDescInput = document.getElementById('predictedDesc');
+    const descSuggestions = document.getElementById('descSuggestions');
+
+    predictedDescInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        descSuggestions.innerHTML = ''; // Clear previous suggestions
+        
+        if (query.length < 2) {
+            descSuggestions.style.display = 'none';
+            return;
+        }
+
+        let matches = [];
+        // Search through the lenses database
+        for (const [sku, desc] of Object.entries(database.lenses)) {
+            if (desc.toLowerCase().includes(query)) {
+                matches.push({ sku, desc });
+                // Limit to 15 results so it doesn't freeze the browser
+                if (matches.length >= 15) break; 
+            }
+        }
+
+        if (matches.length > 0) {
+            matches.forEach(match => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.innerText = match.desc;
+                // When you click a suggestion...
+                div.onclick = function() {
+                    predictedDescInput.value = match.desc;     // Fill description
+                    document.getElementById('posBarcode').value = match.sku; // Auto-fill POS SKU!
+                    descSuggestions.style.display = 'none';    // Hide list
+                };
+                descSuggestions.appendChild(div);
+            });
+            descSuggestions.style.display = 'block';
+        } else {
+            descSuggestions.style.display = 'none';
+        }
+    });
+
+    // Hide dropdown when clicking anywhere else on the screen
+    document.addEventListener('click', function(e) {
+        if (e.target.id !== 'predictedDesc') {
+            descSuggestions.style.display = 'none';
+        }
+    });
+
     // --- 2. Mode Switching Logic ---
     function setMode(mode) {
         currentMode = mode;
-        
-        // Update Buttons visually
         document.getElementById('btnSpecs').className = `mode-btn specs ${mode === 'specs' ? 'active' : ''}`;
         document.getElementById('btnLens').className = `mode-btn lens ${mode === 'lens' ? 'active' : ''}`;
-        
-        // Update UI panels
         document.getElementById('specsUI').style.display = mode === 'specs' ? 'block' : 'none';
         document.getElementById('lensUI').style.display = mode === 'lens' ? 'block' : 'none';
         
@@ -283,29 +354,26 @@
     }
 
     // --- 3. Scanning & Decoding Logic ---
-    
-    // Listen for Physical Gun (Enter key)
     document.getElementById('manualBarcode').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const code = this.value.trim();
             if (code) processBarcode(code, false);
-            this.value = ''; // Clear box immediately for next shot
+            this.value = ''; 
         }
     });
 
-    // Start Camera Feature
     function startScanner() {
         document.getElementById('startCamBtn').style.display = 'none';
         html5QrcodeScanner = new Html5Qrcode("reader");
         
         html5QrcodeScanner.start(
-            { facingMode: "environment" }, // Use back camera if on mobile
+            { facingMode: "environment" }, 
             { fps: 10, qrbox: { width: 250, height: 150 } },
             (decodedText) => {
-                html5QrcodeScanner.pause(); // Pause video while processing
+                html5QrcodeScanner.pause(); 
                 processBarcode(decodedText, true);
             },
-            () => { /* Ignore background scanning noise */ }
+            () => {}
         ).catch(err => {
             console.error(err);
             alert("Camera access denied or unavailable.");
@@ -317,7 +385,6 @@
         document.getElementById('detectedBarcode').innerText = barcode;
         
         if (currentMode === 'specs') {
-            // DIRECT MATCH MODE (Suns, Frames, Accessories)
             const desc = database.specs[barcode] || database.lenses[barcode];
             const resultDiv = document.getElementById('specsResult');
             
@@ -328,43 +395,35 @@
                 resultDiv.innerText = "Item Not Found in Master Database.";
                 resultDiv.style.color = "#E74C3C";
             }
-            
-            // Auto-resume camera for next scan after 2 seconds
             if (isCamera) setTimeout(() => html5QrcodeScanner.resume(), 2000);
             
         } else if (currentMode === 'lens') {
-            // TRANSLATION & AI MODE (Contact Lenses)
-            
-            // Check if we already mapped this item previously
             if (lensMappings[barcode]) {
                 document.getElementById('predictedDesc').value = lensMappings[barcode].desc;
                 document.getElementById('posBarcode').value = lensMappings[barcode].pos;
                 document.getElementById('ocrResult').innerText = "Loaded from Local Translation Memory.";
             } else {
-                // New barcode detected
                 if (isCamera) {
                     document.getElementById('ocrResult').innerText = "Running OCR on Box Image...";
                     captureAndRunOCR(barcode);
                 } else {
                     document.getElementById('ocrResult').innerText = "Manual scan. No camera image to OCR.";
-                    predictLensLogic(barcode, ""); // Try interpolation only
+                    predictLensLogic(barcode, ""); 
                 }
             }
         }
     }
 
-    // --- 4. OCR & Interpolation Logic (Contact Lenses) ---
+    // --- 4. OCR & Interpolation Logic ---
     function captureAndRunOCR(barcode) {
         const video = document.querySelector('#reader video');
-        if (!video) return predictLensLogic(barcode, ""); // Fallback
+        if (!video) return predictLensLogic(barcode, ""); 
 
-        // Draw current video frame to a hidden canvas
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth; 
         canvas.height = video.videoHeight;
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Pass image to Tesseract
         Tesseract.recognize(canvas.toDataURL('image/jpeg'), 'eng')
             .then(({ data: { text } }) => {
                 const cleanedText = text.trim() || "No text found on box.";
@@ -372,45 +431,42 @@
                 predictLensLogic(barcode, cleanedText);
             })
             .catch(err => {
-                console.error("OCR Failed:", err);
                 document.getElementById('ocrResult').innerText = "OCR Failed.";
                 predictLensLogic(barcode, "");
             });
     }
 
     function predictLensLogic(barcode, ocrText) {
-        // Extract Diopter Power using regex (e.g., "-4.00", "+1.25")
         const powerMatch = ocrText.match(/[+-]\d{1,2}\.\d{2}/);
         const power = powerMatch ? powerMatch[0] : "";
+        let prediction = `Type to search or check power: ${power}`;
         
-        let prediction = `Unknown Contact Lens ${power}`;
-        
-        // 1. Direct Lookup
         if (database.lenses[barcode]) {
             prediction = database.lenses[barcode];
+            // Auto-fill POS if we directly find it
+            document.getElementById('posBarcode').value = barcode;
         } else {
-            // 2. Sequential Interpolation (Handling the missing -4.00 logic)
-            // Strip the 12th digit (Mod 10 Check Digit) to get the 11-digit base
             const baseStr = barcode.substring(0, barcode.length - 1);
             const numBase = parseInt(baseStr, 10);
             
             if (!isNaN(numBase)) {
-                // Search neighbors (e.g., check the -3.75 and -4.25 barcodes)
                 for (let i = -3; i <= 3; i++) {
                     if (i === 0) continue;
                     let testBase = String(numBase + i);
-                    
-                    // Look through the keys of our lens database
                     const neighborKey = Object.keys(database.lenses).find(k => k.startsWith(testBase));
                     if (neighborKey) {
                         const neighborDesc = database.lenses[neighborKey];
-                        prediction = `Interpolated near: [${neighborDesc}] (Assumed Power: ${power})`;
+                        prediction = `Interpolated near: [${neighborDesc}]`;
+                        // Trigger search to populate dropdown manually if they want to override
+                        predictedDescInput.value = prediction;
+                        // Fire the input event manually to open dropdown based on neighbor
+                        const event = new Event('input', { bubbles: true });
+                        predictedDescInput.dispatchEvent(event);
                         break;
                     }
                 }
             }
         }
-        
         document.getElementById('predictedDesc').value = prediction;
     }
 
@@ -422,7 +478,6 @@
 
         if (!pos || barcode === "---") return alert("Please ensure a valid barcode is scanned and a POS SKU is entered.");
 
-        // Save mapping to Local Storage
         lensMappings[barcode] = { 
             pos: pos, 
             desc: desc, 
@@ -434,7 +489,7 @@
         
         resetUI();
         if (html5QrcodeScanner && html5QrcodeScanner.getState() === 2) {
-            html5QrcodeScanner.resume(); // Resume camera
+            html5QrcodeScanner.resume(); 
         }
         document.getElementById('manualBarcode').focus();
     }
@@ -452,15 +507,12 @@
             return alert("No lens mappings exist yet! Scan and link items first.");
         }
 
-        // Build CSV string
         let csv = "Manufacturer_Barcode,Magrabi_POS_SKU,Description,Date_Mapped\n";
         for (const [mfgBarcode, data] of Object.entries(lensMappings)) {
-            // Clean up descriptions to prevent CSV formatting issues
             const cleanDesc = data.desc.replace(/"/g, '""'); 
             csv += `"${mfgBarcode}","${data.pos}","${cleanDesc}","${data.timestamp}"\n`;
         }
         
-        // Trigger download
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
