@@ -28,118 +28,41 @@
             color: #333; 
         }
         
-        .container { 
-            max-width: 1000px; 
-            margin: auto; 
-            display: grid; 
-            gap: 20px; 
-        }
+        .container { max-width: 1000px; margin: auto; display: grid; gap: 20px; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
-        .card { 
-            background: var(--card); 
-            border-radius: 12px; 
-            padding: 20px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-        }
-        
-        .header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 2px solid #EEE; 
-            padding-bottom: 10px; 
-            margin-bottom: 20px; 
-        }
-        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #EEE; padding-bottom: 10px; margin-bottom: 20px; }
         h2 { margin: 0; color: var(--primary); }
         
         /* Toggle Mode Buttons */
-        .mode-toggle { 
-            display: flex; 
-            gap: 10px; 
-            margin-bottom: 20px; 
-        }
-        
+        .mode-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
         .mode-btn { 
-            flex: 1; 
-            padding: 15px; 
-            border: 2px solid #EEE; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            text-align: center; 
-            font-weight: bold; 
-            color: #7F8C8D; 
-            transition: 0.3s; 
-            background: transparent;
+            flex: 1; padding: 15px; border: 2px solid #EEE; border-radius: 8px; cursor: pointer; 
+            text-align: center; font-weight: bold; color: #7F8C8D; transition: 0.3s; background: transparent;
         }
-        
         .mode-btn.active.specs { border-color: var(--accent); background: #EBF5FB; color: var(--accent); }
         .mode-btn.active.lens { border-color: var(--success); background: #EAFAF1; color: var(--success); }
 
         /* Scanner Area */
-        .scanner-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-        }
+        .scanner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .scanner-grid { grid-template-columns: 1fr; } }
         
-        @media (max-width: 768px) { 
-            .scanner-grid { grid-template-columns: 1fr; } 
-        }
+        #reader { width: 100%; border-radius: 8px; overflow: hidden; border: 2px solid #EEE; }
+        .result-box { background: #F8F9FA; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); }
         
-        #reader { 
-            width: 100%; 
-            border-radius: 8px; 
-            overflow: hidden; 
-            border: 2px solid #EEE; 
-        }
-        
-        .result-box { 
-            background: #F8F9FA; 
-            padding: 15px; 
-            border-radius: 8px; 
-            border-left: 4px solid var(--primary); 
-        }
-        
-        .status-badge { 
-            display: inline-block; 
-            padding: 5px 12px; 
-            border-radius: 20px; 
-            font-size: 0.85rem; 
-            font-weight: bold; 
-        }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
         .status-ready { background: #E8F8F5; color: #1ABC9C; }
         
         .form-group { margin-top: 15px; }
-        
-        input[type="text"] { 
-            width: 100%; 
-            padding: 10px; 
-            border: 1px solid #CCC; 
-            border-radius: 6px; 
-            font-size: 1rem; 
-            box-sizing: border-box; 
-        }
-        
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #CCC; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
         input[type="file"] { padding: 10px 0; }
         
-        .btn { 
-            padding: 10px 15px; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            width: 100%; 
-            margin-top: 10px; 
-            transition: 0.2s; 
-            color: white;
-        }
-        
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; transition: 0.2s; color: white;}
         .btn-primary { background: var(--primary); }
         .btn-success { background: var(--success); }
         .btn:disabled { background: #BDC3C7; cursor: not-allowed; }
 
-        /* Autocomplete Styles */
+        /* Autocomplete Styles - Upgraded for more results */
         .autocomplete-container { position: relative; }
         .suggestions-dropdown {
             position: absolute;
@@ -149,7 +72,7 @@
             background: white;
             border: 1px solid #CCC;
             border-radius: 4px;
-            max-height: 200px;
+            max-height: 350px; /* Taller box for more results */
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -164,7 +87,8 @@
         }
         .suggestion-item:last-child { border-bottom: none; }
         .suggestion-item:hover { background: #EAF2F8; color: var(--accent); font-weight: bold; }
-
+        
+        .helper-text { font-size: 0.8rem; color: #7F8C8D; margin-top: 4px; display: block; }
     </style>
 </head>
 <body>
@@ -180,7 +104,7 @@
 
     <div class="card" id="scannerCard" style="display: none;">
         <div class="header">
-            <h2><i class="fa-solid fa-barcode"></i> Universal Scanner</h2>
+            <h2><i class="fa-solid fa-qrcode"></i> Universal POS Scanner</h2>
             <button class="btn btn-primary" style="width: auto; margin:0;" onclick="exportTranslation()"><i class="fa-solid fa-file-export"></i> Export Lens Mappings</button>
         </div>
 
@@ -201,7 +125,7 @@
                 </div>
                 <hr style="margin: 20px 0; border: 0; border-top: 1px solid #EEE;">
                 <div id="reader"></div>
-                <button id="startCamBtn" class="btn btn-primary" onclick="startScanner()"><i class="fa-solid fa-camera"></i> Start Camera Scanner</button>
+                <button id="startCamBtn" class="btn btn-primary" onclick="startScanner()"><i class="fa-solid fa-camera"></i> Start Camera / QR Scanner</button>
             </div>
 
             <div>
@@ -221,9 +145,10 @@
                         </div>
                         
                         <div class="form-group">
-                            <label style="font-weight: bold; font-size: 0.9rem;">AI Translated Description (Type to search):</label>
+                            <label style="font-weight: bold; font-size: 0.9rem;">Wildcard Search & Link:</label>
+                            <span class="helper-text">Tip: Use <b>%</b> as a wildcard. Example: <i>iClinic%-%1.25</i></span>
                             <div class="autocomplete-container">
-                                <input type="text" id="predictedDesc" placeholder="Type to search database..." autocomplete="off">
+                                <input type="text" id="predictedDesc" placeholder="Type to search database dynamically..." autocomplete="off">
                                 <div id="descSuggestions" class="suggestions-dropdown"></div>
                             </div>
                         </div>
@@ -241,16 +166,11 @@
 </div>
 
 <script>
-    // System Variables
-    let database = {
-        specs: {}, // Regular items
-        lenses: {} // Contact lenses
-    };
+    let database = { specs: {}, lenses: {} };
     let currentMode = 'specs';
     let html5QrcodeScanner;
     let lensMappings = JSON.parse(localStorage.getItem('magrabi_lens_mappings')) || {};
 
-    // --- 1. Database Initialization ---
     function processCSV() {
         const fileInput = document.getElementById('csvFileInput').files[0];
         if (!fileInput) return alert("Please select the 'Combined SKU' CSV file.");
@@ -263,14 +183,11 @@
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                let specsCount = 0;
-                let lensCount = 0;
-
+                let specsCount = 0; let lensCount = 0;
                 results.data.forEach(row => {
                     const category = String(row['Merchandise Category'] || "").trim().toUpperCase();
                     const article = String(row['Article'] || "").trim();
                     const desc = String(row['Article Description'] || "").trim();
-
                     if (!article) return;
 
                     if (category.startsWith('CL') || category.startsWith('CS')) {
@@ -292,26 +209,33 @@
         });
     }
 
-    // --- Custom Autocomplete Search Logic ---
+    // --- Upgraded Wildcard Autocomplete Search Logic ---
     const predictedDescInput = document.getElementById('predictedDesc');
     const descSuggestions = document.getElementById('descSuggestions');
 
     predictedDescInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
-        descSuggestions.innerHTML = ''; // Clear previous suggestions
+        const rawQuery = this.value.toLowerCase().trim();
+        descSuggestions.innerHTML = ''; 
         
-        if (query.length < 2) {
+        if (rawQuery.length < 2) {
             descSuggestions.style.display = 'none';
             return;
         }
 
+        // Logic to translate '%' into a regex wildcard '.*'
+        // First, escape standard regex characters so they don't break the search
+        const escapedParts = rawQuery.split('%').map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        // Join them back with '.*' which means "any character, any number of times"
+        const regexPattern = escapedParts.join('.*');
+        const searchRegex = new RegExp(regexPattern, 'i'); // 'i' for case-insensitive
+
         let matches = [];
-        // Search through the lenses database
         for (const [sku, desc] of Object.entries(database.lenses)) {
-            if (desc.toLowerCase().includes(query)) {
+            // Test the description against our wildcard regex
+            if (searchRegex.test(desc)) {
                 matches.push({ sku, desc });
-                // Limit to 15 results so it doesn't freeze the browser
-                if (matches.length >= 15) break; 
+                // Increased limit to 100 to show full spectrum of matching powers
+                if (matches.length >= 100) break; 
             }
         }
 
@@ -319,12 +243,11 @@
             matches.forEach(match => {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
-                div.innerText = match.desc;
-                // When you click a suggestion...
+                div.innerHTML = `<strong>${match.desc}</strong> <br><small style="color: #7F8C8D;">SKU: ${match.sku}</small>`;
                 div.onclick = function() {
-                    predictedDescInput.value = match.desc;     // Fill description
-                    document.getElementById('posBarcode').value = match.sku; // Auto-fill POS SKU!
-                    descSuggestions.style.display = 'none';    // Hide list
+                    predictedDescInput.value = match.desc;     
+                    document.getElementById('posBarcode').value = match.sku; 
+                    descSuggestions.style.display = 'none';    
                 };
                 descSuggestions.appendChild(div);
             });
@@ -334,14 +257,12 @@
         }
     });
 
-    // Hide dropdown when clicking anywhere else on the screen
     document.addEventListener('click', function(e) {
         if (e.target.id !== 'predictedDesc') {
             descSuggestions.style.display = 'none';
         }
     });
 
-    // --- 2. Mode Switching Logic ---
     function setMode(mode) {
         currentMode = mode;
         document.getElementById('btnSpecs').className = `mode-btn specs ${mode === 'specs' ? 'active' : ''}`;
@@ -353,7 +274,6 @@
         document.getElementById('manualBarcode').focus();
     }
 
-    // --- 3. Scanning & Decoding Logic ---
     document.getElementById('manualBarcode').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             const code = this.value.trim();
@@ -368,7 +288,8 @@
         
         html5QrcodeScanner.start(
             { facingMode: "environment" }, 
-            { fps: 10, qrbox: { width: 250, height: 150 } },
+            // Changed box to be square (250x250) to perfectly accommodate QR Codes
+            { fps: 10, qrbox: { width: 250, height: 250 } },
             (decodedText) => {
                 html5QrcodeScanner.pause(); 
                 processBarcode(decodedText, true);
@@ -414,7 +335,6 @@
         }
     }
 
-    // --- 4. OCR & Interpolation Logic ---
     function captureAndRunOCR(barcode) {
         const video = document.querySelector('#reader video');
         if (!video) return predictLensLogic(barcode, ""); 
@@ -439,38 +359,18 @@
     function predictLensLogic(barcode, ocrText) {
         const powerMatch = ocrText.match(/[+-]\d{1,2}\.\d{2}/);
         const power = powerMatch ? powerMatch[0] : "";
-        let prediction = `Type to search or check power: ${power}`;
         
-        if (database.lenses[barcode]) {
-            prediction = database.lenses[barcode];
-            // Auto-fill POS if we directly find it
-            document.getElementById('posBarcode').value = barcode;
+        // If we extracted a power via OCR, pre-fill the search box to assist the user
+        if (power) {
+            predictedDescInput.value = `%-%${power}`;
+            // Trigger the search automatically
+            const event = new Event('input', { bubbles: true });
+            predictedDescInput.dispatchEvent(event);
         } else {
-            const baseStr = barcode.substring(0, barcode.length - 1);
-            const numBase = parseInt(baseStr, 10);
-            
-            if (!isNaN(numBase)) {
-                for (let i = -3; i <= 3; i++) {
-                    if (i === 0) continue;
-                    let testBase = String(numBase + i);
-                    const neighborKey = Object.keys(database.lenses).find(k => k.startsWith(testBase));
-                    if (neighborKey) {
-                        const neighborDesc = database.lenses[neighborKey];
-                        prediction = `Interpolated near: [${neighborDesc}]`;
-                        // Trigger search to populate dropdown manually if they want to override
-                        predictedDescInput.value = prediction;
-                        // Fire the input event manually to open dropdown based on neighbor
-                        const event = new Event('input', { bubbles: true });
-                        predictedDescInput.dispatchEvent(event);
-                        break;
-                    }
-                }
-            }
+            predictedDescInput.value = "";
         }
-        document.getElementById('predictedDesc').value = prediction;
     }
 
-    // --- 5. Confirmation & Exporting ---
     function confirmMapping() {
         const barcode = document.getElementById('detectedBarcode').innerText;
         const pos = document.getElementById('posBarcode').value.trim();
