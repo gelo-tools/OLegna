@@ -60,9 +60,10 @@
         .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; transition: 0.2s; color: white;}
         .btn-primary { background: var(--primary); }
         .btn-success { background: var(--success); }
+        .btn-warning { background: var(--warning); }
         .btn:disabled { background: #BDC3C7; cursor: not-allowed; }
 
-        /* Autocomplete Styles - Upgraded for more results */
+        /* Autocomplete Styles */
         .autocomplete-container { position: relative; }
         .suggestions-dropdown {
             position: absolute;
@@ -72,7 +73,7 @@
             background: white;
             border: 1px solid #CCC;
             border-radius: 4px;
-            max-height: 350px; /* Taller box for more results */
+            max-height: 350px; 
             overflow-y: auto;
             z-index: 1000;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -89,6 +90,8 @@
         .suggestion-item:hover { background: #EAF2F8; color: var(--accent); font-weight: bold; }
         
         .helper-text { font-size: 0.8rem; color: #7F8C8D; margin-top: 4px; display: block; }
+        
+        .action-buttons { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -157,7 +160,11 @@
                             <label style="font-weight: bold; font-size: 0.9rem;">Magrabi POS Barcode (SKU):</label>
                             <input type="text" id="posBarcode" placeholder="Enter corresponding Magrabi SKU to link...">
                         </div>
-                        <button class="btn btn-success" onclick="confirmMapping()"><i class="fa-solid fa-link"></i> Confirm & Link to Translation Table</button>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="confirmMapping()"><i class="fa-solid fa-check"></i> Confirm Mapping</button>
+                            <button class="btn btn-warning" onclick="cancelAndResume()"><i class="fa-solid fa-rotate-right"></i> Cancel & Scan Next</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -209,7 +216,6 @@
         });
     }
 
-    // --- Upgraded Wildcard Autocomplete Search Logic ---
     const predictedDescInput = document.getElementById('predictedDesc');
     const descSuggestions = document.getElementById('descSuggestions');
 
@@ -222,19 +228,14 @@
             return;
         }
 
-        // Logic to translate '%' into a regex wildcard '.*'
-        // First, escape standard regex characters so they don't break the search
         const escapedParts = rawQuery.split('%').map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-        // Join them back with '.*' which means "any character, any number of times"
         const regexPattern = escapedParts.join('.*');
-        const searchRegex = new RegExp(regexPattern, 'i'); // 'i' for case-insensitive
+        const searchRegex = new RegExp(regexPattern, 'i'); 
 
         let matches = [];
         for (const [sku, desc] of Object.entries(database.lenses)) {
-            // Test the description against our wildcard regex
             if (searchRegex.test(desc)) {
                 matches.push({ sku, desc });
-                // Increased limit to 100 to show full spectrum of matching powers
                 if (matches.length >= 100) break; 
             }
         }
@@ -271,6 +272,7 @@
         document.getElementById('lensUI').style.display = mode === 'lens' ? 'block' : 'none';
         
         resetUI();
+        resumeCamera();
         document.getElementById('manualBarcode').focus();
     }
 
@@ -288,10 +290,9 @@
         
         html5QrcodeScanner.start(
             { facingMode: "environment" }, 
-            // Changed box to be square (250x250) to perfectly accommodate QR Codes
             { fps: 10, qrbox: { width: 250, height: 250 } },
             (decodedText) => {
-                html5QrcodeScanner.pause(); 
+                html5QrcodeScanner.pause(); // Pause to let user confirm
                 processBarcode(decodedText, true);
             },
             () => {}
@@ -300,6 +301,23 @@
             alert("Camera access denied or unavailable.");
             document.getElementById('startCamBtn').style.display = 'block';
         });
+    }
+
+    // --- Helper function to robustly wake the camera up ---
+    function resumeCamera() {
+        try {
+            if (html5QrcodeScanner) {
+                // 3 is the internal state code for PAUSED in the library
+                if (html5QrcodeScanner.getState() === 3) {
+                    html5QrcodeScanner.resume();
+                } else {
+                    // Fallback to force it if the state machine is confused
+                    html5QrcodeScanner.resume();
+                }
+            }
+        } catch (err) {
+            // Camera is already running or not yet initialized, safe to ignore
+        }
     }
 
     function processBarcode(barcode, isCamera) {
@@ -316,7 +334,7 @@
                 resultDiv.innerText = "Item Not Found in Master Database.";
                 resultDiv.style.color = "#E74C3C";
             }
-            if (isCamera) setTimeout(() => html5QrcodeScanner.resume(), 2000);
+            if (isCamera) setTimeout(() => resumeCamera(), 2000);
             
         } else if (currentMode === 'lens') {
             if (lensMappings[barcode]) {
@@ -360,10 +378,8 @@
         const powerMatch = ocrText.match(/[+-]\d{1,2}\.\d{2}/);
         const power = powerMatch ? powerMatch[0] : "";
         
-        // If we extracted a power via OCR, pre-fill the search box to assist the user
         if (power) {
             predictedDescInput.value = `%-%${power}`;
-            // Trigger the search automatically
             const event = new Event('input', { bubbles: true });
             predictedDescInput.dispatchEvent(event);
         } else {
@@ -388,9 +404,14 @@
         alert("Lens successfully mapped and saved to Translation Table!");
         
         resetUI();
-        if (html5QrcodeScanner && html5QrcodeScanner.getState() === 2) {
-            html5QrcodeScanner.resume(); 
-        }
+        resumeCamera(); // <--- Correctly wakes up the scanner
+        document.getElementById('manualBarcode').focus();
+    }
+
+    // New Function for the Cancel Button
+    function cancelAndResume() {
+        resetUI();
+        resumeCamera();
         document.getElementById('manualBarcode').focus();
     }
 
