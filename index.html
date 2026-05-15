@@ -3,437 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decentration and Diameter Recommendation Tool</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Magrabi Universal POS Scanner</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        /* ZERO-SCROLL COMPACT LAYOUT */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f5; margin: 0; padding: 10px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }
-        .container { flex: 1; display: flex; flex-direction: column; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; padding: 10px; gap: 8px; }
+        :root {
+            --primary: #2C3E50;
+            --accent: #3498DB;
+            --success: #27AE60;
+            --warning: #F39C12;
+            --bg: #F4F7F6;
+            --card: #FFFFFF;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 20px; 
+            color: #333; 
+        }
         
-        /* CANVAS AREA - Increased height for non-Surface laptops & Custom High-Contrast Cursor */
-        .canvas-wrapper { display: flex; justify-content: center; overflow: hidden; background: #fff; border: 1px solid #ccc; border-radius: 6px; position: relative; min-height: 480px; }
+        .container { 
+            max-width: 1000px; 
+            margin: auto; 
+            display: grid; 
+            gap: 20px; 
+        }
         
-        canvas { 
+        .card { 
+            background: var(--card); 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+        }
+        
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid #EEE; 
+            padding-bottom: 10px; 
+            margin-bottom: 20px; 
+        }
+        
+        h2 { margin: 0; color: var(--primary); }
+        
+        /* Toggle Mode Buttons */
+        .mode-toggle { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+        }
+        
+        .mode-btn { 
+            flex: 1; 
+            padding: 15px; 
+            border: 2px solid #EEE; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: center; 
+            font-weight: bold; 
+            color: #7F8C8D; 
+            transition: 0.3s; 
+            background: transparent;
+        }
+        
+        .mode-btn.active.specs { border-color: var(--accent); background: #EBF5FB; color: var(--accent); }
+        .mode-btn.active.lens { border-color: var(--success); background: #EAFAF1; color: var(--success); }
+
+        /* Scanner Area */
+        .scanner-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+        }
+        
+        @media (max-width: 768px) { 
+            .scanner-grid { grid-template-columns: 1fr; } 
+        }
+        
+        #reader { 
             width: 100%; 
-            max-height: 480px; 
-            object-fit: contain; 
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="rgba(255,255,255,0.9)" stroke="%231e3a8a" stroke-width="2"/><line x1="16" y1="4" x2="16" y2="28" stroke="%231e3a8a" stroke-width="2"/><line x1="4" y1="16" x2="28" y2="16" stroke="%231e3a8a" stroke-width="2"/></svg>') 16 16, crosshair; 
-        }
-        canvas:active { 
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="8" fill="rgba(30,58,138,0.9)" stroke="white" stroke-width="2"/><line x1="16" y1="4" x2="16" y2="28" stroke="white" stroke-width="2"/><line x1="4" y1="16" x2="28" y2="16" stroke="white" stroke-width="2"/></svg>') 16 16, crosshair; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            border: 2px solid #EEE; 
         }
         
-        /* ANIMATED DRAG DEMONSTRATION */
-        .drag-demo-bubble {
-            position: absolute;
-            top: 20%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(239, 246, 255, 0.95);
-            border: 1px solid #93c5fd;
-            color: #1e3a8a;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            pointer-events: none;
-            z-index: 10;
-            animation: float-and-fade 4s ease-in-out infinite;
-        }
-
-        .animated-hand {
-            animation: swipe-left-right 2s ease-in-out infinite;
-        }
-
-        @keyframes float-and-fade {
-            0%, 100% { opacity: 0.9; transform: translate(-50%, 0); }
-            50% { opacity: 1; transform: translate(-50%, -5px); }
-        }
-
-        @keyframes swipe-left-right {
-            0%, 100% { transform: translateX(0) rotate(0deg); }
-            50% { transform: translateX(-15px) rotate(-10deg); }
-        }
-
-        /* CUSTOM SLIDER TOOLTIP CONTAINER */
-        .slider-container {
-            position: relative;
-            padding-top: 15px; /* Room for tooltip */
+        .result-box { 
+            background: #F8F9FA; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border-left: 4px solid var(--primary); 
         }
         
-        .slider-tooltip {
-            position: absolute;
-            top: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #1e3a8a;
+        .status-badge { 
+            display: inline-block; 
+            padding: 5px 12px; 
+            border-radius: 20px; 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+        }
+        .status-ready { background: #E8F8F5; color: #1ABC9C; }
+        
+        .form-group { margin-top: 15px; }
+        
+        input[type="text"] { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #CCC; 
+            border-radius: 6px; 
+            font-size: 1rem; 
+            box-sizing: border-box; 
+        }
+        
+        input[type="file"] { padding: 10px 0; }
+        
+        .btn { 
+            padding: 10px 15px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            width: 100%; 
+            margin-top: 10px; 
+            transition: 0.2s; 
             color: white;
-            font-size: 9px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            white-space: nowrap;
         }
-
-        .slider-tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -3px;
-            border-width: 3px;
-            border-style: solid;
-            border-color: #1e3a8a transparent transparent transparent;
-        }
-
-        .slider-container:hover .slider-tooltip {
-            opacity: 1;
-        }
-
-        /* CUSTOM VISUAL SHAPE DROPDOWN */
-        .custom-select { position: relative; width: 100%; height: 32px; user-select: none; }
-        .select-selected { background: #fff; border: 1px solid #d1d5db; border-radius: 0.25rem; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; cursor: pointer; transition: 0.2s; font-size: 0.75rem; }
-        .select-selected:hover { background: #f3f4f6; }
-        .select-selected::after { content: "▼"; font-size: 10px; color: #6b7280; }
-        .select-selected .selected-content { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #374151; }
-        .select-items { position: absolute; background: #fff; border: 1px solid #d1d5db; border-radius: 0.25rem; top: 100%; left: 0; right: 0; z-index: 50; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); max-height: 250px; overflow-y: auto; margin-top: 2px;}
-        .select-items div { padding: 8px 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #f3f4f6; font-size: 0.75rem; font-weight: bold; color: #374151; }
-        .select-items div:hover { background: #eff6ff; }
-        .select-hide { display: none; }
-        .shape-svg { width: 50px; height: 18px; stroke: #1f2937; stroke-width: 1.5; fill: none; stroke-linejoin: round; }
-
-        input[type="range"] { margin: 0; }
         
-        /* TOGGLE SWITCH CSS */
-        .toggle-checkbox { display: none; }
-        .toggle-label { width: 40px; height: 20px; background-color: #94a3b8; border-radius: 9999px; cursor: pointer; position: relative; transition: background-color 0.3s; }
-        .toggle-label::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background-color: white; border-radius: 50%; transition: transform 0.3s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
-        .toggle-checkbox:checked + .toggle-label::after { transform: translateX(20px); }
-
-        /* LENS TYPE TOGGLE CSS */
-        .type-label {
-            box-shadow: inset 0 0 0 1px transparent;
-        }
-        input[type="radio"]:checked + .type-label {
-            background-color: #2563eb;
-            color: #ffffff;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        /* Remove Number Input Spinners for cleaner look */
-        input[type="number"]::-webkit-inner-spin-button, 
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
+        .btn-primary { background: var(--primary); }
+        .btn-success { background: var(--success); }
+        .btn:disabled { background: #BDC3C7; cursor: not-allowed; }
     </style>
 </head>
-<body class="bg-gray-100 p-4 md:p-8 font-sans min-h-screen flex flex-col">
+<body>
 
-<!-- DEVICE DETECT MODAL -->
-<div id="deviceModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-50 hidden flex items-center justify-center backdrop-filter backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full border border-blue-300 border-2">
-        <h3 class="text-lg font-bold text-blue-800 mb-2 flex items-center gap-2">🖥️ Device Mismatch</h3>
-        <p class="text-sm text-gray-700 mb-4">This tool is defaulting to a <strong>1:1 physical hardware scale</strong> optimized for Surface screens.</p>
-        <p class="text-sm text-gray-600 mb-6 bg-gray-50 p-3 rounded border border-gray-100">It looks like you are not using a Surface laptop. Because your screen has a different pixel density, the visualizer might render off-center or break the layout.<br><br>Would you like to switch to <strong>Standard View</strong>?</p>
-        <div class="flex justify-end gap-3">
-            <button class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded shadow-sm transition-colors text-xs" onclick="keepSurfaceMode()">Keep Surface Scale</button>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition-colors text-xs" onclick="switchToStandard()">Switch to Standard View</button>
-        </div>
+<div class="container">
+    <div class="card" id="setupCard">
+        <h2><i class="fa-solid fa-database"></i> Load Magrabi Master Database</h2>
+        <p style="color: #7F8C8D;">Upload your 'Combined SKU.csv' file to initialize the system.</p>
+        <input type="file" id="csvFileInput" accept=".csv">
+        <button class="btn btn-primary" id="loadBtn" onclick="processCSV()">Load Database</button>
+        <div id="loadStatus" style="margin-top:10px; font-weight:bold; color: var(--success);"></div>
     </div>
-</div>
 
-<div id="customModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-50 hidden flex items-center justify-center backdrop-filter backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full border border-gray-200">
-        <h3 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">⚠️ Copy OD to OS?</h3>
-        <p class="text-sm text-gray-600 mb-4">Your <b>Right (OD)</b> and <b>Left (OS)</b> measurements are different.</p>
-        <p class="text-sm text-gray-600 mb-6 bg-gray-50 p-3 rounded border border-gray-100">Did you forget to copy your Right Eye measurements over to the Left Eye before running the recommendation?</p>
-        <div class="flex justify-end gap-2">
-            <button class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-2 px-4 rounded shadow-sm transition-colors text-xs" onclick="closeModal()">Cancel</button>
-            <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded shadow-sm transition-colors text-xs" onclick="proceedWithoutCopy()">Calculate As Is</button>
-            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition-colors text-xs" onclick="proceedWithCopy()">Copy & Calculate</button>
+    <div class="card" id="scannerCard" style="display: none;">
+        <div class="header">
+            <h2><i class="fa-solid fa-barcode"></i> Universal Scanner</h2>
+            <button class="btn btn-primary" style="width: auto; margin:0;" onclick="exportTranslation()"><i class="fa-solid fa-file-export"></i> Export Lens Mappings</button>
         </div>
-    </div>
-</div>
 
-<div id="zoomModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-50 hidden flex items-center justify-center backdrop-filter backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full border border-blue-300 border-2">
-        <h3 class="text-lg font-bold text-blue-800 mb-2 flex items-center gap-2">🔍 Scale Lock Active</h3>
-        <p class="text-sm text-gray-700 mb-6">Precision zooming is locked on visualizer. Ensure browser zoom is exactly <b>100%</b> for 1:1 physical scale.</p>
-        <div class="flex justify-end">
-            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition-colors" onclick="closeZoomModal()">Understood</button>
-        </div>
-    </div>
-</div>
-
-<div class="max-w-6xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden flex-1 flex flex-col w-full">
-    
-    <div class="bg-blue-900 text-white px-6 py-4 flex-shrink-0 flex justify-between items-center">
-        <!-- Updated Back Button and Link Name -->
-        <div class="flex items-center gap-4">
-            <button onclick="window.history.back()" class="bg-blue-800 hover:bg-blue-700 text-white p-2 rounded-full transition-colors focus:outline-none" title="Go Back">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
+        <div class="mode-toggle">
+            <button class="mode-btn active specs" id="btnSpecs" onclick="setMode('specs')">
+                <i class="fa-solid fa-glasses"></i> Suns & Specs Mode<br><small>(Direct POS Scan)</small>
             </button>
+            <button class="mode-btn lens" id="btnLens" onclick="setMode('lens')">
+                <i class="fa-solid fa-eye"></i> Contact Lens Mode<br><small>(AI Vision & Translate)</small>
+            </button>
+        </div>
+
+        <div class="scanner-grid">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight">Decentration and Diameter Recommendation Tool</h1>
-                <p class="text-sm text-blue-200">
-                    For any comments and suggestions <a href="mailto:3393@magrabi.com" class="underline hover:text-white transition-colors">email me</a>. 
-                    <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" class="font-bold text-green-300 hover:text-green-100 transition-colors">-gelotools</a>
-                </p>
+                <div class="form-group">
+                    <label style="font-weight: bold;">Manual Entry (or use physical scanner gun):</label>
+                    <input type="text" id="manualBarcode" placeholder="Scan or type barcode here and hit Enter..." autocomplete="off">
+                </div>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #EEE;">
+                <div id="reader"></div>
+                <button id="startCamBtn" class="btn btn-primary" onclick="startScanner()"><i class="fa-solid fa-camera"></i> Start Camera Scanner</button>
             </div>
-        </div>
-        
-        <div class="flex items-center gap-3 bg-blue-800 px-4 py-2 rounded border border-blue-700 shadow-inner">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-blue-200">Standard View</span>
+
             <div>
-                <input type="checkbox" id="surfaceToggle" class="toggle-checkbox" checked onchange="toggleMode()">
-                <label for="surfaceToggle" class="toggle-label block"></label>
-            </div>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-green-300">Surface Pro Laptop 1:1 Scale</span>
-        </div>
-    </div>
-
-    <div class="p-6 flex-1 flex flex-col overflow-y-auto">
-        
-        <div class="canvas-wrapper p-2 mb-1 w-full">
-            
-            <div id="dragHint" class="drag-demo-bubble">
-                <svg class="animated-hand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                </svg>
-                Click & Drag dashed lens to decenter
-            </div>
-
-            <canvas id="lensCanvas" width="900" height="340"></canvas>
-        </div>
-        
-        <div class="flex justify-between items-center mb-6 px-4">
-            <p class="text-xs text-gray-500 font-bold">
-                <span id="physicalLabel">Physical 1:1 Scale. </span><span class="text-red-500">X = Pupil</span>, <span class="text-blue-500">+ = OC</span>
-            </p>
-            <!-- High Cylinder Warning Label -->
-            <p class="text-[10px] text-gray-500 italic">
-                <strong class="text-orange-500">Note on High Cylinder:</strong> For Rx with cylinder &ge; 2.00 D, actual cut-out may vary due to elliptical blank shapes. Consult lab for borderline sizes.
-            </p>
-        </div>
-
-        <!-- FRAME CONTROLS -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div class="p-3 border border-gray-200 rounded bg-gray-50">
-                <label class="block font-bold mb-1 text-xs text-gray-700">Shape</label>
-                <div class="custom-select" id="shapeSelector">
-                    <div class="select-selected" onclick="toggleDropdown()">
-                        <div class="selected-content" id="currentShapeIcon"></div>
-                    </div>
-                    <div class="select-items select-hide" id="dropdownList"></div>
-                </div>
-                <input type="hidden" id="frameShape" value="Rectangle">
-            </div>
-            <div class="p-3 border border-gray-200 rounded bg-gray-50">
-                <div class="flex justify-between items-center mb-1">
-                    <label class="font-bold text-xs text-gray-700">A (Width)</label>
-                    <input type="number" id="frameA_num" min="40" max="70" value="54" class="w-14 border border-gray-300 rounded px-1 text-xs font-bold text-blue-600 text-center">
-                </div>
-                <input type="range" id="frameA" min="40" max="70" value="54" class="w-full">
-            </div>
-            <div class="p-3 border border-gray-200 rounded bg-gray-50">
-                <div class="flex justify-between items-center mb-1">
-                    <label class="font-bold text-xs text-gray-700">B (Height)</label>
-                    <input type="number" id="frameB_num" min="20" max="60" value="50" class="w-14 border border-gray-300 rounded px-1 text-xs font-bold text-blue-600 text-center">
-                </div>
-                <input type="range" id="frameB" min="20" max="60" value="50" class="w-full">
-            </div>
-            <div class="p-3 border border-gray-200 rounded bg-gray-50">
-                <div class="flex justify-between items-center mb-1">
-                    <label class="font-bold text-xs text-gray-700">ED (Diag)</label>
-                    <input type="number" id="diag_num" min="40" max="100" value="58" class="w-14 border border-gray-300 rounded px-1 text-xs font-bold text-red-600 text-center">
-                </div>
-                <input type="range" id="diag" min="40" max="100" value="58" class="w-full">
-            </div>
-            <div class="p-3 border border-gray-200 rounded bg-gray-50">
-                <div class="flex justify-between items-center mb-1">
-                    <label class="font-bold text-xs text-gray-700">DBL</label>
-                    <input type="number" id="dbl_num" min="10" max="25" value="16" class="w-14 border border-gray-300 rounded px-1 text-xs font-bold text-blue-600 text-center">
-                </div>
-                <input type="range" id="dbl" min="10" max="25" value="16" class="w-full">
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
-            
-            <!-- OD (RIGHT EYE) PANEL -->
-            <div class="border border-gray-200 rounded shadow-sm p-4 bg-white flex flex-col justify-between">
-                <div>
-                    <h3 class="text-center font-bold text-gray-800 border-b border-gray-200 pb-2 mb-3">OD (Right Eye)</h3>
+                <div class="result-box">
+                    <div id="statusIndicator" class="status-badge status-ready">Ready to Scan</div>
+                    <h3 id="detectedBarcode" style="margin: 10px 0; color: var(--primary);">---</h3>
                     
-                    <div class="mb-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-bold text-gray-600">Mono PD</label>
-                            <input type="number" id="odPD" value="35" step="0.5" min="20" max="45" class="border border-gray-300 rounded px-2 py-1 text-xs w-16 text-center text-blue-600 font-bold">
+                    <div id="specsUI">
+                        <label style="font-size: 0.85rem; color: #7F8C8D;">Item Description (From Database):</label>
+                        <div id="specsResult" style="font-size: 1.2rem; font-weight: bold; margin-top: 5px; color: var(--primary);">Waiting for scan...</div>
+                    </div>
+
+                    <div id="lensUI" style="display: none;">
+                        <label style="font-size: 0.85rem; color: #7F8C8D;">OCR Box Text (Lens Mode Camera Only):</label>
+                        <div id="ocrResult" style="font-family: monospace; font-size: 0.9rem; margin-top: 5px; color: #555; background: #FFF; padding: 8px; border: 1px solid #EEE;">
+                            Awaiting camera scan...
                         </div>
-                        <input type="range" id="odPD_slide" min="20" max="45" step="0.5" value="35" class="w-full">
-                    </div>
-                    
-                    <div class="mb-4 border-b border-gray-100 pb-4">
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-bold text-gray-600">OC Height</label>
-                            <input type="number" id="odOCHt" value="25" step="0.5" min="10" max="40" class="border border-gray-300 rounded px-2 py-1 text-xs w-16 text-center text-blue-600 font-bold">
+                        
+                        <div class="form-group">
+                            <label style="font-weight: bold; font-size: 0.9rem;">AI Translated Description:</label>
+                            <input type="text" id="predictedDesc" placeholder="AI prediction / Database Match" readonly style="background: #F4F7F6;">
                         </div>
-                        <input type="range" id="odOCHt_slide" min="10" max="40" step="0.5" value="25" class="w-full">
-                    </div>
-                    
-                    <div class="flex justify-between items-center mt-2 mb-2">
-                        <label class="text-xs font-bold text-gray-600 flex justify-between w-20">H. Dec <span id="t_odHDec" class="text-blue-600">0.0</span></label>
-                        <input type="range" id="odHDec" min="0" max="20" step="0.5" value="0" class="flex-1 mx-2">
-                        <select id="odHDir" class="border border-gray-300 rounded px-1 py-1 text-xs">
-                            <option value="Nose">In</option>
-                            <option value="Temple">Out</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <label class="text-xs font-bold text-gray-600 flex justify-between w-20">V. Dec <span id="t_odVDec" class="text-blue-600">0.0</span></label>
-                        <input type="range" id="odVDec" min="0" max="20" step="0.5" value="0" class="flex-1 mx-2">
-                        <select id="odVDir" class="border border-gray-300 rounded px-1 py-1 text-xs">
-                            <option value="Up">Up</option>
-                            <option value="Down">Dn</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- OD RESULTS BOX -->
-                <div class="mt-4 pt-3 border-t border-gray-200">
-                    <p class="text-[11px] font-black text-blue-900 uppercase tracking-widest mb-2 text-center">Recommendations for OD</p>
-                    <div class="bg-gray-50 rounded border border-gray-200 p-2 text-[11px] font-mono text-gray-800 shadow-inner">
-                        <div class="flex justify-between mb-1"><span>Add Decentration H:</span> <span class="font-bold text-blue-700" id="resOD_H">-</span></div>
-                        <div class="flex justify-between mb-2"><span>Add Decentration V:</span> <span class="font-bold text-blue-700" id="resOD_V">-</span></div>
-                        
-                        <div class="text-center text-[10px] font-bold text-gray-400 mb-2">OR</div>
-                        
-                        <div class="flex justify-between mb-2 pb-2 border-b border-gray-200"><span>Add Decentration Custom:</span> <span class="font-black text-indigo-700" id="resOD_Vec">-</span></div>
-                        
-                        <div class="flex justify-between mt-1"><span>Special Diameter:</span> <span class="font-black text-blue-800 text-xs" id="resOD_Dia">-</span></div>
-                        <div id="resOD_Warning" class="text-center text-[10px] text-red-600 font-bold mt-1" style="display:none;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CENTER ACTIONS PANEL -->
-            <div class="border border-blue-200 bg-blue-50 rounded shadow-sm p-4 flex flex-col gap-3">
-                <button onclick="copyODtoOS()" class="w-full bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-1.5 rounded text-[10px] uppercase transition-colors shadow-sm">⮂ Copy OD to OS ⮂</button>
-                
-                <!-- LENS TYPE TOGGLE -->
-                <div class="flex justify-center mt-2 mb-1 bg-white rounded border border-blue-200 shadow-sm p-1">
-                    <div class="relative flex w-full">
-                        <input type="radio" name="lensType" id="typeSV" value="SV" class="hidden" checked onchange="handleLensTypeChange()">
-                        <label for="typeSV" class="flex-1 text-center py-1.5 text-xs font-bold text-gray-600 cursor-pointer rounded transition-colors type-label">Single Vision</label>
-                        
-                        <input type="radio" name="lensType" id="typePAL" value="PAL" class="hidden" onchange="handleLensTypeChange()">
-                        <label for="typePAL" class="flex-1 text-center py-1.5 text-xs font-bold text-gray-600 cursor-pointer rounded transition-colors type-label">PAL</label>
-                        
-                        <input type="radio" name="lensType" id="typePALTLD" value="PAL_TLD" class="hidden" onchange="handleLensTypeChange()">
-                        <label for="typePALTLD" class="flex-1 text-center py-1.5 text-xs font-bold text-gray-600 cursor-pointer rounded transition-colors type-label">PAL TLD</label>
-                    </div>
-                </div>
-
-                <div class="slider-container">
-                    <div class="slider-tooltip">Slide to resize</div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="font-bold text-xs text-blue-800">Uncut Lens Dia</label>
-                        <span id="valLensDia" class="text-sm font-black text-blue-800">65 mm</span>
-                    </div>
-                    <input type="range" id="lensDia" min="40" max="100" step="1" value="65" class="w-full mb-2 cursor-pointer">
-                </div>
-                <div id="mbsDisplay" class="bg-white border border-blue-200 text-blue-800 text-sm font-bold text-center py-2 rounded shadow-sm">MBS (Centered): 60 mm</div>
-                
-                <div id="sizeWarning" class="hidden bg-red-100 border border-red-300 text-red-700 text-[10px] leading-tight font-bold text-center py-1.5 px-2 rounded shadow-sm mt-1">
-                    ⚠️ Diameter size is not sufficient even with decentration. Choose another frame.
-                </div>
-
-                <div id="liveIndicatorContainer" class="flex justify-center items-center h-4 invisible mt-1">
-                    <span class="flex h-2 w-2 relative mr-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    <span id="liveIndicatorText" class="text-[10px] font-bold text-green-700 uppercase tracking-tighter">Live Recommendation Active</span>
-                </div>
-                
-                <div class="flex flex-col gap-2 mt-auto">
-                    <div class="flex gap-2">
-                        <button id="btnPlus" onclick="toggleRecommendation(true)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold leading-tight py-2 rounded text-[9px] shadow transition-colors uppercase">Recommend for Plus Lens</button>
-                        <button id="btnMinus" onclick="toggleRecommendation(false)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold leading-tight py-2 rounded text-[9px] shadow transition-colors uppercase">Recommend for Minus Lens</button>
-                    </div>
-                    
-                    <div class="border-t border-blue-200 pt-3 flex flex-col gap-1.5 mt-1">
-                        <div class="flex gap-1.5">
-                            <button onclick="resetDecentration()" class="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 py-1.5 rounded text-[8px] font-bold shadow-sm">RESET DECENTRATION</button>
-                            <button onclick="resetBlankSize()" class="w-full bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 py-1.5 rounded text-[8px] font-bold shadow-sm">RESET SIZE</button>
+                        <div class="form-group">
+                            <label style="font-weight: bold; font-size: 0.9rem;">Magrabi POS Barcode (SKU):</label>
+                            <input type="text" id="posBarcode" placeholder="Enter corresponding Magrabi SKU to link...">
                         </div>
-                        <button onclick="resetState()" class="w-full bg-gray-200 border border-gray-400 text-gray-800 hover:bg-gray-300 py-1.5 rounded text-[10px] font-bold shadow-sm">RESET ALL</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- OS (LEFT EYE) PANEL -->
-            <div class="border border-gray-200 rounded shadow-sm p-4 bg-white flex flex-col justify-between">
-                <div>
-                    <h3 class="text-center font-bold text-gray-800 border-b border-gray-200 pb-2 mb-3">OS (Left Eye)</h3>
-                    
-                    <div class="mb-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-bold text-gray-600">Mono PD</label>
-                            <input type="number" id="osPD" value="35" step="0.5" min="20" max="45" class="border border-gray-300 rounded px-2 py-1 text-xs w-16 text-center text-blue-600 font-bold">
-                        </div>
-                        <input type="range" id="osPD_slide" min="20" max="45" step="0.5" value="35" class="w-full">
-                    </div>
-                    
-                    <div class="mb-4 border-b border-gray-100 pb-4">
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-bold text-gray-600">OC Height</label>
-                            <input type="number" id="osOCHt" value="25" step="0.5" min="10" max="40" class="border border-gray-300 rounded px-2 py-1 text-xs w-16 text-center text-blue-600 font-bold">
-                        </div>
-                        <input type="range" id="osOCHt_slide" min="10" max="40" step="0.5" value="25" class="w-full">
-                    </div>
-
-                    <div class="flex justify-between items-center mt-2 mb-2">
-                        <label class="text-xs font-bold text-gray-600 flex justify-between w-20">H. Dec <span id="t_osHDec" class="text-blue-600">0.0</span></label>
-                        <input type="range" id="osHDec" min="0" max="20" step="0.5" value="0" class="flex-1 mx-2">
-                        <select id="osHDir" class="border border-gray-300 rounded px-1 py-1 text-xs">
-                            <option value="Nose">In</option>
-                            <option value="Temple">Out</option>
-                        </select>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <label class="text-xs font-bold text-gray-600 flex justify-between w-20">V. Dec <span id="t_osVDec" class="text-blue-600">0.0</span></label>
-                        <input type="range" id="osVDec" min="0" max="20" step="0.5" value="0" class="flex-1 mx-2">
-                        <select id="osVDir" class="border border-gray-300 rounded px-1 py-1 text-xs">
-                            <option value="Up">Up</option>
-                            <option value="Down">Dn</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- OS RESULTS BOX -->
-                <div class="mt-4 pt-3 border-t border-gray-200">
-                    <p class="text-[11px] font-black text-blue-900 uppercase tracking-widest mb-2 text-center">Recommendations for OS</p>
-                    <div class="bg-gray-50 rounded border border-gray-200 p-2 text-[11px] font-mono text-gray-800 shadow-inner">
-                        <div class="flex justify-between mb-1"><span>Add Decentration H:</span> <span class="font-bold text-blue-700" id="resOS_H">-</span></div>
-                        <div class="flex justify-between mb-2"><span>Add Decentration V:</span> <span class="font-bold text-blue-700" id="resOS_V">-</span></div>
-                        
-                        <div class="text-center text-[10px] font-bold text-gray-400 mb-2">OR</div>
-                        
-                        <div class="flex justify-between mb-2 pb-2 border-b border-gray-200"><span>Add Decentration Custom:</span> <span class="font-black text-indigo-700" id="resOS_Vec">-</span></div>
-                        
-                        <div class="flex justify-between mt-1"><span>Special Diameter:</span> <span class="font-black text-blue-800 text-xs" id="resOS_Dia">-</span></div>
-                        <div id="resOS_Warning" class="text-center text-[10px] text-red-600 font-bold mt-1" style="display:none;"></div>
+                        <button class="btn btn-success" onclick="confirmMapping()"><i class="fa-solid fa-link"></i> Confirm & Link to Translation Table</button>
                     </div>
                 </div>
             </div>
@@ -442,840 +211,263 @@
 </div>
 
 <script>
-    // --- SHAPE DEFINITIONS ---
-    const shapeOptions = {
-        'Rectangle': { 
-            name: 'Rectangle', 
-            svg: '<rect x="2" y="4" width="24" height="12" rx="1"/><line x1="26" y1="10" x2="34" y2="10"/><rect x="34" y="4" width="24" height="12" rx="1"/>' 
-        },
-        'Round': { 
-            name: 'Round', 
-            svg: '<circle cx="15" cy="10" r="8"/><line x1="23" y1="10" x2="37" y2="10"/><circle cx="45" cy="10" r="8"/>' 
-        },
-        'Geometric': { 
-            name: 'Geometric', 
-            svg: '<polygon points="5,4 23,4 26,7 26,13 23,16 5,16 2,13 2,7"/><line x1="26" y1="10" x2="34" y2="10"/><polygon points="37,4 55,4 58,7 58,13 55,16 37,16 34,13 34,7"/>' 
-        },
-        'Aviator': {
-            name: 'Aviator',
-            svg: '<path d="M 56,6 C 54,3 46,0 28,0 C 6,1 0,6 0,25 C 0,40 9,50 21,50 C 34,50 49,43 58,15 C 58,10 56.84,7.5 56,6 Z" transform="scale(0.4) translate(4, 0)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/><line x1="26" y1="10" x2="34" y2="10"/><path d="M 56,6 C 54,3 46,0 28,0 C 6,1 0,6 0,25 C 0,40 9,50 21,50 C 34,50 49,43 58,15 C 58,10 56.84,7.5 56,6 Z" transform="scale(-0.4, 0.4) translate(-146, 0)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/>'
-        },
-        'CatEye': {
-            name: 'Cat-Eye',
-            svg: '<path d="M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z" transform="scale(0.4) translate(4, -2)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/><line x1="26" y1="10" x2="34" y2="10"/><path d="M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z" transform="scale(-0.4, 0.4) translate(-146, -2)" stroke="#1f2937" stroke-width="1.5" vector-effect="non-scaling-stroke" fill="none"/>'
-        }
+    // System Variables
+    let database = {
+        specs: {}, // Regular items (FO, FS, etc.)
+        lenses: {} // Contact lenses (CL, CS)
     };
-
-    // --- GLOBAL STATE ---
-    let activeLiveMode = 'none'; 
-    let isSurfaceMode = true; 
-    let scale = 10.5118; 
-    let lensType = 'SV'; // Toggle state
+    let currentMode = 'specs';
+    let html5QrcodeScanner;
     
-    const canvas = document.getElementById('lensCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    let odBlankX = 0, odBlankY = 0;
-    let osBlankX = 0, osBlankY = 0;
-    let isDragging = false;
-    let dragTarget = null;
-    let isInitialized = false;
-    
-    // Smart Sync state variables
-    let pdLeader = null;
-    let htLeader = null;
+    // Load previously mapped lenses from LocalStorage so you don't lose them on refresh
+    let lensMappings = JSON.parse(localStorage.getItem('magrabi_lens_mappings')) || {};
 
-    let hasSkippedCopyCheck = false;
-    let pendingActionIsPlus = false;
+    // --- 1. Database Initialization (PapaParse) ---
+    function processCSV() {
+        const fileInput = document.getElementById('csvFileInput').files[0];
+        if (!fileInput) return alert("Please select the 'Combined SKU' CSV file.");
 
-    function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
-    function setVal(id, val) { document.getElementById(id).value = val; }
+        const btn = document.getElementById('loadBtn');
+        btn.disabled = true;
+        btn.innerText = "Parsing 77,000+ Items (Please Wait)...";
 
-    function handleLensTypeChange() {
-        lensType = document.querySelector('input[name="lensType"]:checked').value;
-        if (activeLiveMode !== 'none') {
-            if (activeLiveMode === 'plus') executeRecommendPlus();
-            else executeRecommendMinus(false);
-        } else {
-            updateUI();
-        }
+        Papa.parse(fileInput, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                let specsCount = 0;
+                let lensCount = 0;
+
+                results.data.forEach(row => {
+                    const category = String(row['Merchandise Category'] || "").trim().toUpperCase();
+                    const article = String(row['Article'] || "").trim();
+                    const desc = String(row['Article Description'] || "").trim();
+
+                    if (!article) return;
+
+                    // Group based on Magrabi Prefix Logic
+                    if (category.startsWith('CL') || category.startsWith('CS')) {
+                        database.lenses[article] = desc;
+                        lensCount++;
+                    } else {
+                        // Anything not a contact lens (Frames, Lenses, Accessories) goes to specs
+                        database.specs[article] = desc;
+                        specsCount++;
+                    }
+                });
+
+                document.getElementById('loadStatus').innerText = `Success! Loaded ${specsCount} General Items & ${lensCount} Lenses.`;
+                setTimeout(() => {
+                    document.getElementById('setupCard').style.display = 'none';
+                    document.getElementById('scannerCard').style.display = 'block';
+                    document.getElementById('manualBarcode').focus();
+                }, 1500);
+            }
+        });
     }
 
-    // --- DEVICE DETECTION LOGIC ---
-    function checkDeviceCompatibility() {
-        const screenRatio = window.screen.width / window.screen.height;
-        const isLikelySurface = Math.abs(screenRatio - 1.5) < 0.05; 
+    // --- 2. Mode Switching Logic ---
+    function setMode(mode) {
+        currentMode = mode;
         
-        if (!isLikelySurface) {
-            document.getElementById('deviceModal').classList.remove('hidden');
-        } else {
-            isSurfaceMode = true;
-            document.getElementById('surfaceToggle').checked = true;
-            updateUI();
-        }
+        // Update Buttons visually
+        document.getElementById('btnSpecs').className = `mode-btn specs ${mode === 'specs' ? 'active' : ''}`;
+        document.getElementById('btnLens').className = `mode-btn lens ${mode === 'lens' ? 'active' : ''}`;
+        
+        // Update UI panels
+        document.getElementById('specsUI').style.display = mode === 'specs' ? 'block' : 'none';
+        document.getElementById('lensUI').style.display = mode === 'lens' ? 'block' : 'none';
+        
+        resetUI();
+        document.getElementById('manualBarcode').focus();
     }
 
-    function switchToStandard() {
-        document.getElementById('deviceModal').classList.add('hidden');
-        document.getElementById('surfaceToggle').checked = false;
-        isSurfaceMode = false;
-        updateUI();
-    }
-
-    function keepSurfaceMode() {
-        document.getElementById('deviceModal').classList.add('hidden');
-        document.getElementById('surfaceToggle').checked = true;
-        isSurfaceMode = true;
-        updateUI();
-    }
-
-    function toggleMode() {
-        isSurfaceMode = document.getElementById('surfaceToggle').checked;
-        updateUI();
-    }
-
-    // --- DROPDOWN LOGIC ---
-    function initDropdown() {
-        const list = document.getElementById('dropdownList');
-        for (let key in shapeOptions) {
-            let div = document.createElement('div');
-            div.innerHTML = `<svg class="shape-svg" viewBox="0 0 60 20">${shapeOptions[key].svg}</svg> <span>${shapeOptions[key].name}</span>`;
-            div.onclick = function() {
-                document.getElementById('frameShape').value = key;
-                document.getElementById('currentShapeIcon').innerHTML = `<svg class="shape-svg" viewBox="0 0 60 20">${shapeOptions[key].svg}</svg> <span>${shapeOptions[key].name}</span>`;
-                document.getElementById('dropdownList').classList.add('select-hide');
-                updateEDBounds(); 
-                handleInputEvent(key);
-            };
-            list.appendChild(div);
-        }
-        document.getElementById('currentShapeIcon').innerHTML = `<svg class="shape-svg" viewBox="0 0 60 20">${shapeOptions['Rectangle'].svg}</svg> <span>Rectangle</span>`;
-    }
-
-    function toggleDropdown() { document.getElementById('dropdownList').classList.toggle('select-hide'); }
-
-    document.addEventListener('click', function(e) {
-        if (!document.getElementById('shapeSelector').contains(e.target)) {
-            document.getElementById('dropdownList').classList.add('select-hide');
+    // --- 3. Scanning & Decoding Logic ---
+    
+    // Listen for Physical Gun (Enter key)
+    document.getElementById('manualBarcode').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const code = this.value.trim();
+            if (code) processBarcode(code, false);
+            this.value = ''; // Clear box immediately for next shot
         }
     });
 
-    // --- MATH & GEOMETRY LIMITS ---
-    function updateEDBounds() {
-        const A = getVal('frameA');
-        const B = getVal('frameB');
-        const minPossibleED = Math.ceil(Math.max(A, B));
-        const maxPossibleED = Math.ceil(Math.hypot(A, B));
-
-        const diagSlider = document.getElementById('diag');
-        const diagNum = document.getElementById('diag_num');
+    // Start Camera Feature
+    function startScanner() {
+        document.getElementById('startCamBtn').style.display = 'none';
+        html5QrcodeScanner = new Html5Qrcode("reader");
         
-        diagSlider.min = minPossibleED; 
-        diagSlider.max = maxPossibleED;
-        if(diagNum) {
-            diagNum.min = minPossibleED;
-            diagNum.max = maxPossibleED;
-        }
-        
-        if (parseFloat(diagSlider.value) < minPossibleED) {
-            diagSlider.value = minPossibleED;
-            if(diagNum) diagNum.value = minPossibleED;
-        } else if (parseFloat(diagSlider.value) > maxPossibleED) {
-            diagSlider.value = maxPossibleED;
-            if(diagNum) diagNum.value = maxPossibleED;
-        }
-    }
-
-    // --- DRAWING FUNCTIONS ---
-    function drawShapePath(ctx, cx, cy, w, h, shape, isRightEye) {
-        const r = w / 2;
-        const b = h / 2;
-        const userED = getVal('diag') * scale; 
-        const edRadius = userED / 2; 
-        const trueHypot = Math.hypot(r, b);
-        
-        let dynR = 8 * scale; 
-        if (trueHypot > edRadius) {
-            dynR = Math.max(0, Math.min((trueHypot - edRadius) * 2.5, r, b));
-        }
-        
-        ctx.save();
-        ctx.translate(cx, cy);
-        
-        if (!isRightEye) {
-            ctx.scale(-1, 1);
-        }
-        
-        ctx.beginPath();
-        if (shape === 'Aviator' || shape === 'CatEye') {
-            const pathStr = shape === 'Aviator' 
-                ? 'M 56, 6 C 54, 3, 46, 0, 28, 0 C 6, 1, 0, 6, 0, 25 C 0, 40, 9, 50, 21, 50 C 34, 50, 49, 43, 58, 15 C 58, 10, 56.84, 7.5, 56, 6 Z'
-                : 'M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z';
-            const matrix = new DOMMatrix().translate(-r, -b).scale(w / 58, h / 50);
-            const scaledPath = new Path2D();
-            scaledPath.addPath(new Path2D(pathStr), matrix);
-            ctx.stroke(scaledPath);
-            
-        } else if (shape === 'Rectangle') {
-            if (ctx.roundRect) ctx.roundRect(-r, -b, w, h, dynR); 
-            else ctx.rect(-r, -b, w, h);
-            ctx.stroke();
-        } else if (shape === 'Round') { 
-            ctx.ellipse(0, 0, r, b, 0, 0, Math.PI * 2);
-            ctx.stroke();
-        } else if (shape === 'Geometric') {
-            const inset = (trueHypot > edRadius) ? (1 - (edRadius / trueHypot)) * r : 0;
-            const cX = w * 0.08 + inset;
-            const cY = h * 0.11 + inset;
-            ctx.moveTo(-r + cX, -b); ctx.lineTo(r - cX, -b); ctx.lineTo(r, -b + cY); ctx.lineTo(r, b - cY); ctx.lineTo(r - cX, b); ctx.lineTo(-r + cX, b); ctx.lineTo(-r, b - cY); ctx.lineTo(-r, -b + cY); ctx.closePath();
-            ctx.stroke();
-        }
-        ctx.restore();
-    }
-
-    function drawCrosshair(x, y, color) { 
-        ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 8, y); ctx.lineTo(x + 8, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y + 8); ctx.stroke(); 
-    }
-
-    function drawX(x, y, color) { 
-        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - 5, y - 5); ctx.lineTo(x + 5, y + 5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x + 5, y - 5); ctx.lineTo(x - 5, y + 5); ctx.stroke(); 
-    }
-
-    function drawBlank(x, y, dia) { 
-        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.arc(x, y, dia / 2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); 
-    }
-
-    function initBlanks() {
-        if (isInitialized) return;
-        const A = getVal('frameA');
-        const DBL = getVal('dbl');
-        odBlankX = -((A + DBL) / 2); 
-        osBlankX = ((A + DBL) / 2);
-        odBlankY = 0; 
-        osBlankY = 0;
-        isInitialized = true;
-    }
-
-    function setSlidersFromOffset(dxOD, dyOD, dxOS, dyOS) {
-        const roundHalf = num => Math.round(num * 2) / 2;
-        
-        if (dxOD !== null) {
-            setVal('odHDec', Math.abs(roundHalf(dxOD)).toFixed(1));
-            document.getElementById('odHDir').value = dxOD > 0 ? 'Nose' : 'Temple';
-        }
-        if (dyOD !== null) {
-            setVal('odVDec', Math.abs(roundHalf(dyOD)).toFixed(1));
-            document.getElementById('odVDir').value = dyOD < 0 ? 'Up' : 'Down';
-        }
-        if (dxOS !== null) {
-            setVal('osHDec', Math.abs(roundHalf(dxOS)).toFixed(1));
-            document.getElementById('osHDir').value = dxOS < 0 ? 'Nose' : 'Temple';
-        }
-        if (dyOS !== null) {
-            setVal('osVDec', Math.abs(roundHalf(dyOS)).toFixed(1));
-            document.getElementById('osVDir').value = dyOS < 0 ? 'Up' : 'Down';
-        }
-        
-        ['odHDec', 'odVDec', 'osHDec', 'osVDec'].forEach(id => {
-            document.getElementById('t_'+id).innerText = Number(getVal(id)).toFixed(1);
+        html5QrcodeScanner.start(
+            { facingMode: "environment" }, // Use back camera if on mobile
+            { fps: 10, qrbox: { width: 250, height: 150 } },
+            (decodedText) => {
+                html5QrcodeScanner.pause(); // Pause video while processing
+                processBarcode(decodedText, true);
+            },
+            () => { /* Ignore background scanning noise */ }
+        ).catch(err => {
+            console.error(err);
+            alert("Camera access denied or unavailable.");
+            document.getElementById('startCamBtn').style.display = 'block';
         });
     }
 
-    function getHDecSliderVal(eye) {
-        const val = getVal(eye === 'OD' ? 'odHDec' : 'osHDec');
-        const dir = document.getElementById(eye === 'OD' ? 'odHDir' : 'osHDir').value;
-        if (eye === 'OD') return dir === 'Nose' ? val : -val;
-        return dir === 'Nose' ? -val : val;
-    }
-
-    function getVDecSliderVal(eye) {
-        const val = getVal(eye === 'OD' ? 'odVDec' : 'osVDec');
-        const dir = document.getElementById(eye === 'OD' ? 'odVDir' : 'osVDir').value;
-        return dir === 'Up' ? -val : val; 
-    }
-
-    // --- MAIN ENGINE ---
-    function updateUI() {
+    function processBarcode(barcode, isCamera) {
+        document.getElementById('detectedBarcode').innerText = barcode;
         
-        // Hide or show the physical scale indicator label based on mode
-        const physicalLabel = document.getElementById('physicalLabel');
-        if (physicalLabel) {
-            physicalLabel.style.display = isSurfaceMode ? 'inline' : 'none';
+        if (currentMode === 'specs') {
+            // DIRECT MATCH MODE (Suns, Frames, Accessories)
+            const desc = database.specs[barcode] || database.lenses[barcode];
+            const resultDiv = document.getElementById('specsResult');
+            
+            if (desc) {
+                resultDiv.innerText = desc;
+                resultDiv.style.color = "var(--success)";
+            } else {
+                resultDiv.innerText = "Item Not Found in Master Database.";
+                resultDiv.style.color = "#E74C3C";
+            }
+            
+            // Auto-resume camera for next scan after 2 seconds
+            if (isCamera) setTimeout(() => html5QrcodeScanner.resume(), 2000);
+            
+        } else if (currentMode === 'lens') {
+            // TRANSLATION & AI MODE (Contact Lenses)
+            
+            // Check if we already mapped this item previously
+            if (lensMappings[barcode]) {
+                document.getElementById('predictedDesc').value = lensMappings[barcode].desc;
+                document.getElementById('posBarcode').value = lensMappings[barcode].pos;
+                document.getElementById('ocrResult').innerText = "Loaded from Local Translation Memory.";
+            } else {
+                // New barcode detected
+                if (isCamera) {
+                    document.getElementById('ocrResult').innerText = "Running OCR on Box Image...";
+                    captureAndRunOCR(barcode);
+                } else {
+                    document.getElementById('ocrResult').innerText = "Manual scan. No camera image to OCR.";
+                    predictLensLogic(barcode, ""); // Try interpolation only
+                }
+            }
         }
+    }
 
-        // --- SMART INVERSE MULTIPLIER FOR HARDWARE SCALE ---
-        if (isSurfaceMode) {
-            const rectWidth = canvas.getBoundingClientRect().width || 900;
-            const cssScaleMultiplier = rectWidth / 900;
-            const dpr = window.devicePixelRatio || 1;
-            scale = (267 / 25.4) / (cssScaleMultiplier * dpr);
+    // --- 4. OCR & Interpolation Logic (Contact Lenses) ---
+    function captureAndRunOCR(barcode) {
+        const video = document.querySelector('#reader video');
+        if (!video) return predictLensLogic(barcode, ""); // Fallback
+
+        // Draw current video frame to a hidden canvas
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth; 
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Pass image to Tesseract
+        Tesseract.recognize(canvas.toDataURL('image/jpeg'), 'eng')
+            .then(({ data: { text } }) => {
+                const cleanedText = text.trim() || "No text found on box.";
+                document.getElementById('ocrResult').innerText = cleanedText;
+                predictLensLogic(barcode, cleanedText);
+            })
+            .catch(err => {
+                console.error("OCR Failed:", err);
+                document.getElementById('ocrResult').innerText = "OCR Failed.";
+                predictLensLogic(barcode, "");
+            });
+    }
+
+    function predictLensLogic(barcode, ocrText) {
+        // Extract Diopter Power using regex (e.g., "-4.00", "+1.25")
+        const powerMatch = ocrText.match(/[+-]\d{1,2}\.\d{2}/);
+        const power = powerMatch ? powerMatch[0] : "";
+        
+        let prediction = `Unknown Contact Lens ${power}`;
+        
+        // 1. Direct Lookup
+        if (database.lenses[barcode]) {
+            prediction = database.lenses[barcode];
         } else {
-            scale = 3.78;
-        }
-
-        const A = getVal('frameA');
-        const B = getVal('frameB');
-        const DBL = getVal('dbl');
-        const shape = document.getElementById('frameShape').value;
-        const lensDia = getVal('lensDia');
-        
-        const userED = getVal('diag');
-        document.getElementById('mbsDisplay').innerText = "MBS (Centered): " + Math.ceil(userED + 2) + " mm";
-        
-        const gcOD = -((A + DBL) / 2);
-        const gcOS = ((A + DBL) / 2);
-        const btm = B / 2;
-        
-        const odPupilX = -getVal('odPD');
-        const odPupilY = btm - getVal('odOCHt');
-        const osPupilX = getVal('osPD');
-        const osPupilY = btm - getVal('osOCHt');
-
-        document.getElementById('sizeWarning').classList.add('hidden');
-
-        // PAL OFFSET CALCULATION
-        let palOffset = (lensType === 'PAL') ? 2 : (lensType === 'PAL_TLD') ? 4 : 0;
-        const targetBlankY_OD = odPupilY + palOffset;
-        const targetBlankY_OS = osPupilY + palOffset;
-
-        // TRUE POINT-CLOUD SCANNER
-        const r = A / 2;
-        const b = B / 2;
-        let path = new Path2D();
-        
-        if (shape === 'Aviator' || shape === 'CatEye') {
-            const pathStr = shape === 'Aviator' 
-                ? 'M 56, 6 C 54, 3, 46, 0, 28, 0 C 6, 1, 0, 6, 0, 25 C 0, 40, 9, 50, 21, 50 C 34, 50, 49, 43, 58, 15 C 58, 10, 56.84, 7.5, 56, 6 Z'
-                : 'M 56,14 C 48,-5 -3,-2 -1,10 C 0,30 15,50 35,50 C 49,48 56,40 58,25 C 58,20 57,17 56,14 Z';
-            const matrix = new DOMMatrix().translate(-r, -b).scale(A / 58, B / 50);
-            path.addPath(new Path2D(pathStr), matrix);
-        } else if (shape === 'Rectangle') {
-            const trueHypot = Math.hypot(r, b);
-            let dynR = 8;
-            if (trueHypot > userED / 2) {
-                dynR = Math.max(0, Math.min((trueHypot - userED / 2) * 2.5, r, b));
-            }
-            if (path.roundRect) path.roundRect(-r, -b, A, B, dynR); 
-            else path.rect(-r, -b, A, B);
-        } else if (shape === 'Round') {
-            if (path.ellipse) path.ellipse(0, 0, r, b, 0, 0, Math.PI * 2);
-            else path.arc(0, 0, r, 0, Math.PI * 2);
-        } else if (shape === 'Geometric') {
-            const inset = (Math.hypot(r, b) > userED / 2) ? (1 - ((userED / 2) / Math.hypot(r, b))) * r : 0;
-            const cX = A * 0.08 + inset, cY = B * 0.11 + inset;
-            path.moveTo(-r + cX, -b); path.lineTo(r - cX, -b); path.lineTo(r, -b + cY); path.lineTo(r, b - cY); path.lineTo(r - cX, b); path.lineTo(-r + cX, b); path.lineTo(-r, b - cY); path.lineTo(-r, -b + cY); path.closePath();
-        }
-
-        let shapePointsOD = [];
-        let shapePointsOS = [];
-        ctx.save();
-        ctx.resetTransform();
-        for (let x = -Math.ceil(r); x <= Math.ceil(r); x += 1) {
-            for (let y = -Math.ceil(b); y <= Math.ceil(b); y += 1) {
-                if (ctx.isPointInPath(path, x, y)) {
-                    shapePointsOD.push({x: x, y: y});
-                    shapePointsOS.push({x: -x, y: y});
-                }
-            }
-        }
-        ctx.restore();
-
-        const getMaxRadius = (points, cx, cy) => {
-            let maxSq = 0;
-            for (let i = 0; i < points.length; i++) {
-                const distSq = (points[i].x - cx)**2 + (points[i].y - cy)**2;
-                if (distSq > maxSq) maxSq = distSq;
-            }
-            return Math.sqrt(maxSq);
-        };
-
-        if (activeLiveMode === 'plus') {
-            odBlankX = gcOD; 
-            odBlankY = 0; 
-            osBlankX = gcOS; 
-            osBlankY = 0;
+            // 2. Sequential Interpolation (Handling the missing -4.00 logic)
+            // Strip the 12th digit (Mod 10 Check Digit) to get the 11-digit base
+            const baseStr = barcode.substring(0, barcode.length - 1);
+            const numBase = parseInt(baseStr, 10);
             
-            window.odOCX_val = odPupilX; 
-            window.odOCY_val = odPupilY;
-            window.osOCX_val = osPupilX; 
-            window.osOCY_val = osPupilY;
-            
-            setSlidersFromOffset(odPupilX - gcOD, targetBlankY_OD - 0, osPupilX - gcOS, targetBlankY_OS - 0);
-
-        } else if (activeLiveMode === 'minus') {
-            window.odOCX_val = odPupilX; 
-            window.odOCY_val = odPupilY;
-            window.osOCX_val = osPupilX; 
-            window.osOCY_val = osPupilY;
-            
-            const R = lensDia / 2;
-            
-            const findMinusBlank = (pupilX, targetY, gcX, gcY, pointsArray) => {
-                const cx = pupilX - gcX;
-                const cy = targetY - gcY;
-                
-                if (R >= getMaxRadius(pointsArray, cx, cy)) {
-                    return {x: pupilX, y: targetY, valid: true}; 
-                }
-                
-                if (R < getMaxRadius(pointsArray, 0, 0)) {
-                    return {x: gcX, y: gcY, valid: false}; 
-                }
-                
-                for (let i = 0; i <= 100; i++) {
-                    const t = i / 100;
-                    const testX = pupilX + t * (gcX - pupilX);
-                    const testY = targetY + t * (gcY - targetY);
-                    if (R >= getMaxRadius(pointsArray, testX - gcX, testY - gcY)) {
-                        return {x: testX, y: testY, valid: true};
+            if (!isNaN(numBase)) {
+                // Search neighbors (e.g., check the -3.75 and -4.25 barcodes)
+                for (let i = -3; i <= 3; i++) {
+                    if (i === 0) continue;
+                    let testBase = String(numBase + i);
+                    
+                    // Look through the keys of our lens database
+                    const neighborKey = Object.keys(database.lenses).find(k => k.startsWith(testBase));
+                    if (neighborKey) {
+                        const neighborDesc = database.lenses[neighborKey];
+                        prediction = `Interpolated near: [${neighborDesc}] (Assumed Power: ${power})`;
+                        break;
                     }
                 }
-                return {x: gcX, y: gcY, valid: false};
-            };
-
-            const resOD = findMinusBlank(odPupilX, targetBlankY_OD, gcOD, 0, shapePointsOD);
-            odBlankX = resOD.x; 
-            odBlankY = resOD.y; 
-            const validOD = resOD.valid;
-
-            const resOS = findMinusBlank(osPupilX, targetBlankY_OS, gcOS, 0, shapePointsOS);
-            osBlankX = resOS.x; 
-            osBlankY = resOS.y; 
-            const validOS = resOS.valid;
-
-            if (!validOD || !validOS) {
-                document.getElementById('sizeWarning').classList.remove('hidden');
-            }
-            
-            setSlidersFromOffset(odPupilX - resOD.x, targetBlankY_OD - resOD.y, osPupilX - resOS.x, targetBlankY_OS - resOS.y);
-
-        } else {
-            window.odOCX_val = odBlankX + getHDecSliderVal('OD');
-            window.odOCY_val = odBlankY + getVDecSliderVal('OD') - palOffset;
-            window.osOCX_val = osBlankX + getHDecSliderVal('OS');
-            window.osOCY_val = osBlankY + getVDecSliderVal('OS') - palOffset;
-            
-            const R = lensDia / 2;
-            const checkManual = (blankX, blankY, gcX, gcY, pointsArray) => {
-                return R >= getMaxRadius(pointsArray, blankX - gcX, blankY - gcY);
-            };
-            if (!checkManual(odBlankX, odBlankY, gcOD, 0, shapePointsOD) || !checkManual(osBlankX, osBlankY, gcOS, 0, shapePointsOS)) {
-                document.getElementById('sizeWarning').classList.remove('hidden');
-            }
-
-            ['odHDec', 'odVDec', 'osHDec', 'osVDec'].forEach(id => {
-                document.getElementById('t_' + id).innerText = Number(getVal(id)).toFixed(1);
-            });
-        }
-
-        window.gcOD_val = gcOD; 
-        window.gcOS_val = gcOS;
-        window.odPupilX_val = odPupilX; 
-        window.odPupilY_val = odPupilY;
-        window.osPupilX_val = osPupilX; 
-        window.osPupilY_val = osPupilY;
-
-        // --- CALCULATE AND DISPLAY RESULTS DATA (MIRRORING SLIDERS) ---
-        
-        let diaPadding = (activeLiveMode === 'plus') ? 2 : 0;
-
-        // OD Added Decentration Vector
-        const hValOD = getVal('odHDec');
-        const hDirTextOD = document.getElementById('odHDir').options[document.getElementById('odHDir').selectedIndex].text;
-        const vValOD = getVal('odVDec');
-        const vDirTextOD = document.getElementById('odVDir').options[document.getElementById('odVDir').selectedIndex].text;
-
-        // TABO Axis Mapping: 0° is Viewer's Right. 180° is Viewer's Left. 90° is Up.
-        // For OD (Right Eye on Viewer's Left): 'In' (Nasal) is towards Viewer's Right (+X). 'Out' is (-X).
-        let xOD = (hDirTextOD === 'In') ? hValOD : -hValOD;
-        let yOD = (vDirTextOD === 'Up') ? vValOD : -vValOD;
-        
-        let magOD = Math.hypot(xOD, yOD);
-        let angOD = Math.atan2(yOD, xOD) * 180 / Math.PI;
-        if (angOD < 0) angOD += 360;
-
-        document.getElementById('resOD_H').innerText = `${hValOD.toFixed(1)} mm ${hValOD === 0 ? '' : hDirTextOD}`;
-        document.getElementById('resOD_V').innerText = `${vValOD.toFixed(1)} mm ${vValOD === 0 ? '' : vDirTextOD}`;
-        document.getElementById('resOD_Vec').innerText = `${magOD.toFixed(1)} mm @ ${magOD === 0 ? 0 : Math.round(angOD)}°`;
-        document.getElementById('resOD_Dia').innerText = `${lensDia + diaPadding} mm`;
-        
-        const odWarn = document.getElementById('resOD_Warning');
-        if (activeLiveMode !== 'minus' && magOD > 5) {
-            odWarn.innerHTML = "(Warning: Decentration over 5mm. Choose a smaller frame or bigger diameter blank, then move the uncut lens to lessen the needed decentration)";
-            odWarn.style.display = 'block';
-        } else {
-            odWarn.style.display = 'none';
-        }
-
-        // OS Added Decentration Vector
-        const hValOS = getVal('osHDec');
-        const hDirTextOS = document.getElementById('osHDir').options[document.getElementById('osHDir').selectedIndex].text;
-        const vValOS = getVal('osVDec');
-        const vDirTextOS = document.getElementById('osVDir').options[document.getElementById('osVDir').selectedIndex].text;
-
-        // For OS (Left Eye on Viewer's Right): 'In' (Nasal) is towards Viewer's Left (-X). 'Out' is (+X).
-        let xOS = (hDirTextOS === 'Out') ? hValOS : -hValOS; 
-        let yOS = (vDirTextOS === 'Up') ? vValOS : -vValOS;
-        
-        let magOS = Math.hypot(xOS, yOS);
-        let angOS = Math.atan2(yOS, xOS) * 180 / Math.PI;
-        if (angOS < 0) angOS += 360;
-
-        document.getElementById('resOS_H').innerText = `${hValOS.toFixed(1)} mm ${hValOS === 0 ? '' : hDirTextOS}`;
-        document.getElementById('resOS_V').innerText = `${vValOS.toFixed(1)} mm ${vValOS === 0 ? '' : vDirTextOS}`;
-        document.getElementById('resOS_Vec').innerText = `${magOS.toFixed(1)} mm @ ${magOS === 0 ? 0 : Math.round(angOS)}°`;
-        document.getElementById('resOS_Dia').innerText = `${lensDia + diaPadding} mm`;
-
-        const osWarn = document.getElementById('resOS_Warning');
-        if (activeLiveMode !== 'minus' && magOS > 5) {
-            osWarn.innerHTML = "(Warning: Decentration over 5mm. Choose a smaller frame or bigger diameter blank, then move the uncut lens to lessen the needed decentration)";
-            osWarn.style.display = 'block';
-        } else {
-            osWarn.style.display = 'none';
-        }
-
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save(); 
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        
-        ctx.strokeStyle = '#f3f4f6'; ctx.lineWidth = 1;
-        for(let i = -canvas.width/2; i < canvas.width/2; i += (10 * scale)) {
-            ctx.beginPath(); ctx.moveTo(i, -canvas.height/2); ctx.lineTo(i, canvas.height/2); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(-canvas.width/2, i); ctx.lineTo(canvas.width/2, i); ctx.stroke();
-        }
-        
-        ctx.strokeStyle = '#1f2937'; ctx.lineWidth = 2.5; 
-        drawShapePath(ctx, gcOD * scale, 0, A * scale, B * scale, shape, true);
-        drawShapePath(ctx, gcOS * scale, 0, A * scale, B * scale, shape, false);
-        
-        ctx.beginPath(); ctx.moveTo((gcOD + A / 2) * scale, 0); ctx.quadraticCurveTo(0, -10, (gcOS - A / 2) * scale, 0); ctx.stroke();
-        
-        drawCrosshair(gcOD * scale, 0, '#9ca3af'); drawCrosshair(gcOS * scale, 0, '#9ca3af');
-        drawX(odPupilX * scale, odPupilY * scale, '#ef4444'); drawX(osPupilX * scale, osPupilY * scale, '#ef4444');
-        drawBlank(odBlankX * scale, odBlankY * scale, lensDia * scale); drawBlank(osBlankX * scale, osBlankY * scale, lensDia * scale);
-        drawCrosshair(window.odOCX_val * scale, window.odOCY_val * scale, '#3b82f6'); drawCrosshair(window.osOCX_val * scale, window.osOCY_val * scale, '#3b82f6');
-        
-        ctx.restore();
-    }
-
-    // --- BUTTON CONTROLS ---
-    function toggleRecommendation(isPlus) {
-        const mode = isPlus ? 'plus' : 'minus';
-        
-        if (activeLiveMode === mode) { 
-            activeLiveMode = 'none'; 
-            updateButtonStates(); 
-            updateUI(); 
-        } else {
-            if (!hasSkippedCopyCheck && (getVal('odPD') !== getVal('osPD') || getVal('odOCHt') !== getVal('osOCHt') || getVal('odHDec') !== getVal('osHDec') || getVal('odVDec') !== getVal('osVDec'))) { 
-                pendingActionIsPlus = isPlus; 
-                document.getElementById('customModal').classList.remove('hidden'); 
-                return; 
-            }
-            
-            activeLiveMode = mode;
-            updateButtonStates(); 
-            
-            if (activeLiveMode === 'plus') {
-                executeRecommendPlus();
-            } else {
-                setVal('lensDia', 75); 
-                updateUI();
             }
         }
-    }
-
-    function updateButtonStates() {
-        const bP = document.getElementById('btnPlus');
-        const bM = document.getElementById('btnMinus');
-        const ind = document.getElementById('liveIndicatorContainer');
-        const warningEl = document.getElementById('sizeWarning');
-        const dragHint = document.getElementById('dragHint');
         
-        bP.innerText = activeLiveMode === 'plus' ? "Stop Recommendation" : "Recommend for Plus Lens";
-        bM.innerText = activeLiveMode === 'minus' ? "Stop Recommendation" : "Recommend for Minus Lens";
-        ind.className = activeLiveMode === 'none' ? "invisible" : "flex justify-center items-center h-4 mt-1";
-        
-        // Hide the animated drag hint if live mode is active (since clicking auto-disables it anyway)
-        if (dragHint) {
-            dragHint.style.opacity = activeLiveMode !== 'none' ? '0' : '1';
-        }
-
-        if (activeLiveMode !== 'minus') {
-            warningEl.classList.add('hidden');
-        }
+        document.getElementById('predictedDesc').value = prediction;
     }
 
-    function executeRecommendPlus() {
-        const shape = document.getElementById('frameShape').value;
-        const A = getVal('frameA');
-        const B = getVal('frameB');
-        let baseED = getVal('diag');
-        
-        if (shape === 'Aviator' || shape === 'CatEye') {
-            baseED = Math.max(baseED, Math.hypot(A, B * 0.75));
-        }
-        
-        let targetDia = Math.ceil(baseED + 2);
-        if (targetDia < 40) targetDia = 40; 
-        setVal('lensDia', targetDia); 
-        updateUI();
-    }
+    // --- 5. Confirmation & Exporting ---
+    function confirmMapping() {
+        const barcode = document.getElementById('detectedBarcode').innerText;
+        const pos = document.getElementById('posBarcode').value.trim();
+        const desc = document.getElementById('predictedDesc').value;
 
-    function executeRecommendMinus(isButtonClick = false) {
-        if (isButtonClick) { 
-            setVal('lensDia', 75); 
-        }
-        updateUI();
-    }
+        if (!pos || barcode === "---") return alert("Please ensure a valid barcode is scanned and a POS SKU is entered.");
 
-    function resetDecentration() { 
-        ['odHDec','odVDec','osHDec','osVDec'].forEach(id => setVal(id, 0)); 
-        activeLiveMode = 'none'; 
-        updateButtonStates(); 
-        updateUI(); 
-    }
-    
-    function resetBlankSize() { 
-        setVal('lensDia', 65); 
-        activeLiveMode = 'none'; 
-        updateButtonStates(); 
-        updateUI(); 
-    }
-    
-    function resetState() { 
-        setVal('frameA', 54); setVal('frameA_num', 54);
-        setVal('frameB', 50); setVal('frameB_num', 50);
-        setVal('dbl', 16); setVal('dbl_num', 16);
-        setVal('odPD', 35); setVal('odPD_slide', 35);
-        setVal('osPD', 35); setVal('osPD_slide', 35);
-        setVal('odOCHt', 25); setVal('odOCHt_slide', 25);
-        setVal('osOCHt', 25); setVal('osOCHt_slide', 25);
-        
-        document.getElementById('frameShape').value = 'Rectangle'; 
-        document.getElementById('currentShapeIcon').innerHTML = `<svg class="shape-svg" viewBox="0 0 60 20">${shapeOptions['Rectangle'].svg}</svg> <span>Rectangle</span>`; 
-        
-        updateEDBounds(); 
-        resetBlankSize(); 
-        resetDecentration(); 
-        
-        // Reset Link Leaders
-        pdLeader = null;
-        htLeader = null;
-
-        odBlankX = window.gcOD_val; 
-        odBlankY = 0; 
-        osBlankX = window.gcOS_val; 
-        osBlankY = 0;
-        updateUI();
-    }
-
-    function closeModal() { 
-        document.getElementById('customModal').classList.add('hidden'); 
-    }
-
-    // Modal functions to handle the workflow
-    function proceedWithCopy() { 
-        closeModal(); 
-        copyODtoOS(); 
-        hasSkippedCopyCheck = true;
-        toggleRecommendation(pendingActionIsPlus); 
-        hasSkippedCopyCheck = false; // Reset for future clicks
-    }
-
-    function proceedWithoutCopy() { 
-        closeModal(); 
-        hasSkippedCopyCheck = true;
-        toggleRecommendation(pendingActionIsPlus); 
-        hasSkippedCopyCheck = false; // Reset for future clicks
-    }
-
-    function closeZoomModal() { 
-        document.getElementById('zoomModal').classList.add('hidden'); 
-    }
-
-    function handleInputEvent(id) {
-        // Bi-directional sync map
-        const syncMap = {
-            'frameA': 'frameA_num', 'frameA_num': 'frameA',
-            'frameB': 'frameB_num', 'frameB_num': 'frameB',
-            'diag': 'diag_num', 'diag_num': 'diag',
-            'dbl': 'dbl_num', 'dbl_num': 'dbl',
-            'odPD': 'odPD_slide', 'odPD_slide': 'odPD',
-            'osPD': 'osPD_slide', 'osPD_slide': 'osPD',
-            'odOCHt': 'odOCHt_slide', 'odOCHt_slide': 'odOCHt',
-            'osOCHt': 'osOCHt_slide', 'osOCHt_slide': 'osOCHt'
+        // Save mapping to Local Storage
+        lensMappings[barcode] = { 
+            pos: pos, 
+            desc: desc, 
+            timestamp: new Date().toISOString() 
         };
-
-        if (syncMap[id]) {
-            setVal(syncMap[id], getVal(id));
-            if (id.includes('_num') || id.includes('_slide')) {
-                id = syncMap[id]; // Alias back to primary ID for existing logic
-            }
-        }
+        localStorage.setItem('magrabi_lens_mappings', JSON.stringify(lensMappings));
         
-        if (['frameA', 'frameB'].includes(id)) {
-            updateEDBounds();
-        }
+        alert("Lens successfully mapped and saved to Translation Table!");
         
-        // --- SMART SYNC LOGIC ---
-        // PD Link
-        if (id === 'odPD') {
-            if (pdLeader === null || pdLeader === 'OD') {
-                pdLeader = 'OD';
-                setVal('osPD', getVal('odPD'));
-                setVal('osPD_slide', getVal('odPD'));
-            } else if (pdLeader === 'OS') {
-                pdLeader = 'broken';
-            }
-        } else if (id === 'osPD') {
-            if (pdLeader === null || pdLeader === 'OS') {
-                pdLeader = 'OS';
-                setVal('odPD', getVal('osPD'));
-                setVal('odPD_slide', getVal('osPD'));
-            } else if (pdLeader === 'OD') {
-                pdLeader = 'broken';
-            }
+        resetUI();
+        if (html5QrcodeScanner && html5QrcodeScanner.getState() === 2) {
+            html5QrcodeScanner.resume(); // Resume camera
         }
-        
-        // Height Link
-        if (id === 'odOCHt') {
-            if (htLeader === null || htLeader === 'OD') {
-                htLeader = 'OD';
-                setVal('osOCHt', getVal('odOCHt'));
-                setVal('osOCHt_slide', getVal('odOCHt'));
-            } else if (htLeader === 'OS') {
-                htLeader = 'broken';
-            }
-        } else if (id === 'osOCHt') {
-            if (htLeader === null || htLeader === 'OS') {
-                htLeader = 'OS';
-                setVal('odOCHt', getVal('osOCHt'));
-                setVal('osOCHt_slide', getVal('osOCHt'));
-            } else if (htLeader === 'OD') {
-                htLeader = 'broken';
-            }
-        }
-
-        const decOverrides = ['odHDec', 'odVDec', 'osHDec', 'osVDec', 'odHDir', 'odVDir', 'osHDir', 'osVDir'];
-        
-        if (decOverrides.includes(id)) { 
-            activeLiveMode = 'none'; 
-            updateButtonStates(); 
-        } else if (id === 'lensDia' && activeLiveMode === 'plus') {
-            activeLiveMode = 'none'; 
-            updateButtonStates();
-        }
-        
-        if (activeLiveMode !== 'none') {
-            if (activeLiveMode === 'plus') {
-                executeRecommendPlus();
-            } else {
-                executeRecommendMinus(false);
-            }
-        } else {
-            updateUI();
-        }
+        document.getElementById('manualBarcode').focus();
     }
 
-    function copyODtoOS() { 
-        setVal('osPD', getVal('odPD')); 
-        setVal('osPD_slide', getVal('odPD')); 
-        setVal('osOCHt', getVal('odOCHt')); 
-        setVal('osOCHt_slide', getVal('odOCHt')); 
-        setVal('osHDec', getVal('odHDec')); 
-        setVal('osVDec', getVal('odVDec')); 
-        document.getElementById('osHDir').value = document.getElementById('odHDir').value; 
-        document.getElementById('osVDir').value = document.getElementById('odVDir').value; 
-        
-        // Force the link back to OD as leader since they explicitly copied
-        pdLeader = 'OD';
-        htLeader = 'OD';
-
-        const offsetBlankX = odBlankX - window.gcOD_val;
-        osBlankX = window.gcOS_val - offsetBlankX; 
-        osBlankY = odBlankY; 
-        
-        handleInputEvent('osPD'); 
+    function resetUI() {
+        document.getElementById('detectedBarcode').innerText = "---";
+        document.getElementById('specsResult').innerText = "Waiting for scan...";
+        document.getElementById('ocrResult').innerText = "Awaiting camera scan...";
+        document.getElementById('predictedDesc').value = "";
+        document.getElementById('posBarcode').value = "";
     }
 
-    // --- EVENT LISTENERS ---
-    window.onload = function() {
-        checkDeviceCompatibility(); 
-        
-        initBlanks(); 
-        initDropdown();
-        
-        document.querySelectorAll('input, select').forEach(el => {
-            el.addEventListener('input', (e) => handleInputEvent(e.target.id));
-        });
-        
-        window.addEventListener('resize', updateUI);
-        
-        canvas.addEventListener('wheel', e => { 
-            if (e.ctrlKey) { 
-                e.preventDefault(); 
-                document.getElementById('zoomModal').classList.remove('hidden'); 
-            } 
-        }, { passive: false });
-        
-        canvas.addEventListener('mousedown', e => {
-            const hint = document.getElementById('dragHint');
-            if (hint) hint.style.opacity = '0'; 
-            
-            const r = canvas.getBoundingClientRect(); 
-            const cssScaleX = 900 / r.width;
-            const cssScaleY = 340 / r.height;
-            
-            const mX = ((e.clientX - r.left) * cssScaleX - 450) / scale;
-            const mY = ((e.clientY - r.top) * cssScaleY - 170) / scale;
-            
-            if (Math.hypot(mX - odBlankX, mY - odBlankY) < getVal('lensDia') / 2) { 
-                isDragging = true; 
-                dragTarget = 'OD'; 
-            }
-            else if (Math.hypot(mX - osBlankX, mY - osBlankY) < getVal('lensDia') / 2) { 
-                isDragging = true; 
-                dragTarget = 'OS'; 
-            }
-        });
-        
-        canvas.addEventListener('mousemove', e => {
-            if (!isDragging) return; 
-            
-            if (activeLiveMode !== 'none') { 
-                activeLiveMode = 'none'; 
-                updateButtonStates(); 
-            }
+    function exportTranslation() {
+        if (Object.keys(lensMappings).length === 0) {
+            return alert("No lens mappings exist yet! Scan and link items first.");
+        }
 
-            const r = canvas.getBoundingClientRect(); 
-            const cssScaleX = 900 / r.width;
-            const cssScaleY = 340 / r.height;
-            
-            const mX = ((e.clientX - r.left) * cssScaleX - 450) / scale;
-            const mY = ((e.clientY - r.top) * cssScaleY - 170) / scale;
-            
-            let palOffset = (lensType === 'PAL') ? 2 : (lensType === 'PAL_TLD') ? 4 : 0;
-
-            if (dragTarget === 'OD') { 
-                odBlankX = mX; 
-                odBlankY = mY;
-                setSlidersFromOffset(window.odPupilX_val - mX, (window.odPupilY_val + palOffset) - mY, null, null);
-            } else {
-                osBlankX = mX; 
-                osBlankY = mY;
-                setSlidersFromOffset(null, null, window.osPupilX_val - mX, (window.osPupilY_val + palOffset) - mY);
-            }
-            updateUI();
-        });
+        // Build CSV string
+        let csv = "Manufacturer_Barcode,Magrabi_POS_SKU,Description,Date_Mapped\n";
+        for (const [mfgBarcode, data] of Object.entries(lensMappings)) {
+            // Clean up descriptions to prevent CSV formatting issues
+            const cleanDesc = data.desc.replace(/"/g, '""'); 
+            csv += `"${mfgBarcode}","${data.pos}","${cleanDesc}","${data.timestamp}"\n`;
+        }
         
-        window.addEventListener('mouseup', () => isDragging = false);
-        window.addEventListener('mouseleave', () => isDragging = false);
-        
-        updateEDBounds(); 
-        updateUI();
-    };
+        // Trigger download
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = window.URL.createObjectURL(blob);
+        a.download = 'Magrabi_Lens_Translation_Table.csv';
+        a.click();
+    }
 </script>
+
 </body>
 </html>
