@@ -3,444 +3,866 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magrabi Universal POS Scanner</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+    <title>Ophthalmic Lens Stock Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
     <style>
-        :root {
-            --primary: #2C3E50;
-            --accent: #3498DB;
-            --success: #27AE60;
-            --warning: #F39C12;
-            --bg: #F4F7F6;
-            --card: #FFFFFF;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg); 
-            margin: 0; 
-            padding: 20px; 
-            color: #333; 
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f5fafd; }
+        ::-webkit-scrollbar-thumb { background: #a8cce5; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3598dc; }
         
-        .container { max-width: 1000px; margin: auto; display: grid; gap: 20px; }
-        .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #EEE; padding-bottom: 10px; margin-bottom: 20px; }
-        h2 { margin: 0; color: var(--primary); }
-        
-        /* Toggle Mode Buttons */
-        .mode-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
-        .mode-btn { 
-            flex: 1; padding: 15px; border: 2px solid #EEE; border-radius: 8px; cursor: pointer; 
-            text-align: center; font-weight: bold; color: #7F8C8D; transition: 0.3s; background: transparent;
-        }
-        .mode-btn.active.specs { border-color: var(--accent); background: #EBF5FB; color: var(--accent); }
-        .mode-btn.active.lens { border-color: var(--success); background: #EAFAF1; color: var(--success); }
-
-        /* Scanner Area */
-        .scanner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 768px) { .scanner-grid { grid-template-columns: 1fr; } }
-        
-        #reader { width: 100%; border-radius: 8px; overflow: hidden; border: 2px solid #EEE; }
-        .result-box { background: #F8F9FA; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary); }
-        
-        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
-        .status-ready { background: #E8F8F5; color: #1ABC9C; }
-        
-        .form-group { margin-top: 15px; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #CCC; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-        input[type="file"] { padding: 10px 0; }
-        
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 10px; transition: 0.2s; color: white;}
-        .btn-primary { background: var(--primary); }
-        .btn-success { background: var(--success); }
-        .btn-warning { background: var(--warning); }
-        .btn:disabled { background: #BDC3C7; cursor: not-allowed; }
-
-        /* Autocomplete Styles */
-        .autocomplete-container { position: relative; }
-        .suggestions-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #CCC;
+        input[type=file]::file-selector-button {
+            background-color: #f5fafd;
+            color: #3598dc;
+            border: 1px solid #a8cce5;
+            padding: 6px 12px;
             border-radius: 4px;
-            max-height: 350px; 
-            overflow-y: auto;
-            z-index: 1000;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            display: none;
+            cursor: help; 
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.75rem;
         }
-        .suggestion-item {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #EEE;
-            font-size: 0.85rem;
-            color: #333;
+        input[type=file]::file-selector-button:hover {
+            background-color: #3598dc;
+            color: white;
+            border-color: #3598dc;
         }
-        .suggestion-item:last-child { border-bottom: none; }
-        .suggestion-item:hover { background: #EAF2F8; color: var(--accent); font-weight: bold; }
-        
-        .helper-text { font-size: 0.8rem; color: #7F8C8D; margin-top: 4px; display: block; }
-        
-        .action-buttons { display: flex; gap: 10px; }
     </style>
 </head>
-<body>
+<body class="bg-[#f5fafd] text-gray-800 font-sans antialiased min-h-screen p-4 md:p-8 flex flex-col justify-between">
 
-<div class="container">
-    <div class="card" id="setupCard">
-        <h2><i class="fa-solid fa-database"></i> Load Magrabi Master Database</h2>
-        <p style="color: #7F8C8D;">Upload your 'Combined SKU.csv' file to initialize the system.</p>
-        <input type="file" id="csvFileInput" accept=".csv">
-        <button class="btn btn-primary" id="loadBtn" onclick="processCSV()">Load Database</button>
-        <div id="loadStatus" style="margin-top:10px; font-weight:bold; color: var(--success);"></div>
-    </div>
-
-    <div class="card" id="scannerCard" style="display: none;">
-        <div class="header">
-            <h2><i class="fa-solid fa-qrcode"></i> Universal POS Scanner</h2>
-            <button class="btn btn-primary" style="width: auto; margin:0;" onclick="exportTranslation()"><i class="fa-solid fa-file-export"></i> Export Lens Mappings</button>
-        </div>
-
-        <div class="mode-toggle">
-            <button class="mode-btn active specs" id="btnSpecs" onclick="setMode('specs')">
-                <i class="fa-solid fa-glasses"></i> Suns & Specs Mode<br><small>(Direct POS Scan)</small>
-            </button>
-            <button class="mode-btn lens" id="btnLens" onclick="setMode('lens')">
-                <i class="fa-solid fa-eye"></i> Contact Lens Mode<br><small>(AI Vision & Translate)</small>
-            </button>
-        </div>
-
-        <div class="scanner-grid">
-            <div>
-                <div class="form-group">
-                    <label style="font-weight: bold;">Manual Entry (or use physical scanner gun):</label>
-                    <input type="text" id="manualBarcode" placeholder="Scan or type barcode here and hit Enter..." autocomplete="off">
+    <div class="max-w-7xl mx-auto w-full bg-white rounded-lg shadow-[0_4px_20px_rgba(53,152,220,0.08)] overflow-hidden border border-[#e4e7ea] mb-8">
+        
+        <div class="bg-white px-8 py-6 border-b-4 border-[#3598dc] flex flex-col md:flex-row justify-between items-center relative">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="text-[#3598dc] hover:text-[#2f86c2] text-2xl font-bold text-decoration-none" title="Back to Home">←</a>
+                <div>
+                    <h1 class="text-3xl font-light text-gray-700 tracking-wide uppercase"><span class="font-bold text-[#3598dc]">Ophthalmic Lens</span> Stock Analyzer</h1>
+                    <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-semibold italic">Internal Optical Inventory Control System</p>
                 </div>
-                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #EEE;">
-                <div id="reader"></div>
-                <button id="startCamBtn" class="btn btn-primary" onclick="startScanner()"><i class="fa-solid fa-camera"></i> Start Camera / QR Scanner</button>
+            </div>
+            
+            <button id="exportBtnTop" onclick="exportToExcel()" class="hidden mt-4 md:mt-0 bg-white border-2 border-[#3598dc] text-[#3598dc] hover:bg-[#3598dc] hover:text-white font-bold py-2 px-6 rounded transition-colors flex items-center text-sm shadow-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Export Report
+            </button>
+        </div>
+
+        <div class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                
+                <div class="p-4 border-2 border-[#a8cce5] rounded bg-[#f5fafd] shadow-sm relative">
+                    <div class="flex justify-between items-center mb-2 border-b border-[#a8cce5] pb-1">
+                        <label class="font-bold text-xs text-[#3598dc] uppercase tracking-tight">Webshop PDF</label>
+                        <span class="text-[9px] font-bold text-[#3598dc] uppercase">Max 80 Files</span>
+                    </div>
+                    <input type="file" id="fileWebshop" accept=".pdf" multiple class="w-full text-[10px] text-gray-600" title="print as PDF file set to 100 P.O. per page, print to PDF all the pages until from Today until the last Inventory date. Upload multiple PDF here.">
+                </div>
+
+                <div class="p-4 border border-[#e4e7ea] rounded bg-white">
+                    <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Sales Transaction Report</label>
+                    <input type="file" id="fileSalesTrans" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Date from last inventory date to today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                </div>
+                
+                <div class="p-4 border border-[#e4e7ea] rounded bg-white">
+                    <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Sales Summary by Salesman</label>
+                    <input type="file" id="fileSalesSum" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from earliest date with a deleted invoice included in the Sales Transaction Report until the date Today.&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                </div>
+                
+                <div class="p-4 border border-[#e4e7ea] rounded bg-white">
+                    <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Intransit</label>
+                    <input type="file" id="fileIntransit" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from last inventory Date to today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                </div>
+                
+                <div class="p-4 border border-[#e4e7ea] rounded bg-white">
+                    <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Stock (MB52)</label>
+                    <input type="file" id="fileStock" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                </div>
+                
+                <div class="p-4 border border-[#e4e7ea] rounded bg-white">
+                    <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Items to Be Delivered Report</label>
+                    <input type="file" id="fileToBeDel" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from last inventory date until today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                </div>
+                
+                <div class="p-4 border border-[#e4e7ea] rounded bg-white">
+                    <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Sales Delivery Report</label>
+                    <input type="file" id="fileDelivery" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from earliest date with a deleted invoice included in the Sales Transaction Report until the date Today.&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                </div>
             </div>
 
-            <div>
-                <div class="result-box">
-                    <div id="statusIndicator" class="status-badge status-ready">Ready to Scan</div>
-                    <h3 id="detectedBarcode" style="margin: 10px 0; color: var(--primary);">---</h3>
+            <div class="text-center mb-6 flex flex-col items-center">
+                <button onclick="runAudit()" id="runBtn" class="bg-[#3598dc] hover:bg-[#2f86c2] text-white font-bold py-3 px-16 rounded shadow-lg w-full max-w-md transition-colors uppercase tracking-widest text-xs">
+                    Run Analysis
+                </button>
+                <p id="progressText" class="mt-3 text-xs font-bold text-[#3598dc] hidden uppercase tracking-widest"></p>
+            </div>
+
+            <div id="resultsDashboard" class="hidden border-t-2 border-[#f5fafd] pt-8">
+                
+                <h2 class="text-lg font-bold text-gray-700 mb-6 tracking-wide border-l-4 border-[#3598dc] pl-3 uppercase">Audit Flags & Alerts</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+                    <div class="bg-white border-l-4 border-blue-400 p-4 rounded shadow-sm border border-[#e4e7ea]"><h3 class="font-bold text-blue-700 text-[10px] uppercase tracking-wider mb-2">Over-Ordered Lenses</h3><ul id="flagOverOrders" class="text-[10px] text-gray-600 list-disc list-inside space-y-1"></ul></div>
+                    <div class="bg-white border-l-4 border-orange-400 p-4 rounded shadow-sm border border-[#e4e7ea]"><h3 class="font-bold text-orange-700 text-[10px] uppercase tracking-wider mb-2">Missing Orders</h3><ul id="flagMissing" class="text-[10px] text-gray-600 list-disc list-inside space-y-1"></ul></div>
+                    <div class="bg-[#f5fafd] border-l-4 border-yellow-400 p-4 rounded shadow-sm border border-[#e4e7ea]"><h3 class="font-bold text-yellow-700 text-[10px] uppercase tracking-wider mb-2">Deletions Warnings</h3><ul id="flagDeletions" class="text-[10px] text-gray-600 list-disc list-inside space-y-1"></ul></div>
+                    <div class="bg-[#fcf3f3] border-l-4 border-red-500 p-4 rounded shadow-sm border border-[#e4e7ea] lg:col-span-3"><h3 class="font-bold text-red-700 text-[10px] uppercase tracking-wider mb-2">Accidental Delivery Alerts</h3><p class="text-[9px] text-red-500 mb-2 border-b border-red-100 pb-1">Items marked delivered but missing corresponding order IDs. Check SLOC 1000.</p><ul id="flagAccidentalDel" class="text-[10px] text-gray-600 list-disc list-inside space-y-1"></ul></div>
+                </div>
+
+                <div class="flex justify-between items-end border-b-2 border-[#3598dc] pb-2 mb-4 mt-8">
+                    <h2 class="text-lg font-bold text-gray-800 tracking-wide uppercase">Official Stock Reconciliation Ledger</h2>
+                </div>
+                
+                <div class="overflow-x-auto shadow-sm rounded border border-[#e4e7ea]">
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-[#f5fafd] border-b border-[#e4e7ea] text-gray-700">
+                            <tr>
+                                <th class="py-3 px-5 text-left text-[10px] font-bold uppercase tracking-wider text-[#3598dc]">SKU / Article</th>
+                                <th class="py-3 px-5 text-left text-[10px] font-bold uppercase tracking-wider text-[#3598dc]">Description</th>
+                                <th class="py-3 px-5 text-center text-[10px] font-bold uppercase tracking-wider">Good Stock (1000)</th>
+                                <th class="py-3 px-5 text-center text-[10px] font-bold uppercase tracking-wider">Defect (4000)</th>
+                                <th class="py-3 px-5 text-center text-[10px] font-bold uppercase tracking-wider">To Deliver</th>
+                                <th class="py-3 px-5 text-center text-[10px] font-bold uppercase tracking-wider">Intransit</th>
+                                <th class="py-3 px-5 text-center text-[10px] font-bold uppercase tracking-wider">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody" class="text-[11px] text-gray-600 divide-y divide-[#e4e7ea]"></tbody>
+                    </table>
+                </div>
+
+                <!-- NEW BUTTONS ROW -->
+                <div class="mt-8 text-center flex flex-col md:flex-row justify-center items-center gap-4">
+                    <button onclick="exportToExcel()" class="bg-[#3598dc] hover:bg-[#2f86c2] text-white font-bold py-4 px-8 rounded shadow-xl transition-all inline-flex items-center text-sm uppercase tracking-widest w-full md:w-auto">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Download Audit Report
+                    </button>
                     
-                    <div id="specsUI">
-                        <label style="font-size: 0.85rem; color: #7F8C8D;">Item Description (From Database):</label>
-                        <div id="specsResult" style="font-size: 1.2rem; font-weight: bold; margin-top: 5px; color: var(--primary);">Waiting for scan...</div>
-                    </div>
-
-                    <div id="lensUI" style="display: none;">
-                        <label style="font-size: 0.85rem; color: #7F8C8D;">OCR Box Text (Lens Mode Camera Only):</label>
-                        <div id="ocrResult" style="font-family: monospace; font-size: 0.9rem; margin-top: 5px; color: #555; background: #FFF; padding: 8px; border: 1px solid #EEE;">
-                            Awaiting camera scan...
-                        </div>
-                        
-                        <div class="form-group">
-                            <label style="font-weight: bold; font-size: 0.9rem;">Wildcard Search & Link:</label>
-                            <span class="helper-text">Tip: Use <b>%</b> as a wildcard. Example: <i>iClinic%-%1.25</i></span>
-                            <div class="autocomplete-container">
-                                <input type="text" id="predictedDesc" placeholder="Type to search database dynamically..." autocomplete="off">
-                                <div id="descSuggestions" class="suggestions-dropdown"></div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label style="font-weight: bold; font-size: 0.9rem;">Magrabi POS Barcode (SKU):</label>
-                            <input type="text" id="posBarcode" placeholder="Enter corresponding Magrabi SKU to link...">
-                        </div>
-                        
-                        <div class="action-buttons">
-                            <button class="btn btn-success" onclick="confirmMapping()"><i class="fa-solid fa-check"></i> Confirm Mapping</button>
-                            <button class="btn btn-warning" onclick="cancelAndResume()"><i class="fa-solid fa-rotate-right"></i> Cancel & Scan Next</button>
-                        </div>
-                    </div>
+                    <button onclick="generatePrepStockTake()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 px-8 rounded shadow-xl transition-all inline-flex items-center text-sm uppercase tracking-widest w-full md:w-auto">
+                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Pending Prep Stock Take
+                    </button>
                 </div>
             </div>
+
+            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden hidden" id="debugContainer">
+                <div class="flex justify-between items-center bg-gray-800 px-6 py-3 border-b border-gray-700">
+                    <span class="font-bold text-gray-200 text-xs tracking-widest uppercase">System Diagnostic Log</span>
+                    <button onclick="document.getElementById('debugLog').innerHTML=''" class="text-gray-400 hover:text-white text-xs">CLEAR LOG</button>
+                </div>
+                <div id="debugLog" class="p-6 h-64 overflow-y-auto whitespace-pre-wrap font-mono text-[11px] text-green-400 leading-relaxed"></div>
+            </div>
+
         </div>
     </div>
-</div>
 
-<script>
-    let database = { specs: {}, lenses: {} };
-    let currentMode = 'specs';
-    let html5QrcodeScanner;
-    let lensMappings = JSON.parse(localStorage.getItem('magrabi_lens_mappings')) || {};
+    <footer class="text-center pb-6">
+        <p class="text-[10px] text-gray-400 tracking-widest uppercase">For any comments and suggestions <a href="mailto:3393@magrabi.com" class="text-[#3598dc] hover:underline font-bold">email me</a>. -<a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" class="text-[#3598dc] hover:underline font-bold">gelotools</a></p>
+    </footer>
 
-    function processCSV() {
-        const fileInput = document.getElementById('csvFileInput').files[0];
-        if (!fileInput) return alert("Please select the 'Combined SKU' CSV file.");
+    <script>
+        const db = { salesTrans: [], salesSum: [], intransit: [], stock: [], toBeDel: [], delivery: [], extractedOrderIds: new Set(), extractedPOs: new Set() };
 
-        const btn = document.getElementById('loadBtn');
-        btn.disabled = true;
-        btn.innerText = "Parsing Data (Please Wait)...";
+        function logDebug(msg) {
+            const container = document.getElementById('debugContainer');
+            const logPanel = document.getElementById('debugLog');
+            if (container && logPanel) {
+                container.classList.remove('hidden');
+                logPanel.innerHTML += `> ${msg}\n`;
+                logPanel.scrollTop = logPanel.scrollHeight;
+            }
+            console.log(msg);
+        }
 
-        Papa.parse(fileInput, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                let specsCount = 0; let lensCount = 0;
-                results.data.forEach(row => {
-                    const category = String(row['Merchandise Category'] || "").trim().toUpperCase();
-                    const article = String(row['Article'] || "").trim();
-                    const desc = String(row['Article Description'] || "").trim();
-                    if (!article) return;
+        function cleanSKU(rawSKU) {
+            if (rawSKU === undefined || rawSKU === null || rawSKU === "") return null;
+            return rawSKU.toString().trim().replace(/^0+/, ''); 
+        }
 
-                    if (category.startsWith('CL') || category.startsWith('CS')) {
-                        database.lenses[article] = desc;
-                        lensCount++;
-                    } else {
-                        database.specs[article] = desc;
-                        specsCount++;
+        function getVal(row, possibleKeys) {
+            const rowKeys = Object.keys(row);
+            const clean = (s) => s.toString().toLowerCase().replace(/[^a-z0-9]/g, ''); 
+            
+            for (let pk of possibleKeys) {
+                const target = clean(pk);
+                const foundKey = rowKeys.find(rk => clean(rk) === target);
+                if (foundKey) return row[foundKey];
+            }
+            for (let pk of possibleKeys) {
+                const target = clean(pk);
+                const foundKey = rowKeys.find(rk => clean(rk).startsWith(target));
+                if (foundKey) return row[foundKey];
+            }
+            for (let pk of possibleKeys) {
+                const target = clean(pk);
+                const foundKey = rowKeys.find(rk => clean(rk).includes(target));
+                if (foundKey) return row[foundKey];
+            }
+            return null;
+        }
+
+        function isContactLens(desc, category = "") {
+            const d = (desc || "").toString().trim().toLowerCase();
+            const c = (category || "").toString().trim().toLowerCase();
+            return c.includes('contact') || d.startsWith('cl;') || d.startsWith('clcp;');
+        }
+
+        function isOphthalmicLens(desc, category = "") {
+            const d = (desc || "").toString().trim().toLowerCase();
+            const c = (category || "").toString().trim().toLowerCase();
+            
+            if (d.startsWith('o;') || d.startsWith('s;') || d.startsWith('os;') || d.startsWith('cl;') || d.startsWith('clcp;')) return false;
+            if (d.includes('solution') || d.includes('demo lens')) return false;
+            if (c.includes('frame') || c.includes('sunglass') || c.includes('contact') || c.includes('solution') || c === 's' || c === 'o') return false;
+
+            if (d.includes('zwei') || d.includes('zeiss') || d.includes('essilor')) return true;
+            if (d.includes('sphere') || d.includes('cylindre') || d.includes('axis')) return true;
+            if (c.includes('rx') || c.includes('ophthalmic') || (c.includes('lens') && !c.includes('contact'))) return true;
+            if (d.match(/\b(sv|pal|fwd|tld|cls|svi|fsv)\b/)) return true;
+
+            return false;
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let inQuotes = false;
+            let currentCell = '';
+            let currentRow = [];
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char === '"' && text[i+1] === '"') {
+                    currentCell += '"'; i++;
+                } else if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    currentRow.push(currentCell.trim()); currentCell = '';
+                } else if (char === '\n' && !inQuotes) {
+                    currentRow.push(currentCell.trim()); rows.push(currentRow); currentRow = []; currentCell = '';
+                } else if (char !== '\r') {
+                    currentCell += char;
+                }
+            }
+            if (currentCell || currentRow.length > 0) {
+                currentRow.push(currentCell.trim()); rows.push(currentRow);
+            }
+            return rows;
+        }
+
+        function universalSAPParser(text) {
+            logDebug("[SAP PARSER] Analyzing raw file structure...");
+            const cleanText = text.replace(/=\r?\n/g, ''); 
+            
+            if (cleanText.includes("<table") || cleanText.includes("<TABLE")) {
+                logDebug("[SAP PARSER] Disguised HTML Table detected. Extracting raw nodes...");
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(cleanText, 'text/html');
+                const tables = doc.querySelectorAll('table');
+                let bestTable = null;
+                let maxCols = 0;
+                
+                tables.forEach(t => {
+                    const row = t.querySelector('tr');
+                    if (row) {
+                        const cols = row.querySelectorAll('td, th').length;
+                        if (cols > maxCols) { maxCols = cols; bestTable = t; }
                     }
                 });
-
-                document.getElementById('loadStatus').innerText = `Success! Loaded ${specsCount} General Items & ${lensCount} Lenses.`;
-                setTimeout(() => {
-                    document.getElementById('setupCard').style.display = 'none';
-                    document.getElementById('scannerCard').style.display = 'block';
-                    document.getElementById('manualBarcode').focus();
-                }, 1500);
+                
+                if (bestTable) {
+                    const result = [];
+                    bestTable.querySelectorAll('tr').forEach(tr => {
+                        const row = [];
+                        tr.querySelectorAll('td, th').forEach(td => {
+                            row.push(td.innerText.trim());
+                        });
+                        if (row.length > 0) result.push(row);
+                    });
+                    logDebug(`[SAP PARSER] Recovered ${result.length} rows from HTML.`);
+                    return result;
+                }
             }
-        });
-    }
-
-    const predictedDescInput = document.getElementById('predictedDesc');
-    const descSuggestions = document.getElementById('descSuggestions');
-
-    predictedDescInput.addEventListener('input', function() {
-        const rawQuery = this.value.toLowerCase().trim();
-        descSuggestions.innerHTML = ''; 
-        
-        if (rawQuery.length < 2) {
-            descSuggestions.style.display = 'none';
-            return;
+            
+            const lines = cleanText.split(/\r?\n/);
+            const tabCount = (lines[0].match(/\t/g) || []).length;
+            if (tabCount > 2) {
+                logDebug("[SAP PARSER] Disguised TSV File detected.");
+                return lines.map(line => line.split('\t').map(c => c.trim()));
+            }
+            
+            logDebug("[SAP PARSER] Processing as standard Text/CSV.");
+            return parseCSV(cleanText);
         }
 
-        const escapedParts = rawQuery.split('%').map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-        const regexPattern = escapedParts.join('.*');
-        const searchRegex = new RegExp(regexPattern, 'i'); 
+        function readFile(file, targetDbKey, headerKeywords) {
+            return new Promise((resolve) => {
+                if (!file) { resolve(); return; }
 
-        let matches = [];
-        for (const [sku, desc] of Object.entries(database.lenses)) {
-            if (searchRegex.test(desc)) {
-                matches.push({ sku, desc });
-                if (matches.length >= 100) break; 
-            }
-        }
+                logDebug(`Reading File: ${file.name} for [${targetDbKey}]...`);
 
-        if (matches.length > 0) {
-            matches.forEach(match => {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
-                div.innerHTML = `<strong>${match.desc}</strong> <br><small style="color: #7F8C8D;">SKU: ${match.sku}</small>`;
-                div.onclick = function() {
-                    predictedDescInput.value = match.desc;     
-                    document.getElementById('posBarcode').value = match.sku; 
-                    descSuggestions.style.display = 'none';    
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const buffer = e.target.result;
+                    const bytes = new Uint8Array(buffer);
+                    
+                    let isBinary = false;
+                    if (bytes[0] === 0x50 && bytes[1] === 0x4B) isBinary = true; 
+                    if (bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0) isBinary = true; 
+
+                    let rows = [];
+
+                    try {
+                        if (isBinary) {
+                            logDebug(`[${targetDbKey}] Binary Excel signature detected.`);
+                            const workbook = XLSX.read(buffer, { type: 'array' });
+                            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                            rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
+                        } else {
+                            logDebug(`[${targetDbKey}] Text-based signature detected. Routing to Universal Parser.`);
+                            const text = new TextDecoder("utf-8").decode(buffer);
+                            rows = universalSAPParser(text);
+                        }
+                    } catch(err) {
+                        logDebug(`[${targetDbKey}] Parser error: ` + err.message);
+                    }
+
+                    let headerRowIndex = -1;
+                    for (let i = 0; i < Math.min(rows.length, 500); i++) {
+                        if (!rows[i] || !Array.isArray(rows[i])) continue;
+                        
+                        if (rows[i].length === 1 && typeof rows[i][0] === 'string' && rows[i][0].includes('\t')) {
+                            rows[i] = rows[i][0].split('\t');
+                        }
+                        
+                        const rowString = rows[i].join("").toLowerCase().replace(/[^a-z0-9]/g, '');
+                        if (headerKeywords.every(kw => rowString.includes(kw.toLowerCase().replace(/[^a-z0-9]/g, '')))) {
+                            if (rows[i].length > 1) {
+                                headerRowIndex = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (headerRowIndex === -1) {
+                        logDebug(`[ERROR] Headers not found for ${targetDbKey}. Keywords: [${headerKeywords.join(',')}]`);
+                        headerRowIndex = 0; 
+                    } else {
+                        logDebug(`[SUCCESS] Headers found for ${targetDbKey} at row ${headerRowIndex}. Columns: ${rows[headerRowIndex].length}`);
+                    }
+
+                    const headers = rows[headerRowIndex] || [];
+                    const data = [];
+                    for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                        if (!rows[i] || !Array.isArray(rows[i]) || rows[i].length <= 1) continue; 
+                        const obj = {};
+                        headers.forEach((h, idx) => {
+                            obj[h] = rows[i][idx];
+                        });
+                        data.push(obj);
+                    }
+                    
+                    db[targetDbKey] = data;
+                    logDebug(`[${targetDbKey}] Extracted ${data.length} data rows.`);
+                    resolve();
                 };
-                descSuggestions.appendChild(div);
+                reader.readAsArrayBuffer(file); 
             });
-            descSuggestions.style.display = 'block';
-        } else {
-            descSuggestions.style.display = 'none';
         }
-    });
 
-    document.addEventListener('click', function(e) {
-        if (e.target.id !== 'predictedDesc') {
-            descSuggestions.style.display = 'none';
-        }
-    });
-
-    function setMode(mode) {
-        currentMode = mode;
-        document.getElementById('btnSpecs').className = `mode-btn specs ${mode === 'specs' ? 'active' : ''}`;
-        document.getElementById('btnLens').className = `mode-btn lens ${mode === 'lens' ? 'active' : ''}`;
-        document.getElementById('specsUI').style.display = mode === 'specs' ? 'block' : 'none';
-        document.getElementById('lensUI').style.display = mode === 'lens' ? 'block' : 'none';
-        
-        resetUI();
-        resumeCamera();
-        document.getElementById('manualBarcode').focus();
-    }
-
-    document.getElementById('manualBarcode').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const code = this.value.trim();
-            if (code) processBarcode(code, false);
-            this.value = ''; 
-        }
-    });
-
-    function startScanner() {
-        document.getElementById('startCamBtn').style.display = 'none';
-        html5QrcodeScanner = new Html5Qrcode("reader");
-        
-        html5QrcodeScanner.start(
-            { facingMode: "environment" }, 
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            (decodedText) => {
-                html5QrcodeScanner.pause(); // Pause to let user confirm
-                processBarcode(decodedText, true);
-            },
-            () => {}
-        ).catch(err => {
-            console.error(err);
-            alert("Camera access denied or unavailable.");
-            document.getElementById('startCamBtn').style.display = 'block';
-        });
-    }
-
-    // --- Helper function to robustly wake the camera up ---
-    function resumeCamera() {
-        try {
-            if (html5QrcodeScanner) {
-                // 3 is the internal state code for PAUSED in the library
-                if (html5QrcodeScanner.getState() === 3) {
-                    html5QrcodeScanner.resume();
-                } else {
-                    // Fallback to force it if the state machine is confused
-                    html5QrcodeScanner.resume();
-                }
-            }
-        } catch (err) {
-            // Camera is already running or not yet initialized, safe to ignore
-        }
-    }
-
-    function processBarcode(barcode, isCamera) {
-        document.getElementById('detectedBarcode').innerText = barcode;
-        
-        if (currentMode === 'specs') {
-            const desc = database.specs[barcode] || database.lenses[barcode];
-            const resultDiv = document.getElementById('specsResult');
-            
-            if (desc) {
-                resultDiv.innerText = desc;
-                resultDiv.style.color = "var(--success)";
-            } else {
-                resultDiv.innerText = "Item Not Found in Master Database.";
-                resultDiv.style.color = "#E74C3C";
-            }
-            if (isCamera) setTimeout(() => resumeCamera(), 2000);
-            
-        } else if (currentMode === 'lens') {
-            if (lensMappings[barcode]) {
-                document.getElementById('predictedDesc').value = lensMappings[barcode].desc;
-                document.getElementById('posBarcode').value = lensMappings[barcode].pos;
-                document.getElementById('ocrResult').innerText = "Loaded from Local Translation Memory.";
-            } else {
-                if (isCamera) {
-                    document.getElementById('ocrResult').innerText = "Running OCR on Box Image...";
-                    captureAndRunOCR(barcode);
-                } else {
-                    document.getElementById('ocrResult').innerText = "Manual scan. No camera image to OCR.";
-                    predictLensLogic(barcode, ""); 
+        async function readMultiplePDFs(files) {
+            db.extractedOrderIds.clear(); 
+            db.extractedPOs.clear();
+            if (!files || files.length === 0) return;
+            const maxFiles = Math.min(files.length, 80);
+            for (let i = 0; i < maxFiles; i++) {
+                try {
+                    const file = files[i];
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    for (let j = 1; j <= pdf.numPages; j++) {
+                        const page = await pdf.getPage(j);
+                        const textContent = await page.getTextContent();
+                        const rawText = textContent.items.map(item => item.str).join(" ");
+                        const cleanText = rawText.replace(/\s/g, ''); 
+                        
+                        const orderMatches = cleanText.match(/\d{4}-\d{5,7}-\d{1,2}/g) || [];
+                        orderMatches.forEach(m => db.extractedOrderIds.add(m));
+                        
+                        const poMatches = cleanText.match(/(8050\d{6}|6733\d{6})/g) || [];
+                        poMatches.forEach(m => db.extractedPOs.add(m));
+                    }
+                } catch (err) {
+                    console.error("PDF Parsing Error:", err);
                 }
             }
         }
-    }
 
-    function captureAndRunOCR(barcode) {
-        const video = document.querySelector('#reader video');
-        if (!video) return predictLensLogic(barcode, ""); 
+        async function runAudit() {
+            const btn = document.getElementById('runBtn');
+            const progressText = document.getElementById('progressText');
+            btn.disabled = true; progressText.classList.remove('hidden');
+            progressText.innerText = "Scanning Excel Files & Mapping Headers...";
+            document.getElementById('debugLog').innerHTML = ""; 
 
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth; 
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        Tesseract.recognize(canvas.toDataURL('image/jpeg'), 'eng')
-            .then(({ data: { text } }) => {
-                const cleanedText = text.trim() || "No text found on box.";
-                document.getElementById('ocrResult').innerText = cleanedText;
-                predictLensLogic(barcode, cleanedText);
-            })
-            .catch(err => {
-                document.getElementById('ocrResult').innerText = "OCR Failed.";
-                predictLensLogic(barcode, "");
+            logDebug("=== STARTING NEW AUDIT ===");
+
+            try {
+                await Promise.all([
+                    readFile(document.getElementById('fileSalesTrans').files[0], 'salesTrans', ['invoice', 'netamount']),
+                    readFile(document.getElementById('fileSalesSum').files[0], 'salesSum', ['item', 'qty']), 
+                    readFile(document.getElementById('fileIntransit').files[0], 'intransit', ['sto', 'article']),
+                    readFile(document.getElementById('fileStock').files[0], 'stock', ['article', 'unrestricted']),
+                    readFile(document.getElementById('fileToBeDel').files[0], 'toBeDel', ['itemnumber', 'quantity']),
+                    readFile(document.getElementById('fileDelivery').files[0], 'delivery', ['invoice', 'item'])
+                ]);
+
+                await readMultiplePDFs(document.getElementById('fileWebshop').files);
+                
+                progressText.innerText = "Reconciling Lens Data...";
+                await new Promise(resolve => setTimeout(resolve, 50)); 
+
+                analyzeData();
+                document.getElementById('resultsDashboard').classList.remove('hidden');
+                document.getElementById('exportBtnTop').classList.remove('hidden');
+                progressText.innerText = "Analysis Complete";
+                logDebug("=== AUDIT COMPLETE ===");
+
+            } catch (error) {
+                alert("Error reading files. Check console log.");
+                logDebug("ERROR: " + error.message);
+                console.error(error);
+            } finally {
+                btn.innerText = "Run Analysis";
+                btn.disabled = false;
+            }
+        }
+
+        // =========================================================
+        // NEW FEATURE: PENDING PREPARATION FOR STOCK TAKE GENERATOR
+        // =========================================================
+        function generatePrepStockTake() {
+            logDebug("Generating Pending Preparation for Stock Take Report...");
+
+            // 1. Gather SLOC 1000 Stock availability
+            const s1000 = {};
+            db.stock.forEach(row => {
+                let sku = cleanSKU(getVal(row, ['article', 'itemnumber']));
+                const sloc = (getVal(row, ['storagelocation', 'sloc']) || "").toString().trim();
+                const qty = parseInt(getVal(row, ['unrestricted'])) || 0;
+                const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
+                
+                // Only heal for the sake of mapping if it's broken, but mostly we rely on raw from MB52
+                sku = healSKU(sku, desc, null) || sku;
+                
+                if (sku && sloc === "1000") {
+                    s1000[sku] = (s1000[sku] || 0) + qty;
+                }
             });
-    }
 
-    function predictLensLogic(barcode, ocrText) {
-        const powerMatch = ocrText.match(/[+-]\d{1,2}\.\d{2}/);
-        const power = powerMatch ? powerMatch[0] : "";
-        
-        if (power) {
-            predictedDescInput.value = `%-%${power}`;
-            const event = new Event('input', { bubbles: true });
-            predictedDescInput.dispatchEvent(event);
-        } else {
-            predictedDescInput.value = "";
+            // 2. Gather Intransit stock availability
+            const validIntransit = {};
+            db.intransit.forEach(row => {
+                let sku = cleanSKU(getVal(row, ['article', 'itemnumber']));
+                const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
+                const qty = Math.round(parseFloat(getVal(row, ['poqty', 'poquantity', 'intransitqty', 'quantity', 'qty']))) || 0;
+                sku = healSKU(sku, desc, null) || sku;
+                
+                if (sku && qty > 0) {
+                    validIntransit[sku] = (validIntransit[sku] || 0) + qty;
+                }
+            });
+
+            // 3. Calculate total needed quantities per SKU across ALL "To Be Delivered" rows
+            // This allows us to flag if stock is insufficient for ALL rows combined.
+            const requiredQty = {};
+            db.toBeDel.forEach(row => {
+                let sku = cleanSKU(getVal(row, ['itemnumber', 'article']));
+                const desc = getVal(row, ['itemdescription', 'description', 'desc']) || "";
+                const invRaw = getVal(row, ['invoice']);
+                const inv = invRaw ? invRaw.toString().trim() : "";
+                sku = healSKU(sku, desc, inv) || sku;
+                
+                const qty = parseInt(getVal(row, ['quantity', 'qty'])) || 0;
+                if (sku) {
+                    requiredQty[sku] = (requiredQty[sku] || 0) + qty;
+                }
+            });
+
+            // 4. Map Webshop Orders
+            const invoiceOrderCount = {};
+            const uniqueOrderIds = [...db.extractedOrderIds];
+            uniqueOrderIds.forEach(oid => {
+                const parts = oid.split('-');
+                if (parts.length >= 2) {
+                    const inv = parts[1];
+                    invoiceOrderCount[inv] = (invoiceOrderCount[inv] || 0) + 1;
+                }
+            });
+
+            // 5. Build Report Export Data
+            const reportData = [
+                ["Pending Preparation for Stock Take"],
+                ["Generated On:", new Date().toLocaleString()],
+                [],
+                ["Invoice Number", "Invoice Date", "Category", "Article / SKU", "Description", "Quantity", "Status"]
+            ];
+
+            db.toBeDel.forEach(row => {
+                const invRaw = getVal(row, ['invoice']);
+                const inv = invRaw ? invRaw.toString().trim() : "";
+                const invDate = getVal(row, ['date', 'invoicedate', 'createdon', 'docdate']) || "";
+                const category = getVal(row, ['category']) || "";
+                const desc = getVal(row, ['itemdescription', 'description', 'desc']) || "";
+                
+                let sku = cleanSKU(getVal(row, ['itemnumber', 'article']));
+                sku = healSKU(sku, desc, inv) || sku;
+                
+                const qty = parseInt(getVal(row, ['quantity', 'qty'])) || 0;
+
+                const isContact = isContactLens(desc, category);
+                const isOphthalmic = isOphthalmicLens(desc, category);
+                
+                const stockAvail = s1000[sku] || 0;
+                const totalReq = requiredQty[sku] || 0;
+                const baseWarning = "Warning: Not enough Quantity in system stock for all rows sharing this article";
+                
+                let status = "";
+
+                if (isContact) {
+                    // Contact Lenses: Keep status empty
+                    status = "";
+                } else if (isOphthalmic) {
+                    // Ophthalmic Lenses Logic
+                    if (stockAvail >= totalReq && totalReq > 0) {
+                        status = "In Stock";
+                    } else {
+                        // Fails MB52 check, verify webshop and intransit
+                        const orderedInWebshop = !!invoiceOrderCount[inv];
+                        
+                        if (!orderedInWebshop) {
+                            status = "Not in Stock - " + baseWarning;
+                        } else {
+                            // Ordered in Webshop, check Intransit
+                            const inTransitQty = validIntransit[sku] || 0;
+                            if (inTransitQty > 0) {
+                                status = "In Transit - " + baseWarning;
+                            } else {
+                                // Ordered, but NOT in Intransit = It has been GR'd (Goods Receipt)
+                                status = "In Stock (Received) - " + baseWarning;
+                            }
+                        }
+                    }
+                } else {
+                    // Frames, Sunglasses, Others Logic
+                    if (stockAvail >= totalReq && totalReq > 0) {
+                        status = "In Stock";
+                    } else {
+                        status = baseWarning;
+                    }
+                }
+
+                reportData.push([
+                    inv,
+                    invDate,
+                    category,
+                    String(sku || ""), // Cast to string for proper formatting in Excel
+                    desc,
+                    qty,
+                    status
+                ]);
+            });
+
+            // 6. Generate and Download Excel File
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(reportData);
+            // Setup column widths
+            ws['!cols'] = [{wch: 15}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 50}, {wch: 10}, {wch: 80}];
+            
+            XLSX.utils.book_append_sheet(wb, ws, "Pending Prep Stock Take");
+            XLSX.writeFile(wb, `Pending_Preparation_Stock_Take_${new Date().toISOString().split('T')[0]}.xlsx`);
+            logDebug("Pending Preparation for Stock Take Report Generated Successfully.");
         }
-    }
 
-    function confirmMapping() {
-        const barcode = document.getElementById('detectedBarcode').innerText;
-        const pos = document.getElementById('posBarcode').value.trim();
-        const desc = document.getElementById('predictedDesc').value;
+        // --- Existing Healing & Analysis Logic below ---
 
-        if (!pos || barcode === "---") return alert("Please ensure a valid barcode is scanned and a POS SKU is entered.");
+        const salesSumByInv = {};
+        const descToSkuMap = {};
 
-        lensMappings[barcode] = { 
-            pos: pos, 
-            desc: desc, 
-            timestamp: new Date().toISOString() 
-        };
-        localStorage.setItem('magrabi_lens_mappings', JSON.stringify(lensMappings));
-        
-        alert("Lens successfully mapped and saved to Translation Table!");
-        
-        resetUI();
-        resumeCamera(); // <--- Correctly wakes up the scanner
-        document.getElementById('manualBarcode').focus();
-    }
+        function healSKU(sku, desc, inv = null) {
+            if (!sku) return sku;
+            const isBroken = sku.includes('+') || /^[\d\.]+E\+?\d+$/i.test(sku) || (sku.match(/^\d+$/) && sku.length >= 14 && sku.endsWith('000'));
+            if (!isBroken) return sku;
 
-    // New Function for the Cancel Button
-    function cancelAndResume() {
-        resetUI();
-        resumeCamera();
-        document.getElementById('manualBarcode').focus();
-    }
+            if (inv && salesSumByInv[inv]) {
+                const exactItem = salesSumByInv[inv].find(item => item.desc === desc && isOphthalmicLens(item.desc, item.category));
+                if (exactItem && !exactItem.sku.includes('+') && !exactItem.sku.endsWith('000')) return exactItem.sku;
+                
+                const fallbackItem = salesSumByInv[inv].find(item => isOphthalmicLens(item.desc, item.category));
+                if (fallbackItem && !fallbackItem.sku.includes('+') && !fallbackItem.sku.endsWith('000')) return fallbackItem.sku;
+            }
 
-    function resetUI() {
-        document.getElementById('detectedBarcode').innerText = "---";
-        document.getElementById('specsResult').innerText = "Waiting for scan...";
-        document.getElementById('ocrResult').innerText = "Awaiting camera scan...";
-        document.getElementById('predictedDesc').value = "";
-        document.getElementById('posBarcode').value = "";
-    }
+            if (desc && descToSkuMap[desc]) {
+                return descToSkuMap[desc];
+            }
 
-    function exportTranslation() {
-        if (Object.keys(lensMappings).length === 0) {
-            return alert("No lens mappings exist yet! Scan and link items first.");
+            return sku;
         }
 
-        let csv = "Manufacturer_Barcode,Magrabi_POS_SKU,Description,Date_Mapped\n";
-        for (const [mfgBarcode, data] of Object.entries(lensMappings)) {
-            const cleanDesc = data.desc.replace(/"/g, '""'); 
-            csv += `"${mfgBarcode}","${data.pos}","${cleanDesc}","${data.timestamp}"\n`;
-        }
-        
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = window.URL.createObjectURL(blob);
-        a.download = 'Magrabi_Lens_Translation_Table.csv';
-        a.click();
-    }
-</script>
+        function analyzeData() {
+            let htmlDeletions = "", htmlMissing = "", htmlAccidental = "", htmlOverOrders = "", htmlStock = "";
 
+            const uniqueOrderIds = [...db.extractedOrderIds];
+            const invoiceOrderCount = {}; 
+            uniqueOrderIds.forEach(oid => {
+                const parts = oid.split('-');
+                if (parts.length >= 2) {
+                    const inv = parts[1];
+                    invoiceOrderCount[inv] = (invoiceOrderCount[inv] || 0) + 1;
+                }
+            });
+
+            const invoicesWithOL = new Set();
+            
+            // Clear maps before rebuild
+            Object.keys(salesSumByInv).forEach(k => delete salesSumByInv[k]);
+            Object.keys(descToSkuMap).forEach(k => delete descToSkuMap[k]);
+
+            db.salesSum.forEach(row => {
+                const inv = getVal(row, ['invoice']);
+                const invStr = inv ? inv.toString().trim() : null;
+                let sku = cleanSKU(getVal(row, ['item', 'article', 'itemnumber']));
+                const desc = getVal(row, ['description', 'itemdescription', 'desc']) || "";
+                const cat = getVal(row, ['category', 'merchandisecategory']) || "";
+                
+                const isPristine = sku && !/^[\d\.]+E\+?\d+$/i.test(sku) && !sku.includes('+') && !(sku.match(/^\d+$/) && sku.length >= 14 && sku.endsWith('000'));
+                
+                if (isPristine && desc) {
+                    descToSkuMap[desc] = sku;
+                }
+
+                if (invStr) {
+                    if (!salesSumByInv[invStr]) salesSumByInv[invStr] = [];
+                    salesSumByInv[invStr].push({ sku: sku, desc: desc, category: cat });
+                    if (isOphthalmicLens(desc, cat)) invoicesWithOL.add(invStr);
+                }
+            });
+
+            db.delivery.forEach(row => {
+                const inv = getVal(row, ['invoice']);
+                if (inv && isOphthalmicLens(getVal(row, ['description', 'itemdescription', 'desc']), getVal(row, ['category']))) {
+                    invoicesWithOL.add(inv.toString().trim());
+                }
+            });
+
+            db.toBeDel.forEach(row => {
+                const inv = getVal(row, ['invoice']);
+                if (inv && isOphthalmicLens(getVal(row, ['itemdescription', 'description', 'desc']), getVal(row, ['category']))) {
+                    invoicesWithOL.add(inv.toString().trim());
+                }
+            });
+
+            const allSalesTransInvoices = new Set();
+            
+            db.salesTrans.forEach(row => {
+                const net = parseFloat(getVal(row, ['net', 'return', 'netamount'])) || 0;
+                const invRaw = getVal(row, ['invoice']);
+                const inv = invRaw ? invRaw.toString().trim() : null;
+                
+                if (inv) {
+                    allSalesTransInvoices.add(inv);
+                    if (net < 0) {
+                        if (invoicesWithOL.has(inv)) {
+                            htmlDeletions += `<li>Inv <b class="text-[#3598dc]">${inv}</b> deleted. Check SLOC 1000.</li>`;
+                        }
+                    }
+                }
+            });
+
+            const needsBySKU = {}; const descBySKU = {}; const invOLNeeds = {}; const invOLSkus = {};
+
+            db.toBeDel.forEach(row => {
+                let sku = cleanSKU(getVal(row, ['itemnumber', 'article']));
+                const qty = parseInt(getVal(row, ['quantity', 'qty'])) || 0;
+                const desc = getVal(row, ['itemdescription', 'description', 'desc']) || "";
+                const category = getVal(row, ['category']) || "";
+                
+                const invRaw = getVal(row, ['invoice']);
+                const inv = invRaw ? invRaw.toString().trim() : "";
+
+                sku = healSKU(sku, desc, inv);
+
+                if (sku && qty > 0 && isOphthalmicLens(desc, category)) {
+                    needsBySKU[sku] = (needsBySKU[sku] || 0) + qty;
+                    descBySKU[sku] = desc;
+
+                    if (inv) {
+                        invOLNeeds[inv] = (invOLNeeds[inv] || 0) + qty;
+                        if (!invOLSkus[inv]) invOLSkus[inv] = new Set();
+                        invOLSkus[inv].add(sku);
+                        
+                        let orderFound = !!invoiceOrderCount[inv];
+                        if (!orderFound) htmlMissing += `<li>Missing Order: Invoice <b>${inv}</b> needs Lens <b>${sku}</b>, but no Order ID found in PDFs.</li>`;
+                    }
+                }
+            });
+
+            db.delivery.forEach(row => {
+                const invRaw = getVal(row, ['invoice']);
+                const inv = invRaw ? invRaw.toString().trim() : null;
+                const desc = getVal(row, ['description', 'itemdescription', 'desc']) || "";
+                const category = getVal(row, ['category']) || "";
+                let sku = cleanSKU(getVal(row, ['item', 'article']));
+                
+                sku = healSKU(sku, desc, inv);
+
+                if (inv && isOphthalmicLens(desc, category)) {
+                    const qty = parseInt(getVal(row, ['quantity', 'qty'])) || 1; 
+                    invOLNeeds[inv] = (invOLNeeds[inv] || 0) + qty;
+                    if (!invOLSkus[inv]) invOLSkus[inv] = new Set();
+                    if (sku) invOLSkus[inv].add(sku);
+                    
+                    if (sku && !descBySKU[sku]) descBySKU[sku] = desc;
+
+                    let orderExists = !!invoiceOrderCount[inv];
+                    let inSalesTrans = allSalesTransInvoices.has(inv);
+                    
+                    if (!orderExists && inSalesTrans) {
+                        htmlAccidental += `<li>Inv <b>${inv}</b> (SKU: ${sku || 'Unknown'}) delivered, but NO Webshop Order found. Risk of negative stock.</li>`;
+                    }
+                }
+            });
+
+            for (const inv in invoiceOrderCount) {
+                const ordersPlaced = invoiceOrderCount[inv];
+                const neededQty = invOLNeeds[inv] || 0;
+
+                if (ordersPlaced > neededQty && neededQty > 0) {
+                    let skuText = "";
+                    if (invOLSkus[inv] && invOLSkus[inv].size > 0) {
+                        skuText = ` <span class="text-gray-500 font-mono text-[10px]">(SKU: ${[...invOLSkus[inv]].join(', ')})</span>`;
+                    }
+                    htmlOverOrders += `<li>Over-Ordered: Inv <b class="text-[#3598dc]">${inv}</b>${skuText} requires ${neededQty} lens(es) based on system records, but has ${ordersPlaced} distinct Webshop Order IDs.</li>`;
+                }
+            }
+
+            const s1000 = {}; const s4000 = {};
+            db.stock.forEach(row => {
+                let sku = cleanSKU(getVal(row, ['article', 'itemnumber']));
+                const sloc = (getVal(row, ['storagelocation', 'sloc']) || "").toString().trim();
+                const qty = parseInt(getVal(row, ['unrestricted'])) || 0;
+                const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
+                const merchCat = getVal(row, ['merchandisecategory', 'category']);
+                
+                sku = healSKU(sku, desc, null);
+
+                if (sku && isOphthalmicLens(desc, merchCat)) {
+                    if (sloc === "1000") s1000[sku] = (s1000[sku] || 0) + qty;
+                    if (sloc === "4000") s4000[sku] = (s4000[sku] || 0) + qty;
+                    if (!descBySKU[sku]) descBySKU[sku] = desc;
+                }
+            });
+
+            const validIntransit = {};
+
+            db.intransit.forEach(row => {
+                let sku = cleanSKU(getVal(row, ['article', 'itemnumber'])); 
+                const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
+                const poQtyRaw = getVal(row, ['poqty', 'poquantity', 'intransitqty', 'intransitquantity', 'quantity', 'qty']);
+                const qty = Math.round(parseFloat(poQtyRaw)) || 0;
+                
+                sku = healSKU(sku, desc, null);
+
+                if (sku && qty > 0 && isOphthalmicLens(desc)) {
+                    if (!descBySKU[sku]) descBySKU[sku] = desc; 
+                    validIntransit[sku] = (validIntransit[sku] || 0) + qty;
+                }
+            });
+
+            const allSKUs = new Set([...Object.keys(needsBySKU), ...Object.keys(s1000), ...Object.keys(s4000), ...Object.keys(validIntransit)]);
+            
+            allSKUs.forEach(sku => {
+                const v1 = s1000[sku] || 0;
+                const v4 = s4000[sku] || 0;
+                const need = needsBySKU[sku] || 0;
+                const intrans = validIntransit[sku] || 0;
+                
+                const adjustedNeed = Math.max(0, need - intrans);
+                const variance = v1 - adjustedNeed;
+
+                if (v1 > 0 || need > 0 || intrans > 0 || v4 > 0) {
+                    let vColor = variance < 0 ? "bg-[#fcf3f3] text-red-600" : (variance > 0 ? "bg-[#f5fafd] text-[#3598dc]" : "bg-green-50 text-green-600");
+                    let vText = variance > 0 ? `+${variance}` : variance;
+                    
+                    htmlStock += `
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="py-3 px-5 font-mono text-gray-700">${sku}</td>
+                            <td class="py-3 px-5 text-[10px] text-gray-500 truncate max-w-xs" style="max-width:250px;">${descBySKU[sku] || 'Ophthalmic Lens'}</td>
+                            <td class="py-3 px-5 text-center font-bold text-gray-700">${v1}</td>
+                            <td class="py-3 px-5 text-center text-gray-400 italic">${v4}</td>
+                            <td class="py-3 px-5 text-center text-red-500 font-semibold">${need}</td>
+                            <td class="py-3 px-5 text-center text-orange-400 font-semibold">${intrans}</td>
+                            <td class="py-3 px-5 text-center font-bold ${vColor} rounded">${vText}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            document.getElementById('flagDeletions').innerHTML = htmlDeletions || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
+            document.getElementById('flagMissing').innerHTML = htmlMissing || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
+            document.getElementById('flagAccidentalDel').innerHTML = htmlAccidental || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
+            document.getElementById('flagOverOrders').innerHTML = htmlOverOrders || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
+            document.getElementById('stockTableBody').innerHTML = htmlStock;
+        }
+
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            const reconData = [
+                ["Official Stock Reconciliation Report"],
+                ["Generated On:", new Date().toLocaleString()],
+                [],
+                ["Lens SKU / Article", "Description", "Good Stock (1000)", "Defect (4000)", "To Deliver Qty", "Valid Intransit Qty", "Variance"]
+            ];
+            const tbody = document.getElementById('stockTableBody');
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 7) {
+                    reconData.push([
+                        String(cells[0].innerText), 
+                        cells[1].innerText, 
+                        parseInt(cells[2].innerText) || 0,
+                        parseInt(cells[3].innerText) || 0, 
+                        parseInt(cells[4].innerText) || 0,
+                        parseInt(cells[5].innerText) || 0, 
+                        cells[6].innerText
+                    ]);
+                }
+            });
+
+            const wsRecon = XLSX.utils.aoa_to_sheet(reconData);
+            wsRecon['!cols'] = [{wch: 22}, {wch: 55}, {wch: 15}, {wch: 15}, {wch: 18}, {wch: 20}, {wch: 15}];
+            XLSX.utils.book_append_sheet(wb, wsRecon, "Stock Reconciliation");
+
+            const flagsData = [["Audit Flags & Alerts"], ["Generated On:", new Date().toLocaleString()], [], ["Alert Category", "Flag Details"]];
+            const extractFlags = (ulId, categoryName) => {
+                const ul = document.getElementById(ulId);
+                if (!ul) return;
+                const lis = ul.querySelectorAll('li');
+                lis.forEach(li => { if (!li.innerText.includes("anomalies detected")) flagsData.push([categoryName, li.innerText]); });
+            };
+
+            extractFlags('flagOverOrders', 'Over-Ordered Lenses');
+            extractFlags('flagMissing', 'Missing Orders (Pending)');
+            extractFlags('flagDeletions', '24-Hour Deletions');
+            extractFlags('flagAccidentalDel', 'Accidental Delivery');
+            if (flagsData.length === 4) flagsData.push(["System Status", "Perfect! No anomalies detected across any category."]);
+
+            const wsFlags = XLSX.utils.aoa_to_sheet(flagsData);
+            wsFlags['!cols'] = [{wch: 30}, {wch: 100}];
+            XLSX.utils.book_append_sheet(wb, wsFlags, "Audit Warnings Log");
+            XLSX.writeFile(wb, `Ophthalmic_Lens_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+    </script>
 </body>
 </html>
