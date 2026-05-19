@@ -163,7 +163,7 @@
     </footer>
 
     <script>
-        const db = { salesTrans: [], salesSum: [], intransit: [], stock: [], toBeDel: [], delivery: [], extractedOrderIds: new Set(), extractedPOs: new Set() };
+        const db = { salesTrans: [], salesSum: [], intransit: [], stock: [], toBeDel: [], delivery: [], extractedOrderIds: new Set(), extractedPOs: new Set(), invoiceToPOs: {} };
 
         function logDebug(msg) {
             const container = document.getElementById('debugContainer');
@@ -255,7 +255,6 @@
             const cleanText = text.replace(/=\r?\n/g, ''); 
             
             if (cleanText.includes("<table") || cleanText.includes("<TABLE")) {
-                logDebug("[SAP PARSER] Disguised HTML Table detected. Extracting raw nodes...");
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(cleanText, 'text/html');
                 const tables = doc.querySelectorAll('table');
@@ -279,7 +278,6 @@
                         });
                         if (row.length > 0) result.push(row);
                     });
-                    logDebug(`[SAP PARSER] Recovered ${result.length} rows from HTML.`);
                     return result;
                 }
             }
@@ -287,14 +285,15 @@
             const lines = cleanText.split(/\r?\n/);
             const tabCount = (lines[0].match(/\t/g) || []).length;
             if (tabCount > 2) {
-                logDebug("[SAP PARSER] Disguised TSV File detected.");
                 return lines.map(line => line.split('\t').map(c => c.trim()));
             }
             
-            logDebug("[SAP PARSER] Processing as standard Text/CSV.");
             return parseCSV(cleanText);
         }
 
+        // =========================================================
+        // ROBUST MULTI-SHEET EXCEL PARSER
+        // =========================================================
         function readFile(file, targetDbKey, headerKeywords) {
             return new Promise((resolve) => {
                 if (!file) { resolve(); return; }
@@ -310,60 +309,71 @@
                     if (bytes[0] === 0x50 && bytes[1] === 0x4B) isBinary = true; 
                     if (bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0) isBinary = true; 
 
-                    let rows = [];
+                    let allData = [];
 
                     try {
+                        let sheetsRawData = [];
+
                         if (isBinary) {
-                            logDebug(`[${targetDbKey}] Binary Excel signature detected.`);
                             const workbook = XLSX.read(buffer, { type: 'array' });
-                            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                            rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
+                            workbook.SheetNames.forEach(sheetName => {
+                                const worksheet = workbook.Sheets[sheetName];
+                                const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "", raw: false });
+                                if (rows.length > 0) {
+                                    sheetsRawData.push({ name: sheetName, rows: rows });
+                                }
+                            });
                         } else {
-                            logDebug(`[${targetDbKey}] Text-based signature detected. Routing to Universal Parser.`);
                             const text = new TextDecoder("utf-8").decode(buffer);
-                            rows = universalSAPParser(text);
+                            sheetsRawData.push({ name: "CSV/TXT_Doc", rows: universalSAPParser(text) });
                         }
+
+                        // Loop through ALL sheets found to find matching headers
+                        sheetsRawData.forEach(sheet => {
+                            const rows = sheet.rows;
+                            let headerRowIndex = -1;
+
+                            for (let i = 0; i < Math.min(rows.length, 500); i++) {
+                                if (!rows[i] || !Array.isArray(rows[i])) continue;
+                                
+                                if (rows[i].length === 1 && typeof rows[i][0] === 'string' && rows[i][0].includes('\t')) {
+                                    rows[i] = rows[i][0].split('\t');
+                                }
+                                
+                                const rowString = rows[i].join("").toLowerCase().replace(/[^a-z0-9]/g, '');
+                                if (headerKeywords.every(kw => rowString.includes(kw.toLowerCase().replace(/[^a-z0-9]/g, '')))) {
+                                    if (rows[i].length > 1) {
+                                        headerRowIndex = i;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (headerRowIndex === -1) {
+                                if (sheetsRawData.length === 1) {
+                                    headerRowIndex = 0; 
+                                } else {
+                                    return; // Skip sheets that don't match our required headers
+                                }
+                            }
+
+                            const headers = rows[headerRowIndex] || [];
+                            for (let i = headerRowIndex + 1; i < rows.length; i++) {
+                                if (!rows[i] || !Array.isArray(rows[i]) || rows[i].length <= 1) continue; 
+                                const obj = {};
+                                headers.forEach((h, idx) => {
+                                    obj[h] = rows[i][idx];
+                                });
+                                allData.push(obj);
+                            }
+                        });
+
                     } catch(err) {
                         logDebug(`[${targetDbKey}] Parser error: ` + err.message);
                     }
-
-                    let headerRowIndex = -1;
-                    for (let i = 0; i < Math.min(rows.length, 500); i++) {
-                        if (!rows[i] || !Array.isArray(rows[i])) continue;
-                        
-                        if (rows[i].length === 1 && typeof rows[i][0] === 'string' && rows[i][0].includes('\t')) {
-                            rows[i] = rows[i][0].split('\t');
-                        }
-                        
-                        const rowString = rows[i].join("").toLowerCase().replace(/[^a-z0-9]/g, '');
-                        if (headerKeywords.every(kw => rowString.includes(kw.toLowerCase().replace(/[^a-z0-9]/g, '')))) {
-                            if (rows[i].length > 1) {
-                                headerRowIndex = i;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (headerRowIndex === -1) {
-                        logDebug(`[ERROR] Headers not found for ${targetDbKey}. Keywords: [${headerKeywords.join(',')}]`);
-                        headerRowIndex = 0; 
-                    } else {
-                        logDebug(`[SUCCESS] Headers found for ${targetDbKey} at row ${headerRowIndex}. Columns: ${rows[headerRowIndex].length}`);
-                    }
-
-                    const headers = rows[headerRowIndex] || [];
-                    const data = [];
-                    for (let i = headerRowIndex + 1; i < rows.length; i++) {
-                        if (!rows[i] || !Array.isArray(rows[i]) || rows[i].length <= 1) continue; 
-                        const obj = {};
-                        headers.forEach((h, idx) => {
-                            obj[h] = rows[i][idx];
-                        });
-                        data.push(obj);
-                    }
                     
-                    db[targetDbKey] = data;
-                    logDebug(`[${targetDbKey}] Extracted ${data.length} data rows.`);
+                    db[targetDbKey] = allData;
+                    logDebug(`[${targetDbKey}] Total Combined Rows Extracted: ${allData.length}`);
                     resolve();
                 };
                 reader.readAsArrayBuffer(file); 
@@ -373,13 +383,17 @@
         async function readMultiplePDFs(files) {
             db.extractedOrderIds.clear(); 
             db.extractedPOs.clear();
+            db.invoiceToPOs = {}; 
+
             if (!files || files.length === 0) return;
             const maxFiles = Math.min(files.length, 80);
+            
             for (let i = 0; i < maxFiles; i++) {
                 try {
                     const file = files[i];
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    
                     for (let j = 1; j <= pdf.numPages; j++) {
                         const page = await pdf.getPage(j);
                         const textContent = await page.getTextContent();
@@ -391,6 +405,40 @@
                         
                         const poMatches = cleanText.match(/(8050\d{6}|6733\d{6})/g) || [];
                         poMatches.forEach(m => db.extractedPOs.add(m));
+
+                        const orderRegex = /(\d{4}-\d{5,7}-\d{1,2})/g;
+                        const poRegex = /(8050\d{6}|6733\d{6})/g;
+                        
+                        let orders = [];
+                        let m;
+                        while ((m = orderRegex.exec(cleanText)) !== null) orders.push({ val: m[1], idx: m.index });
+                        
+                        let pos = [];
+                        while ((m = poRegex.exec(cleanText)) !== null) pos.push({ val: m[1], idx: m.index });
+                        
+                        // Map every PO to the mathematically closest Order ID
+                        pos.forEach(p => {
+                            let closestOrder = null;
+                            let minDiff = Infinity;
+                            
+                            orders.forEach(o => {
+                                let diff = Math.abs(p.idx - o.idx);
+                                if (diff < minDiff) {
+                                    minDiff = diff;
+                                    closestOrder = o;
+                                }
+                            });
+                            
+                            if (closestOrder) {
+                                const parts = closestOrder.val.split('-');
+                                if (parts.length >= 2) {
+                                    // Strip leading zeros for robust matching
+                                    const inv = parts[1].replace(/^0+/, ''); 
+                                    if (!db.invoiceToPOs[inv]) db.invoiceToPOs[inv] = new Set();
+                                    db.invoiceToPOs[inv].add(p.val);
+                                }
+                            }
+                        });
                     }
                 } catch (err) {
                     console.error("PDF Parsing Error:", err);
@@ -408,10 +456,12 @@
             logDebug("=== STARTING NEW AUDIT ===");
 
             try {
+                // Ensure the intransit file looks for 'article' so it doesn't fail on alternate headers, 
+                // but we will still grab the PO column internally.
                 await Promise.all([
                     readFile(document.getElementById('fileSalesTrans').files[0], 'salesTrans', ['invoice', 'netamount']),
                     readFile(document.getElementById('fileSalesSum').files[0], 'salesSum', ['item', 'qty']), 
-                    readFile(document.getElementById('fileIntransit').files[0], 'intransit', ['sto', 'article']),
+                    readFile(document.getElementById('fileIntransit').files[0], 'intransit', ['article']),
                     readFile(document.getElementById('fileStock').files[0], 'stock', ['article', 'unrestricted']),
                     readFile(document.getElementById('fileToBeDel').files[0], 'toBeDel', ['itemnumber', 'quantity']),
                     readFile(document.getElementById('fileDelivery').files[0], 'delivery', ['invoice', 'item'])
@@ -439,12 +489,11 @@
         }
 
         // =========================================================
-        // NEW FEATURE: PENDING PREPARATION FOR STOCK TAKE GENERATOR
+        // PENDING PREPARATION FOR STOCK TAKE GENERATOR
         // =========================================================
         function generatePrepStockTake() {
             logDebug("Generating Pending Preparation for Stock Take Report...");
 
-            // 1. Gather SLOC 1000 Stock availability
             const s1000 = {};
             db.stock.forEach(row => {
                 let sku = cleanSKU(getVal(row, ['article', 'itemnumber']));
@@ -452,7 +501,6 @@
                 const qty = parseInt(getVal(row, ['unrestricted'])) || 0;
                 const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
                 
-                // Only heal for the sake of mapping if it's broken, but mostly we rely on raw from MB52
                 sku = healSKU(sku, desc, null) || sku;
                 
                 if (sku && sloc === "1000") {
@@ -460,12 +508,22 @@
                 }
             });
 
-            // 2. Gather Intransit stock availability
             const validIntransit = {};
+            const intransitPOs = new Set(); // Stores all specific PO numbers found in the Intransit document
+            
             db.intransit.forEach(row => {
                 let sku = cleanSKU(getVal(row, ['article', 'itemnumber']));
                 const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
                 const qty = Math.round(parseFloat(getVal(row, ['poqty', 'poquantity', 'intransitqty', 'quantity', 'qty']))) || 0;
+                
+                // Extract PO Number from Intransit Data
+                const rawPO = getVal(row, ['purchasingdocument', 'po', 'sto', 'purchaseorder', 'document']);
+                if (rawPO) {
+                    const poMatch = rawPO.toString().match(/(8050\d{6}|6733\d{6})/);
+                    if (poMatch) intransitPOs.add(poMatch[1]);
+                    else intransitPOs.add(rawPO.toString().trim());
+                }
+
                 sku = healSKU(sku, desc, null) || sku;
                 
                 if (sku && qty > 0) {
@@ -473,14 +531,14 @@
                 }
             });
 
-            // 3. Calculate total needed quantities per SKU across ALL "To Be Delivered" rows
-            // This allows us to flag if stock is insufficient for ALL rows combined.
             const requiredQty = {};
             db.toBeDel.forEach(row => {
                 let sku = cleanSKU(getVal(row, ['itemnumber', 'article']));
                 const desc = getVal(row, ['itemdescription', 'description', 'desc']) || "";
+                
                 const invRaw = getVal(row, ['invoice']);
-                const inv = invRaw ? invRaw.toString().trim() : "";
+                const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : "";
+                
                 sku = healSKU(sku, desc, inv) || sku;
                 
                 const qty = parseInt(getVal(row, ['quantity', 'qty'])) || 0;
@@ -489,28 +547,16 @@
                 }
             });
 
-            // 4. Map Webshop Orders
-            const invoiceOrderCount = {};
-            const uniqueOrderIds = [...db.extractedOrderIds];
-            uniqueOrderIds.forEach(oid => {
-                const parts = oid.split('-');
-                if (parts.length >= 2) {
-                    const inv = parts[1];
-                    invoiceOrderCount[inv] = (invoiceOrderCount[inv] || 0) + 1;
-                }
-            });
-
-            // 5. Build Report Export Data
             const reportData = [
                 ["Pending Preparation for Stock Take"],
                 ["Generated On:", new Date().toLocaleString()],
                 [],
-                ["Invoice Number", "Invoice Date", "Category", "Article / SKU", "Description", "Quantity", "Status"]
+                ["Invoice Number", "Invoice Date", "Category", "Article / SKU", "Description", "Quantity", "Status", "Related PO Number"]
             ];
 
             db.toBeDel.forEach(row => {
                 const invRaw = getVal(row, ['invoice']);
-                const inv = invRaw ? invRaw.toString().trim() : "";
+                const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : "";
                 const invDate = getVal(row, ['date', 'invoicedate', 'createdon', 'docdate']) || "";
                 const category = getVal(row, ['category']) || "";
                 const desc = getVal(row, ['itemdescription', 'description', 'desc']) || "";
@@ -528,63 +574,69 @@
                 const baseWarning = "Warning: Not enough Quantity in system stock for all rows sharing this article";
                 
                 let status = "";
+                
+                // Get the POs ordered for this specific Invoice from the PDF parser
+                const invoicePOs = (db.invoiceToPOs && db.invoiceToPOs[inv]) ? Array.from(db.invoiceToPOs[inv]) : [];
+                let relatedPOs = invoicePOs.join(", ");
 
                 if (isContact) {
-                    // Contact Lenses: Keep status empty
                     status = "";
+                    relatedPOs = "";
                 } else if (isOphthalmic) {
-                    // Ophthalmic Lenses Logic
                     if (stockAvail >= totalReq && totalReq > 0) {
                         status = "In Stock";
                     } else {
-                        // Fails MB52 check, verify webshop and intransit
-                        const orderedInWebshop = !!invoiceOrderCount[inv];
-                        
-                        if (!orderedInWebshop) {
+                        if (invoicePOs.length === 0) {
                             status = "Not in Stock - " + baseWarning;
                         } else {
-                            // Ordered in Webshop, check Intransit
-                            const inTransitQty = validIntransit[sku] || 0;
-                            if (inTransitQty > 0) {
+                            // The lens was ordered. Let's see if the PO still exists in the Intransit file.
+                            const poIsStillInTransit = invoicePOs.some(po => intransitPOs.has(po));
+                            
+                            if (poIsStillInTransit) {
                                 status = "In Transit - " + baseWarning;
                             } else {
-                                // Ordered, but NOT in Intransit = It has been GR'd (Goods Receipt)
-                                status = "In Stock (Received) - " + baseWarning;
+                                // The PO is NOT in Intransit anymore. It must have been received (Goods Receipt).
+                                // Double check general SKU as a fallback just in case PO extraction missed a digit.
+                                const inTransitQty = validIntransit[sku] || 0;
+                                if (inTransitQty > 0) {
+                                    status = "In Transit (SKU Match fallback) - " + baseWarning;
+                                } else {
+                                    // Definitively received! Note it clearly.
+                                    status = `In Stock (Received - PO: ${relatedPOs}) - ${baseWarning}`;
+                                }
                             }
                         }
                     }
                 } else {
-                    // Frames, Sunglasses, Others Logic
+                    // Frames / Sunglasses Logic
                     if (stockAvail >= totalReq && totalReq > 0) {
                         status = "In Stock";
                     } else {
                         status = baseWarning;
                     }
+                    relatedPOs = ""; // Usually not ordered via webshop
                 }
 
                 reportData.push([
-                    inv,
+                    inv, 
                     invDate,
                     category,
-                    String(sku || ""), // Cast to string for proper formatting in Excel
+                    String(sku || ""), 
                     desc,
                     qty,
-                    status
+                    status,
+                    relatedPOs
                 ]);
             });
 
-            // 6. Generate and Download Excel File
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(reportData);
-            // Setup column widths
-            ws['!cols'] = [{wch: 15}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 50}, {wch: 10}, {wch: 80}];
+            ws['!cols'] = [{wch: 15}, {wch: 15}, {wch: 20}, {wch: 20}, {wch: 50}, {wch: 10}, {wch: 80}, {wch: 25}];
             
             XLSX.utils.book_append_sheet(wb, ws, "Pending Prep Stock Take");
             XLSX.writeFile(wb, `Pending_Preparation_Stock_Take_${new Date().toISOString().split('T')[0]}.xlsx`);
             logDebug("Pending Preparation for Stock Take Report Generated Successfully.");
         }
-
-        // --- Existing Healing & Analysis Logic below ---
 
         const salesSumByInv = {};
         const descToSkuMap = {};
@@ -617,20 +669,19 @@
             uniqueOrderIds.forEach(oid => {
                 const parts = oid.split('-');
                 if (parts.length >= 2) {
-                    const inv = parts[1];
+                    const inv = parts[1].replace(/^0+/, '');
                     invoiceOrderCount[inv] = (invoiceOrderCount[inv] || 0) + 1;
                 }
             });
 
             const invoicesWithOL = new Set();
             
-            // Clear maps before rebuild
             Object.keys(salesSumByInv).forEach(k => delete salesSumByInv[k]);
             Object.keys(descToSkuMap).forEach(k => delete descToSkuMap[k]);
 
             db.salesSum.forEach(row => {
-                const inv = getVal(row, ['invoice']);
-                const invStr = inv ? inv.toString().trim() : null;
+                const invRaw = getVal(row, ['invoice']);
+                const invStr = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : null;
                 let sku = cleanSKU(getVal(row, ['item', 'article', 'itemnumber']));
                 const desc = getVal(row, ['description', 'itemdescription', 'desc']) || "";
                 const cat = getVal(row, ['category', 'merchandisecategory']) || "";
@@ -649,16 +700,18 @@
             });
 
             db.delivery.forEach(row => {
-                const inv = getVal(row, ['invoice']);
+                const invRaw = getVal(row, ['invoice']);
+                const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : null;
                 if (inv && isOphthalmicLens(getVal(row, ['description', 'itemdescription', 'desc']), getVal(row, ['category']))) {
-                    invoicesWithOL.add(inv.toString().trim());
+                    invoicesWithOL.add(inv);
                 }
             });
 
             db.toBeDel.forEach(row => {
-                const inv = getVal(row, ['invoice']);
+                const invRaw = getVal(row, ['invoice']);
+                const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : null;
                 if (inv && isOphthalmicLens(getVal(row, ['itemdescription', 'description', 'desc']), getVal(row, ['category']))) {
-                    invoicesWithOL.add(inv.toString().trim());
+                    invoicesWithOL.add(inv);
                 }
             });
 
@@ -667,7 +720,7 @@
             db.salesTrans.forEach(row => {
                 const net = parseFloat(getVal(row, ['net', 'return', 'netamount'])) || 0;
                 const invRaw = getVal(row, ['invoice']);
-                const inv = invRaw ? invRaw.toString().trim() : null;
+                const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : null;
                 
                 if (inv) {
                     allSalesTransInvoices.add(inv);
@@ -688,7 +741,7 @@
                 const category = getVal(row, ['category']) || "";
                 
                 const invRaw = getVal(row, ['invoice']);
-                const inv = invRaw ? invRaw.toString().trim() : "";
+                const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : "";
 
                 sku = healSKU(sku, desc, inv);
 
@@ -709,7 +762,7 @@
 
             db.delivery.forEach(row => {
                 const invRaw = getVal(row, ['invoice']);
-                const inv = invRaw ? invRaw.toString().trim() : null;
+                const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : null;
                 const desc = getVal(row, ['description', 'itemdescription', 'desc']) || "";
                 const category = getVal(row, ['category']) || "";
                 let sku = cleanSKU(getVal(row, ['item', 'article']));
