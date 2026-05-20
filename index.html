@@ -146,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden" id="debugContainer">
+            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden hidden" id="debugContainer">
                 <div class="flex justify-between items-center bg-gray-800 px-6 py-3 border-b border-gray-700">
                     <span class="font-bold text-gray-200 text-xs tracking-widest uppercase">System Diagnostic Log</span>
                     <button onclick="document.getElementById('debugLog').innerHTML=''" class="text-gray-400 hover:text-white text-xs">CLEAR LOG</button>
@@ -158,7 +158,7 @@
     </div>
 
     <script>
-        // Global Error Safeguard Wrapper
+        // Global Error Safeguard Tracker
         window.onerror = function(msg, url, line, col, error) {
             logDebug(`[FATAL ERROR] ${msg} at line ${line}:${col}`);
             alert(`Application Interrupted: ${msg} on line ${line}. Please inspect the Diagnostic Log panel at the bottom.`);
@@ -416,7 +416,6 @@
                         pageOrders.forEach(m => db.extractedOrderIds.add(m));
                         pagePOs.forEach(m => db.extractedPOs.add(m));
 
-                        // Page-scoped transactional contextual map structure 
                         pageOrders.forEach(orderId => {
                             const parts = orderId.split('-');
                             if (parts.length >= 2) {
@@ -829,6 +828,68 @@
             document.getElementById('flagAccidentalDel').innerHTML = htmlAccidental || "<li>No anomalies detected.</li>";
             document.getElementById('flagOverOrders').innerHTML = htmlOverOrders || "<li>No anomalies detected.</li>";
             document.getElementById('stockTableBody').innerHTML = htmlStock;
+        }
+
+        // =========================================================
+        // RESTORED: EXCEL EXPORT WORKBOOK GENERATOR
+        // =========================================================
+        function exportToExcel() {
+            logDebug("Exporting Stock Ledger and Flags Workbook...");
+            const wb = XLSX.utils.book_new();
+            
+            const reconData = [
+                ["Official Stock Reconciliation Report"],
+                ["Generated On:", new Date().toLocaleString()],
+                [],
+                ["Lens SKU / Article", "Description", "Good Stock (1000)", "Defect (4000)", "To Deliver Qty", "Valid Intransit Qty", "Variance"]
+            ];
+            
+            const tbody = document.getElementById('stockTableBody');
+            if (tbody) {
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length === 7) {
+                        reconData.push([
+                            String(cells[0].innerText), 
+                            cells[1].innerText, 
+                            parseInt(cells[2].innerText) || 0,
+                            parseInt(cells[3].innerText) || 0, 
+                            parseInt(cells[4].innerText) || 0,
+                            parseInt(cells[5].innerText) || 0, 
+                            cells[6].innerText
+                        ]);
+                    }
+                });
+            }
+
+            const wsRecon = XLSX.utils.aoa_to_sheet(reconData);
+            wsRecon['!cols'] = [{wch: 22}, {wch: 55}, {wch: 15}, {wch: 15}, {wch: 18}, {wch: 20}, {wch: 15}];
+            XLSX.utils.book_append_sheet(wb, wsRecon, "Stock Reconciliation");
+
+            const flagsData = [["Audit Flags & Alerts"], ["Generated On:", new Date().toLocaleString()], [], ["Alert Category", "Flag Details"]];
+            const extractFlags = (ulId, categoryName) => {
+                const ul = document.getElementById(ulId);
+                if (!ul) return;
+                const lis = ul.querySelectorAll('li');
+                lis.forEach(li => { 
+                    if (!li.innerText.includes("anomalies detected")) {
+                        flagsData.push([categoryName, li.innerText]); 
+                    }
+                });
+            };
+
+            extractFlags('flagOverOrders', 'Over-Ordered Lenses');
+            extractFlags('flagMissing', 'Missing Orders (Pending)');
+            extractFlags('flagDeletions', '24-Hour Deletions');
+            extractFlags('flagAccidentalDel', 'Accidental Delivery');
+            if (flagsData.length === 4) flagsData.push(["System Status", "Perfect! No anomalies detected across any category."]);
+
+            const wsFlags = XLSX.utils.aoa_to_sheet(flagsData);
+            wsFlags['!cols'] = [{wch: 30}, {wch: 100}];
+            XLSX.utils.book_append_sheet(wb, wsFlags, "Audit Warnings Log");
+            XLSX.writeFile(wb, `Ophthalmic_Lens_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
+            logDebug("Audit Excel Download Dispatched Successfully.");
         }
     </script>
 </body>
