@@ -189,6 +189,7 @@
             return rawSKU.toString().trim().replace(/^0+/, ''); 
         }
 
+        // Expanded helper to scan deep headers across multiple sheet configurations
         function getVal(row, possibleKeys) {
             if (!row) return null;
             const rowKeys = Object.keys(row);
@@ -411,7 +412,7 @@
         }
 
         // =========================================================
-        // UPGRADED: PAGE-SCOPED CORELACTIONAL PDF ENERGETIC ENGINE
+        // FIXED: TEXT-BOUNDED PROXIMITY PDF EXTRACTION ENGINE
         // =========================================================
         async function readMultiplePDFs(files) {
             db.extractedOrderIds.clear(); 
@@ -431,36 +432,63 @@
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                     
+                    let fileOrders = [];
+                    let filePOs = [];
+                    let currentGlobalChars = 0;
+
                     for (let j = 1; j <= pdf.numPages; j++) {
                         const page = await pdf.getPage(j);
                         const textContent = await page.getTextContent();
+                        
+                        // CRITICAL FIX: Retain native word spaces (" ") so that numbers do not collapse together!
                         const rawText = textContent.items.map(item => item.str).join(" ");
-                        const cleanText = rawText.replace(/\s/g, ''); 
                         
-                        // Extract all tracking markers located on this sheet block segment
-                        const pageOrders = cleanText.match(/\d{4}-\d{5,7}-\d{1,2}/g) || [];
-                        const pagePOs = cleanText.match(/(8050\d+|6733\d+)/g) || [];
+                        // Strict word-boundary formatting rules prevent picking up truncated numbers
+                        const orderRegex = /\b(\d{4}-\d{5,7}-\d{1,2})\b/g;
+                        const poRegex = /\b(8050\d{6}|6733\d{6})\b/g; 
                         
-                        pageOrders.forEach(m => db.extractedOrderIds.add(m));
-                        pagePOs.forEach(m => db.extractedPOs.add(m));
+                        let m;
+                        while ((m = orderRegex.exec(rawText)) !== null) {
+                            fileOrders.push({ val: m[1], globalIdx: currentGlobalChars + m.index });
+                            db.extractedOrderIds.add(m[1]);
+                        }
+                        while ((m = poRegex.exec(rawText)) !== null) {
+                            filePOs.push({ val: m[1], globalIdx: currentGlobalChars + m.index });
+                            db.extractedPOs.add(m[1]);
+                        }
+                        
+                        currentGlobalChars += rawText.length + 500; 
+                    }
 
-                        // Weld every structural PO token layout group sharing this exact page frame
-                        pageOrders.forEach(orderId => {
-                            const parts = orderId.split('-');
+                    // Map strict 10-digit PO coordinates to their mathematically closest row transaction
+                    filePOs.forEach(p => {
+                        let closestOrder = null;
+                        let minDiff = Infinity;
+                        
+                        fileOrders.forEach(o => {
+                            let diff = Math.abs(p.globalIdx - o.globalIdx);
+                            if (diff < minDiff) {
+                                minDiff = diff;
+                                closestOrder = o;
+                            }
+                        });
+                        
+                        // Confirm they share the same physical statement row proximity width limit
+                        if (closestOrder && minDiff < 350) {
+                            const parts = closestOrder.val.split('-');
                             if (parts.length >= 2) {
                                 const inv = parts[1].replace(/^0+/, ''); 
                                 if (!db.invoiceToPOs[inv]) db.invoiceToPOs[inv] = new Set();
-                                pagePOs.forEach(po => {
-                                    db.invoiceToPOs[inv].add(po);
-                                });
+                                db.invoiceToPOs[inv].add(p.val);
                             }
-                        });
-                    }
+                        }
+                    });
+
                 } catch (err) {
                     logDebug("[PDF ERROR] Failed to process file index " + i + ": " + err.message);
                 }
             }
-            logDebug(`[PDF SUCCESS] Continuous cross-linking complete. Mapped groups: ${Object.keys(db.invoiceToPOs).length}`);
+            logDebug(`[PDF SUCCESS] Bounded cross-linking complete. Mapped groups: ${Object.keys(db.invoiceToPOs).length}`);
         }
 
         // 5. Global Action Executions (Explicitly Hooked to Global Context)
@@ -589,7 +617,7 @@
                 
                 const rawPO = getVal(row, ['purchasingdocument', 'po', 'sto', 'purchaseorder', 'document']);
                 if (rawPO) {
-                    const poMatch = rawPO.toString().match(/(8050\d+|6733\d+)/);
+                    const poMatch = rawPO.toString().match(/(8050\d{6}|6733\d{6})/);
                     if (poMatch) intransitPOs.add(poMatch[1]);
                     else intransitPOs.add(rawPO.toString().trim());
                 }
@@ -663,7 +691,7 @@
                         if (poIsStillInTransit) {
                             status = "In Transit - " + baseWarning;
                         } else {
-                            status = `In Stock (Received)`;
+                            status = "In Stock (Received)";
                         }
                     }
                 } else {
