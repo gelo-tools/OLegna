@@ -167,10 +167,12 @@
             return false;
         };
 
+        // 1. Data Reservoirs & Storage Maps
         const db = { salesTrans: [], salesSum: [], intransit: [], stock: [], toBeDel: [], delivery: [], extractedOrderIds: new Set(), extractedPOs: new Set(), invoiceToPOs: {} };
         const salesSumByInv = {};
         const descToSkuMap = {};
 
+        // 2. Base Parsing Utilities
         function logDebug(msg) {
             const container = document.getElementById('debugContainer');
             const logPanel = document.getElementById('debugLog');
@@ -298,6 +300,28 @@
             return parseCSV(cleanText);
         }
 
+        // 3. Core Structural Data Repair & Healing Engine
+        function healSKU(sku, desc, inv = null) {
+            if (!sku) return sku;
+            const isBroken = sku.includes('+') || /^[\d\.]+E\+?\d+$/i.test(sku) || (sku.match(/^\d+$/) && sku.length >= 14 && sku.endsWith('000'));
+            if (!isBroken) return sku;
+
+            if (inv && salesSumByInv[inv]) {
+                const exactItem = salesSumByInv[inv].find(item => item.desc === desc && isOphthalmicLens(item.desc, item.category));
+                if (exactItem && !exactItem.sku.includes('+') && !exactItem.sku.endsWith('000')) return exactItem.sku;
+                
+                const fallbackItem = salesSumByInv[inv].find(item => isOphthalmicLens(item.desc, item.category));
+                if (fallbackItem && !fallbackItem.sku.includes('+') && !fallbackItem.sku.endsWith('000')) return fallbackItem.sku;
+            }
+
+            if (desc && descToSkuMap[desc]) {
+                return descToSkuMap[desc];
+            }
+
+            return sku;
+        }
+
+        // 4. File Input Parsing Logic (Asynchronous Block)
         function readFile(file, targetDbKey, headerKeywords) {
             return new Promise((resolve) => {
                 if (!file) { 
@@ -434,9 +458,7 @@
             logDebug(`[PDF SUCCESS] Parsed unique orders mapped: ${Object.keys(db.invoiceToPOs).length}`);
         }
 
-        // =========================================================
-        // GLOBAL CONTEXT ASSIGNMENT TO GUARANTEE INLINE SCOPE LAUNCH
-        // =========================================================
+        // 5. Global Action Executions (Explicitly Hooked to the Global Execution Context)
         window.runAudit = async function() {
             const btn = document.getElementById('runBtn');
             const progressText = document.getElementById('progressText');
@@ -668,6 +690,7 @@
             logDebug("Pending Preparation for Stock Take Report Generated Successfully.");
         };
 
+        // 6. Secondary Reconciliation Ledger Matrix
         function analyzeData() {
             let htmlDeletions = "", htmlMissing = "", htmlAccidental = "", htmlOverOrders = "", htmlStock = "";
 
@@ -866,7 +889,7 @@
             });
 
             document.getElementById('flagDeletions').innerHTML = htmlDeletions || "<li>No anomalies detected.</li>";
-            document.getElementById('flagMissing').innerHTML = htmlMissing || "<li>No anomalies deleted.</li>";
+            document.getElementById('flagMissing').innerHTML = htmlMissing || "<li>No anomalies detected.</li>";
             document.getElementById('flagAccidentalDel').innerHTML = htmlAccidental || "<li>No anomalies detected.</li>";
             document.getElementById('flagOverOrders').innerHTML = htmlOverOrders || "<li>No anomalies detected.</li>";
             document.getElementById('stockTableBody').innerHTML = htmlStock;
