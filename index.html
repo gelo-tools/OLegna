@@ -146,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden" id="debugContainer">
+            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden hidden" id="debugContainer">
                 <div class="flex justify-between items-center bg-gray-800 px-6 py-3 border-b border-gray-700">
                     <span class="font-bold text-gray-200 text-xs tracking-widest uppercase">System Diagnostic Log</span>
                     <button onclick="document.getElementById('debugLog').innerHTML=''" class="text-gray-400 hover:text-white text-xs">CLEAR LOG</button>
@@ -410,7 +410,9 @@
             });
         }
 
-        // Global Document-Level Proximity PDF Engine
+        // =========================================================
+        // UPGRADED: PAGE-SCOPED CORELACTIONAL PDF ENERGETIC ENGINE
+        // =========================================================
         async function readMultiplePDFs(files) {
             db.extractedOrderIds.clear(); 
             db.extractedPOs.clear();
@@ -429,54 +431,31 @@
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                     
-                    let fileOrders = [];
-                    let filePOs = [];
-                    let currentGlobalChars = 0;
-
                     for (let j = 1; j <= pdf.numPages; j++) {
                         const page = await pdf.getPage(j);
                         const textContent = await page.getTextContent();
                         const rawText = textContent.items.map(item => item.str).join(" ");
                         const cleanText = rawText.replace(/\s/g, ''); 
                         
-                        const orderRegex = /(\d{4}-\d{5,7}-\d{1,2})/g;
-                        const poRegex = /(8050\d{6}|6733\d{6})/g;
+                        // Extract all tracking markers located on this sheet block segment
+                        const pageOrders = cleanText.match(/\d{4}-\d{5,7}-\d{1,2}/g) || [];
+                        const pagePOs = cleanText.match(/(8050\d+|6733\d+)/g) || [];
                         
-                        let m;
-                        while ((m = orderRegex.exec(cleanText)) !== null) {
-                            fileOrders.push({ val: m[1], globalIdx: currentGlobalChars + m.index });
-                            db.extractedOrderIds.add(m[1]);
-                        }
-                        while ((m = poRegex.exec(cleanText)) !== null) {
-                            filePOs.push({ val: m[1], globalIdx: currentGlobalChars + m.index });
-                            db.extractedPOs.add(m[1]);
-                        }
-                        
-                        currentGlobalChars += cleanText.length + 1000; 
-                    }
+                        pageOrders.forEach(m => db.extractedOrderIds.add(m));
+                        pagePOs.forEach(m => db.extractedPOs.add(m));
 
-                    filePOs.forEach(p => {
-                        let closestOrder = null;
-                        let minDiff = Infinity;
-                        
-                        fileOrders.forEach(o => {
-                            let diff = Math.abs(p.globalIdx - o.globalIdx);
-                            if (diff < minDiff) {
-                                minDiff = diff;
-                                closestOrder = o;
-                            }
-                        });
-                        
-                        if (closestOrder) {
-                            const parts = closestOrder.val.split('-');
+                        // Weld every structural PO token layout group sharing this exact page frame
+                        pageOrders.forEach(orderId => {
+                            const parts = orderId.split('-');
                             if (parts.length >= 2) {
                                 const inv = parts[1].replace(/^0+/, ''); 
                                 if (!db.invoiceToPOs[inv]) db.invoiceToPOs[inv] = new Set();
-                                db.invoiceToPOs[inv].add(p.val);
+                                pagePOs.forEach(po => {
+                                    db.invoiceToPOs[inv].add(po);
+                                });
                             }
-                        }
-                    });
-
+                        });
+                    }
                 } catch (err) {
                     logDebug("[PDF ERROR] Failed to process file index " + i + ": " + err.message);
                 }
@@ -606,11 +585,11 @@
             db.intransit.forEach(row => {
                 let sku = cleanSKU(getVal(row, ['article', 'itemnumber']));
                 const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
-                const qty = Math.round(parseFloat(getVal(row, ['poqty', 'poquantity', 'intransitqty', 'quantity', 'qty']))) || 0;
+                const qty = Math.round(parseFloat(getVal(row, ['poqty', 'poquantity', 'intransitqty', 'intransitquantity', 'quantity', 'qty']))) || 0;
                 
                 const rawPO = getVal(row, ['purchasingdocument', 'po', 'sto', 'purchaseorder', 'document']);
                 if (rawPO) {
-                    const poMatch = rawPO.toString().match(/(8050\d{6}|6733\d{6})/);
+                    const poMatch = rawPO.toString().match(/(8050\d+|6733\d+)/);
                     if (poMatch) intransitPOs.add(poMatch[1]);
                     else intransitPOs.add(rawPO.toString().trim());
                 }
@@ -684,7 +663,7 @@
                         if (poIsStillInTransit) {
                             status = "In Transit - " + baseWarning;
                         } else {
-                            status = "In Stock (Received)";
+                            status = `In Stock (Received)`;
                         }
                     }
                 } else {
