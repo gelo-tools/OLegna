@@ -146,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden hidden" id="debugContainer">
+            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden" id="debugContainer">
                 <div class="flex justify-between items-center bg-gray-800 px-6 py-3 border-b border-gray-700">
                     <span class="font-bold text-gray-200 text-xs tracking-widest uppercase">System Diagnostic Log</span>
                     <button onclick="document.getElementById('debugLog').innerHTML=''" class="text-gray-400 hover:text-white text-xs">CLEAR LOG</button>
@@ -338,7 +338,7 @@
                     
                     let isBinary = false;
                     if (bytes[0] === 0x50 && bytes[1] === 0x4B) isBinary = true; 
-                    if (bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3]xE0) isBinary = true; 
+                    if (bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0) isBinary = true; 
 
                     let allData = [];
 
@@ -410,9 +410,7 @@
             });
         }
 
-        // =========================================================
-        // UPGRADED: GLOBAL DOCUMENT-LEVEL PROXIMITY PDF ENGINE
-        // =========================================================
+        // Global Document-Level Proximity PDF Engine
         async function readMultiplePDFs(files) {
             db.extractedOrderIds.clear(); 
             db.extractedPOs.clear();
@@ -454,10 +452,9 @@
                             db.extractedPOs.add(m[1]);
                         }
                         
-                        currentGlobalChars += cleanText.length + 1000; // Layout padding sequence
+                        currentGlobalChars += cleanText.length + 1000; 
                     }
 
-                    // Bridge page breaks by welding each PO to its mathematically closest Order ID
                     filePOs.forEach(p => {
                         let closestOrder = null;
                         let minDiff = Infinity;
