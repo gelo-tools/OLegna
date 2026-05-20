@@ -66,32 +66,32 @@
 
                 <div class="p-4 border border-[#e4e7ea] rounded bg-white">
                     <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Sales Transaction Report</label>
-                    <input type="file" id="fileSalesTrans" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Date from last inventory date to today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                    <input type="file" id="fileSalesTrans" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400">
                 </div>
                 
                 <div class="p-4 border border-[#e4e7ea] rounded bg-white">
                     <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Sales Summary by Salesman</label>
-                    <input type="file" id="fileSalesSum" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from earliest date with a deleted invoice included in the Sales Transaction Report until the date Today.&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                    <input type="file" id="fileSalesSum" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400">
                 </div>
                 
                 <div class="p-4 border border-[#e4e7ea] rounded bg-white">
                     <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Intransit</label>
-                    <input type="file" id="fileIntransit" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from last inventory Date to today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                    <input type="file" id="fileIntransit" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400">
                 </div>
                 
                 <div class="p-4 border border-[#e4e7ea] rounded bg-white">
                     <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Stock (MB52)</label>
-                    <input type="file" id="fileStock" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                    <input type="file" id="fileStock" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400">
                 </div>
                 
                 <div class="p-4 border border-[#e4e7ea] rounded bg-white">
                     <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Items to Be Delivered Report</label>
-                    <input type="file" id="fileToBeDel" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from last inventory date until today (upon store opening).&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                    <input type="file" id="fileToBeDel" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400">
                 </div>
                 
                 <div class="p-4 border border-[#e4e7ea] rounded bg-white">
                     <label class="block font-bold mb-2 text-xs text-gray-700 uppercase tracking-tight">Sales Delivery Report</label>
-                    <input type="file" id="fileDelivery" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400" title="Extract Date from earliest date with a deleted invoice included in the Sales Transaction Report until the date Today.&#10;&#10;DO NOT UPLOAD directly extracted excel sheets, please copy all the contents of the sheet and paste it a new excel file, save it and upload the newly created one.">
+                    <input type="file" id="fileDelivery" accept=".csv, .xls, .xlsx" class="w-full text-[10px] text-gray-400">
                 </div>
             </div>
 
@@ -133,7 +133,6 @@
                     </table>
                 </div>
 
-                <!-- DOWNLOAD BUTTONS -->
                 <div class="mt-8 text-center flex flex-col md:flex-row justify-center items-center gap-4">
                     <button onclick="exportToExcel()" class="bg-[#3598dc] hover:bg-[#2f86c2] text-white font-bold py-4 px-8 rounded shadow-xl transition-all inline-flex items-center text-sm uppercase tracking-widest w-full md:w-auto">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -147,7 +146,7 @@
                 </div>
             </div>
 
-            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden hidden" id="debugContainer">
+            <div class="mt-12 border border-gray-800 rounded bg-gray-900 shadow-xl overflow-hidden" id="debugContainer">
                 <div class="flex justify-between items-center bg-gray-800 px-6 py-3 border-b border-gray-700">
                     <span class="font-bold text-gray-200 text-xs tracking-widest uppercase">System Diagnostic Log</span>
                     <button onclick="document.getElementById('debugLog').innerHTML=''" class="text-gray-400 hover:text-white text-xs">CLEAR LOG</button>
@@ -158,12 +157,19 @@
         </div>
     </div>
 
-    <footer class="text-center pb-6">
-        <p class="text-[10px] text-gray-400 tracking-widest uppercase">For any comments and suggestions <a href="mailto:3393@magrabi.com" class="text-[#3598dc] hover:underline font-bold">email me</a>. -<a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" class="text-[#3598dc] hover:underline font-bold">gelotools</a></p>
-    </footer>
-
     <script>
+        // Global Error Safeguard Wrapper
+        window.onerror = function(msg, url, line, col, error) {
+            logDebug(`[FATAL ERROR] ${msg} at line ${line}:${col}`);
+            alert(`Application Interrupted: ${msg} on line ${line}. Please inspect the Diagnostic Log panel at the bottom.`);
+            const btn = document.getElementById('runBtn');
+            if(btn) { btn.disabled = false; btn.innerText = "Run Analysis"; }
+            return false;
+        };
+
         const db = { salesTrans: [], salesSum: [], intransit: [], stock: [], toBeDel: [], delivery: [], extractedOrderIds: new Set(), extractedPOs: new Set(), invoiceToPOs: {} };
+        const salesSumByInv = {};
+        const descToSkuMap = {};
 
         function logDebug(msg) {
             const container = document.getElementById('debugContainer');
@@ -182,6 +188,7 @@
         }
 
         function getVal(row, possibleKeys) {
+            if (!row) return null;
             const rowKeys = Object.keys(row);
             const clean = (s) => s.toString().toLowerCase().replace(/[^a-z0-9]/g, ''); 
             
@@ -251,7 +258,7 @@
         }
 
         function universalSAPParser(text) {
-            logDebug("[SAP PARSER] Analyzing raw file structure...");
+            logDebug("[SAP PARSER] Processing raw rows...");
             const cleanText = text.replace(/=\r?\n/g, ''); 
             
             if (cleanText.includes("<table") || cleanText.includes("<TABLE")) {
@@ -291,15 +298,15 @@
             return parseCSV(cleanText);
         }
 
-        // =========================================================
-        // AGGRESSIVE MULTI-SHEET EXCEL PARSER
-        // =========================================================
         function readFile(file, targetDbKey, headerKeywords) {
             return new Promise((resolve) => {
-                if (!file) { resolve(); return; }
+                if (!file) { 
+                    logDebug(`[OPTIONAL] No file selected for [${targetDbKey}]. Skip.`);
+                    resolve(); 
+                    return; 
+                }
 
                 logDebug(`Reading File: ${file.name} for [${targetDbKey}]...`);
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const buffer = e.target.result;
@@ -368,27 +375,28 @@
                         });
 
                     } catch(err) {
-                        logDebug(`[${targetDbKey}] Parser error: ` + err.message);
+                        logDebug(`[${targetDbKey}] Error inside parsed data map block: ` + err.message);
                     }
                     
                     db[targetDbKey] = allData;
-                    logDebug(`[${targetDbKey}] Total Combined Rows Extracted: ${allData.length}`);
+                    logDebug(`[${targetDbKey}] Combined Sheets Row Total: ${allData.length}`);
                     resolve();
                 };
                 reader.readAsArrayBuffer(file); 
             });
         }
 
-        // =========================================================
-        // ROBUST PAGE-SCOPED CONTEXTUAL PDF EXTRACTOR
-        // =========================================================
         async function readMultiplePDFs(files) {
             db.extractedOrderIds.clear(); 
             db.extractedPOs.clear();
             db.invoiceToPOs = {}; 
 
-            if (!files || files.length === 0) return;
+            if (!files || files.length === 0) {
+                logDebug("[PDF EXTRACTOR] No PDF files uploaded.");
+                return;
+            }
             const maxFiles = Math.min(files.length, 80);
+            logDebug(`[PDF EXTRACTOR] Processing ${maxFiles} PDF document(s)...`);
             
             for (let i = 0; i < maxFiles; i++) {
                 try {
@@ -402,14 +410,13 @@
                         const rawText = textContent.items.map(item => item.str).join(" ");
                         const cleanText = rawText.replace(/\s/g, ''); 
                         
-                        // Extract all instances on the exact same sheet page segment
                         const pageOrders = cleanText.match(/\d{4}-\d{5,7}-\d{1,2}/g) || [];
                         const pagePOs = cleanText.match(/(8050\d{6}|6733\d{6})/g) || [];
                         
                         pageOrders.forEach(m => db.extractedOrderIds.add(m));
                         pagePOs.forEach(m => db.extractedPOs.add(m));
 
-                        // Bind all structural matches sharing this isolated page layout
+                        // Page-scoped transactional contextual map structure 
                         pageOrders.forEach(orderId => {
                             const parts = orderId.split('-');
                             if (parts.length >= 2) {
@@ -422,14 +429,73 @@
                         });
                     }
                 } catch (err) {
-                    console.error("PDF Parsing Error:", err);
+                    logDebug("[PDF ERROR] Failed to parse file index " + i + ": " + err.message);
                 }
+            }
+            logDebug(`[PDF SUCCESS] Parsed unique orders mapped: ${Object.keys(db.invoiceToPOs).length}`);
+        }
+
+        async function runAudit() {
+            const btn = document.getElementById('runBtn');
+            const progressText = document.getElementById('progressText');
+            btn.disabled = true; 
+            progressText.classList.remove('hidden');
+            progressText.innerText = "Scanning Excel Files & Mapping Headers...";
+            document.getElementById('debugLog').innerHTML = ""; 
+
+            logDebug("=== STARTING NEW AUDIT ===");
+
+            try {
+                await Promise.all([
+                    readFile(document.getElementById('fileSalesTrans').files[0], 'salesTrans', ['invoice', 'netamount']),
+                    readFile(document.getElementById('fileSalesSum').files[0], 'salesSum', ['item', 'qty']), 
+                    readFile(document.getElementById('fileIntransit').files[0], 'intransit', ['article']),
+                    readFile(document.getElementById('fileStock').files[0], 'stock', ['article', 'unrestricted']),
+                    readFile(document.getElementById('fileToBeDel').files[0], 'toBeDel', ['itemnumber', 'quantity']),
+                    readFile(document.getElementById('fileDelivery').files[0], 'delivery', ['invoice', 'item'])
+                ]);
+
+                await readMultiplePDFs(document.getElementById('fileWebshop').files);
+                
+                progressText.innerText = "Reconciling Lens Data...";
+                await new Promise(resolve => setTimeout(resolve, 50)); 
+
+                analyzeData();
+                document.getElementById('resultsDashboard').classList.remove('hidden');
+                document.getElementById('exportBtnTop').classList.remove('hidden');
+                progressText.innerText = "Analysis Complete";
+                logDebug("=== AUDIT COMPLETE ===");
+
+            } catch (error) {
+                alert("Error encountered during layout building. Review logs.");
+                logDebug("FATAL ERROR: " + error.message);
+                console.error(error);
+            } finally {
+                btn.innerText = "Run Analysis";
+                btn.disabled = false;
             }
         }
 
-        // =========================================================
-        // CORE RECONCILIATION ENGINE
-        // =========================================================
+        function healSKU(sku, desc, inv = null) {
+            if (!sku) return sku;
+            const isBroken = sku.includes('+') || /^[\d\.]+E\+?\d+$/i.test(sku) || (sku.match(/^\d+$/) && sku.length >= 14 && sku.endsWith('000'));
+            if (!isBroken) return sku;
+
+            if (inv && salesSumByInv[inv]) {
+                const exactItem = salesSumByInv[inv].find(item => item.desc === desc && isOphthalmicLens(item.desc, item.category));
+                if (exactItem && !exactItem.sku.includes('+') && !exactItem.sku.endsWith('000')) return exactItem.sku;
+                
+                const fallbackItem = salesSumByInv[inv].find(item => isOphthalmicLens(item.desc, item.category));
+                if (fallbackItem && !fallbackItem.sku.includes('+') && !fallbackItem.sku.endsWith('000')) return fallbackItem.sku;
+            }
+
+            if (desc && descToSkuMap[desc]) {
+                return descToSkuMap[desc];
+            }
+
+            return sku;
+        }
+
         function generatePrepStockTake() {
             logDebug("Generating Pending Preparation for Stock Take Report...");
 
@@ -507,7 +573,6 @@
                 
                 let status = "";
                 
-                // Read exact mapped PO items pulled directly via structural index tracking
                 const invoicePOs = (db.invoiceToPOs && db.invoiceToPOs[inv]) ? Array.from(db.invoiceToPOs[inv]) : [];
                 let relatedPOs = invoicePOs.join(", ");
 
@@ -529,8 +594,7 @@
                         if (poIsStillInTransit) {
                             status = "In Transit - " + baseWarning;
                         } else {
-                            // If it's missing from transit file, it has completed Goods Receipt stage
-                            status = `In Stock (Received) - ${baseWarning}`;
+                            status = "In Stock (Received)";
                         }
                     }
                 } else {
@@ -561,29 +625,6 @@
             XLSX.utils.book_append_sheet(wb, ws, "Pending Prep Stock Take");
             XLSX.writeFile(wb, `Pending_Preparation_Stock_Take_${new Date().toISOString().split('T')[0]}.xlsx`);
             logDebug("Pending Preparation for Stock Take Report Generated Successfully.");
-        }
-
-        const salesSumByInv = {};
-        const descToSkuMap = {};
-
-        function healSKU(sku, desc, inv = null) {
-            if (!sku) return sku;
-            const isBroken = sku.includes('+') || /^[\d\.]+E\+?\d+$/i.test(sku) || (sku.match(/^\d+$/) && sku.length >= 14 && sku.endsWith('000'));
-            if (!isBroken) return sku;
-
-            if (inv && salesSumByInv[inv]) {
-                const exactItem = salesSumByInv[inv].find(item => item.desc === desc && isOphthalmicLens(item.desc, item.category));
-                if (exactItem && !exactItem.sku.includes('+') && !exactItem.sku.endsWith('000')) return exactItem.sku;
-                
-                const fallbackItem = salesSumByInv[inv].find(item => isOphthalmicLens(item.desc, item.category));
-                if (fallbackItem && !fallbackItem.sku.includes('+') && !fallbackItem.sku.endsWith('000')) return fallbackItem.sku;
-            }
-
-            if (desc && descToSkuMap[desc]) {
-                return descToSkuMap[desc];
-            }
-
-            return sku;
         }
 
         function analyzeData() {
@@ -783,60 +824,11 @@
                 }
             });
 
-            document.getElementById('flagDeletions').innerHTML = htmlDeletions || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
-            document.getElementById('flagMissing').innerHTML = htmlMissing || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
-            document.getElementById('flagAccidentalDel').innerHTML = htmlAccidental || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
-            document.getElementById('flagOverOrders').innerHTML = htmlOverOrders || "<li class='text-gray-400 italic text-[10px] uppercase tracking-wider'>No anomalies detected.</li>";
+            document.getElementById('flagDeletions').innerHTML = htmlDeletions || "<li>No anomalies detected.</li>";
+            document.getElementById('flagMissing').innerHTML = htmlMissing || "<li>No anomalies detected.</li>";
+            document.getElementById('flagAccidentalDel').innerHTML = htmlAccidental || "<li>No anomalies detected.</li>";
+            document.getElementById('flagOverOrders').innerHTML = htmlOverOrders || "<li>No anomalies detected.</li>";
             document.getElementById('stockTableBody').innerHTML = htmlStock;
-        }
-
-        function exportToExcel() {
-            const wb = XLSX.utils.book_new();
-            const reconData = [
-                ["Official Stock Reconciliation Report"],
-                ["Generated On:", new Date().toLocaleString()],
-                [],
-                ["Lens SKU / Article", "Description", "Good Stock (1000)", "Defect (4000)", "To Deliver Qty", "Valid Intransit Qty", "Variance"]
-            ];
-            const tbody = document.getElementById('stockTableBody');
-            const rows = tbody.querySelectorAll('tr');
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length === 7) {
-                    reconData.push([
-                        String(cells[0].innerText), 
-                        cells[1].innerText, 
-                        parseInt(cells[2].innerText) || 0,
-                        parseInt(cells[3].innerText) || 0, 
-                        parseInt(cells[4].innerText) || 0,
-                        parseInt(cells[5].innerText) || 0, 
-                        cells[6].innerText
-                    ]);
-                }
-            });
-
-            const wsRecon = XLSX.utils.aoa_to_sheet(reconData);
-            wsRecon['!cols'] = [{wch: 22}, {wch: 55}, {wch: 15}, {wch: 15}, {wch: 18}, {wch: 20}, {wch: 15}];
-            XLSX.utils.book_append_sheet(wb, wsRecon, "Stock Reconciliation");
-
-            const flagsData = [["Audit Flags & Alerts"], ["Generated On:", new Date().toLocaleString()], [], ["Alert Category", "Flag Details"]];
-            const extractFlags = (ulId, categoryName) => {
-                const ul = document.getElementById(ulId);
-                if (!ul) return;
-                const lis = ul.querySelectorAll('li');
-                lis.forEach(li => { if (!li.innerText.includes("anomalies detected")) flagsData.push([categoryName, li.innerText]); });
-            };
-
-            extractFlags('flagOverOrders', 'Over-Ordered Lenses');
-            extractFlags('flagMissing', 'Missing Orders (Pending)');
-            extractFlags('flagDeletions', '24-Hour Deletions');
-            extractFlags('flagAccidentalDel', 'Accidental Delivery');
-            if (flagsData.length === 4) flagsData.push(["System Status", "Perfect! No anomalies detected across any category."]);
-
-            const wsFlags = XLSX.utils.aoa_to_sheet(flagsData);
-            wsFlags['!cols'] = [{wch: 30}, {wch: 100}];
-            XLSX.utils.book_append_sheet(wb, wsFlags, "Audit Warnings Log");
-            XLSX.writeFile(wb, `Ophthalmic_Lens_Audit_${new Date().toISOString().split('T')[0]}.xlsx`);
         }
     </script>
 </body>
