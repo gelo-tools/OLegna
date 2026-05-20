@@ -133,7 +133,7 @@
                     </table>
                 </div>
 
-                <!-- NEW BUTTONS ROW -->
+                <!-- DOWNLOAD BUTTONS -->
                 <div class="mt-8 text-center flex flex-col md:flex-row justify-center items-center gap-4">
                     <button onclick="exportToExcel()" class="bg-[#3598dc] hover:bg-[#2f86c2] text-white font-bold py-4 px-8 rounded shadow-xl transition-all inline-flex items-center text-sm uppercase tracking-widest w-full md:w-auto">
                         <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -292,7 +292,7 @@
         }
 
         // =========================================================
-        // ROBUST MULTI-SHEET EXCEL PARSER
+        // AGGRESSIVE MULTI-SHEET EXCEL PARSER
         // =========================================================
         function readFile(file, targetDbKey, headerKeywords) {
             return new Promise((resolve) => {
@@ -328,7 +328,6 @@
                             sheetsRawData.push({ name: "CSV/TXT_Doc", rows: universalSAPParser(text) });
                         }
 
-                        // Loop through ALL sheets found to find matching headers
                         sheetsRawData.forEach(sheet => {
                             const rows = sheet.rows;
                             let headerRowIndex = -1;
@@ -353,7 +352,7 @@
                                 if (sheetsRawData.length === 1) {
                                     headerRowIndex = 0; 
                                 } else {
-                                    return; // Skip sheets that don't match our required headers
+                                    return; 
                                 }
                             }
 
@@ -380,6 +379,9 @@
             });
         }
 
+        // =========================================================
+        // ROBUST PAGE-SCOPED CONTEXTUAL PDF EXTRACTOR
+        // =========================================================
         async function readMultiplePDFs(files) {
             db.extractedOrderIds.clear(); 
             db.extractedPOs.clear();
@@ -400,43 +402,22 @@
                         const rawText = textContent.items.map(item => item.str).join(" ");
                         const cleanText = rawText.replace(/\s/g, ''); 
                         
-                        const orderMatches = cleanText.match(/\d{4}-\d{5,7}-\d{1,2}/g) || [];
-                        orderMatches.forEach(m => db.extractedOrderIds.add(m));
+                        // Extract all instances on the exact same sheet page segment
+                        const pageOrders = cleanText.match(/\d{4}-\d{5,7}-\d{1,2}/g) || [];
+                        const pagePOs = cleanText.match(/(8050\d{6}|6733\d{6})/g) || [];
                         
-                        const poMatches = cleanText.match(/(8050\d{6}|6733\d{6})/g) || [];
-                        poMatches.forEach(m => db.extractedPOs.add(m));
+                        pageOrders.forEach(m => db.extractedOrderIds.add(m));
+                        pagePOs.forEach(m => db.extractedPOs.add(m));
 
-                        const orderRegex = /(\d{4}-\d{5,7}-\d{1,2})/g;
-                        const poRegex = /(8050\d{6}|6733\d{6})/g;
-                        
-                        let orders = [];
-                        let m;
-                        while ((m = orderRegex.exec(cleanText)) !== null) orders.push({ val: m[1], idx: m.index });
-                        
-                        let pos = [];
-                        while ((m = poRegex.exec(cleanText)) !== null) pos.push({ val: m[1], idx: m.index });
-                        
-                        // Map every PO to the mathematically closest Order ID
-                        pos.forEach(p => {
-                            let closestOrder = null;
-                            let minDiff = Infinity;
-                            
-                            orders.forEach(o => {
-                                let diff = Math.abs(p.idx - o.idx);
-                                if (diff < minDiff) {
-                                    minDiff = diff;
-                                    closestOrder = o;
-                                }
-                            });
-                            
-                            if (closestOrder) {
-                                const parts = closestOrder.val.split('-');
-                                if (parts.length >= 2) {
-                                    // Strip leading zeros for robust matching
-                                    const inv = parts[1].replace(/^0+/, ''); 
-                                    if (!db.invoiceToPOs[inv]) db.invoiceToPOs[inv] = new Set();
-                                    db.invoiceToPOs[inv].add(p.val);
-                                }
+                        // Bind all structural matches sharing this isolated page layout
+                        pageOrders.forEach(orderId => {
+                            const parts = orderId.split('-');
+                            if (parts.length >= 2) {
+                                const inv = parts[1].replace(/^0+/, ''); 
+                                if (!db.invoiceToPOs[inv]) db.invoiceToPOs[inv] = new Set();
+                                pagePOs.forEach(po => {
+                                    db.invoiceToPOs[inv].add(po);
+                                });
                             }
                         });
                     }
@@ -446,50 +427,8 @@
             }
         }
 
-        async function runAudit() {
-            const btn = document.getElementById('runBtn');
-            const progressText = document.getElementById('progressText');
-            btn.disabled = true; progressText.classList.remove('hidden');
-            progressText.innerText = "Scanning Excel Files & Mapping Headers...";
-            document.getElementById('debugLog').innerHTML = ""; 
-
-            logDebug("=== STARTING NEW AUDIT ===");
-
-            try {
-                // Ensure the intransit file looks for 'article' so it doesn't fail on alternate headers, 
-                // but we will still grab the PO column internally.
-                await Promise.all([
-                    readFile(document.getElementById('fileSalesTrans').files[0], 'salesTrans', ['invoice', 'netamount']),
-                    readFile(document.getElementById('fileSalesSum').files[0], 'salesSum', ['item', 'qty']), 
-                    readFile(document.getElementById('fileIntransit').files[0], 'intransit', ['article']),
-                    readFile(document.getElementById('fileStock').files[0], 'stock', ['article', 'unrestricted']),
-                    readFile(document.getElementById('fileToBeDel').files[0], 'toBeDel', ['itemnumber', 'quantity']),
-                    readFile(document.getElementById('fileDelivery').files[0], 'delivery', ['invoice', 'item'])
-                ]);
-
-                await readMultiplePDFs(document.getElementById('fileWebshop').files);
-                
-                progressText.innerText = "Reconciling Lens Data...";
-                await new Promise(resolve => setTimeout(resolve, 50)); 
-
-                analyzeData();
-                document.getElementById('resultsDashboard').classList.remove('hidden');
-                document.getElementById('exportBtnTop').classList.remove('hidden');
-                progressText.innerText = "Analysis Complete";
-                logDebug("=== AUDIT COMPLETE ===");
-
-            } catch (error) {
-                alert("Error reading files. Check console log.");
-                logDebug("ERROR: " + error.message);
-                console.error(error);
-            } finally {
-                btn.innerText = "Run Analysis";
-                btn.disabled = false;
-            }
-        }
-
         // =========================================================
-        // PENDING PREPARATION FOR STOCK TAKE GENERATOR
+        // CORE RECONCILIATION ENGINE
         // =========================================================
         function generatePrepStockTake() {
             logDebug("Generating Pending Preparation for Stock Take Report...");
@@ -502,21 +441,18 @@
                 const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
                 
                 sku = healSKU(sku, desc, null) || sku;
-                
                 if (sku && sloc === "1000") {
                     s1000[sku] = (s1000[sku] || 0) + qty;
                 }
             });
 
             const validIntransit = {};
-            const intransitPOs = new Set(); // Stores all specific PO numbers found in the Intransit document
-            
+            const intransitPOs = new Set(); 
             db.intransit.forEach(row => {
                 let sku = cleanSKU(getVal(row, ['article', 'itemnumber']));
                 const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
                 const qty = Math.round(parseFloat(getVal(row, ['poqty', 'poquantity', 'intransitqty', 'quantity', 'qty']))) || 0;
                 
-                // Extract PO Number from Intransit Data
                 const rawPO = getVal(row, ['purchasingdocument', 'po', 'sto', 'purchaseorder', 'document']);
                 if (rawPO) {
                     const poMatch = rawPO.toString().match(/(8050\d{6}|6733\d{6})/);
@@ -525,7 +461,6 @@
                 }
 
                 sku = healSKU(sku, desc, null) || sku;
-                
                 if (sku && qty > 0) {
                     validIntransit[sku] = (validIntransit[sku] || 0) + qty;
                 }
@@ -535,12 +470,10 @@
             db.toBeDel.forEach(row => {
                 let sku = cleanSKU(getVal(row, ['itemnumber', 'article']));
                 const desc = getVal(row, ['itemdescription', 'description', 'desc']) || "";
-                
                 const invRaw = getVal(row, ['invoice']);
                 const inv = invRaw ? invRaw.toString().trim().replace(/^0+/, '') : "";
                 
                 sku = healSKU(sku, desc, inv) || sku;
-                
                 const qty = parseInt(getVal(row, ['quantity', 'qty'])) || 0;
                 if (sku) {
                     requiredQty[sku] = (requiredQty[sku] || 0) + qty;
@@ -563,7 +496,6 @@
                 
                 let sku = cleanSKU(getVal(row, ['itemnumber', 'article']));
                 sku = healSKU(sku, desc, inv) || sku;
-                
                 const qty = parseInt(getVal(row, ['quantity', 'qty'])) || 0;
 
                 const isContact = isContactLens(desc, category);
@@ -575,7 +507,7 @@
                 
                 let status = "";
                 
-                // Get the POs ordered for this specific Invoice from the PDF parser
+                // Read exact mapped PO items pulled directly via structural index tracking
                 const invoicePOs = (db.invoiceToPOs && db.invoiceToPOs[inv]) ? Array.from(db.invoiceToPOs[inv]) : [];
                 let relatedPOs = invoicePOs.join(", ");
 
@@ -583,38 +515,31 @@
                     status = "";
                     relatedPOs = "";
                 } else if (isOphthalmic) {
-                    if (stockAvail >= totalReq && totalReq > 0) {
-                        status = "In Stock";
-                    } else {
-                        if (invoicePOs.length === 0) {
-                            status = "Not in Stock - " + baseWarning;
+                    const orderedInWebshop = invoicePOs.length > 0;
+                    const poIsStillInTransit = invoicePOs.some(po => intransitPOs.has(po));
+                    const isPhysicallyInStock = (stockAvail >= totalReq && totalReq > 0);
+
+                    if (!orderedInWebshop) {
+                        if (isPhysicallyInStock) {
+                            status = "In Stock";
                         } else {
-                            // The lens was ordered. Let's see if the PO still exists in the Intransit file.
-                            const poIsStillInTransit = invoicePOs.some(po => intransitPOs.has(po));
-                            
-                            if (poIsStillInTransit) {
-                                status = "In Transit - " + baseWarning;
-                            } else {
-                                // The PO is NOT in Intransit anymore. It must have been received (Goods Receipt).
-                                // Double check general SKU as a fallback just in case PO extraction missed a digit.
-                                const inTransitQty = validIntransit[sku] || 0;
-                                if (inTransitQty > 0) {
-                                    status = "In Transit (SKU Match fallback) - " + baseWarning;
-                                } else {
-                                    // Definitively received! Note it clearly.
-                                    status = `In Stock (Received - PO: ${relatedPOs}) - ${baseWarning}`;
-                                }
-                            }
+                            status = "Not in Stock - " + baseWarning;
+                        }
+                    } else {
+                        if (poIsStillInTransit) {
+                            status = "In Transit - " + baseWarning;
+                        } else {
+                            // If it's missing from transit file, it has completed Goods Receipt stage
+                            status = `In Stock (Received) - ${baseWarning}`;
                         }
                     }
                 } else {
-                    // Frames / Sunglasses Logic
                     if (stockAvail >= totalReq && totalReq > 0) {
                         status = "In Stock";
                     } else {
                         status = baseWarning;
                     }
-                    relatedPOs = ""; // Usually not ordered via webshop
+                    relatedPOs = ""; 
                 }
 
                 reportData.push([
@@ -687,7 +612,6 @@
                 const cat = getVal(row, ['category', 'merchandisecategory']) || "";
                 
                 const isPristine = sku && !/^[\d\.]+E\+?\d+$/i.test(sku) && !sku.includes('+') && !(sku.match(/^\d+$/) && sku.length >= 14 && sku.endsWith('000'));
-                
                 if (isPristine && desc) {
                     descToSkuMap[desc] = sku;
                 }
@@ -716,7 +640,6 @@
             });
 
             const allSalesTransInvoices = new Set();
-            
             db.salesTrans.forEach(row => {
                 const net = parseFloat(getVal(row, ['net', 'return', 'netamount'])) || 0;
                 const invRaw = getVal(row, ['invoice']);
@@ -817,7 +740,6 @@
             });
 
             const validIntransit = {};
-
             db.intransit.forEach(row => {
                 let sku = cleanSKU(getVal(row, ['article', 'itemnumber'])); 
                 const desc = getVal(row, ['articledescription', 'description', 'desc']) || "";
