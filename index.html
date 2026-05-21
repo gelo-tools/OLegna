@@ -633,59 +633,6 @@
         return letter + numberIndex;
     }
 
-    // --- BRAND NORMALIZER ENGINE ---
-    function normalizeBrandName(originalBrand) {
-        let b = originalBrand.toUpperCase().trim();
-        let newBrand = originalBrand.trim();
-
-        if (b.includes('RAYBAN') || b.includes('RAY BAN') || b.includes('RAY-BAN')) newBrand = 'RAY-BAN';
-        else if (b.startsWith('DIOR')) newBrand = 'DIOR';
-        else if (b.startsWith("EYE'M") || b.startsWith("EYEM")) newBrand = "EYE'M";
-        else if (b.includes('MAU JIM') || b.includes('MAUI')) newBrand = 'MAUI JIM';
-        else if (b.includes('OLIVER PEOPL')) newBrand = 'OLIVER PEOPLES';
-        else if (b.includes('SAINT LAUREN') || b.includes('SA.LAURENT') || b.includes('S.LAURENT') || b.includes('SAINT LRNT')) newBrand = 'SAINT LAURENT';
-        else if (b.includes('BURBERRY')) newBrand = 'BURBERRY';
-        else if (b.replace(/\s+/g, '') === 'MIRAFLEX') newBrand = 'MIRAFLEX';
-        else if (b.startsWith('TRICE')) newBrand = 'TRICE';
-        
-        // --- NEW COMPREHENSIVE COMBINATIONS FROM COMBINED SKU EXCEL ---
-        else if (b.startsWith('ALEXANDER MCQUE')) newBrand = 'ALEXANDER MCQUEEN';
-        else if (b.startsWith('ATELIER V')) newBrand = 'ATELIER';
-        else if (b.startsWith('BOTTEGA')) newBrand = 'BOTTEGA VENETA';
-        else if (b.startsWith('CAROLINE')) newBrand = 'CAROLINE';
-        else if (b.startsWith('CARRERA')) newBrand = 'CARRERA';
-        else if (b.startsWith('CENTRO')) newBrand = 'CENTRO STYLE';
-        else if (b.startsWith('CHROME H')) newBrand = 'CHROME HEARTS';
-        else if (b.startsWith('CUTLER')) newBrand = 'CUTLER AND GROSS';
-        else if (b.startsWith('DIFFUSER')) newBrand = 'DIFFUSER TOKYO';
-        else if (b.startsWith('DITA')) newBrand = 'DITA';
-        else if (b.startsWith('DOLCE')) newBrand = 'DOLCE & GABBANA';
-        else if (b.startsWith('ELEGANCE')) newBrand = 'ELEGANCE';
-        else if (b.startsWith('EMPORIO')) newBrand = 'EMPORIO ARMANI';
-        else if (b.startsWith('ERMENEGILDO')) newBrand = 'ERMENEGILDO ZEGNA';
-        else if (b.startsWith('HAFFMANS')) newBrand = 'HAFFMANS & NEUMEISTER';
-        else if (b.startsWith('JACQUES')) newBrand = 'JACQUES MARIE';
-        else if (b.startsWith('KAREN WAZEN')) newBrand = 'KAREN WAZEN';
-        else if (b.startsWith('LEISURE')) newBrand = 'LEISURE SOCIETY';
-        else if (b.startsWith('MYKITA')) newBrand = 'MYKITA';
-        else if (b.startsWith('OAKLEY')) newBrand = 'OAKLEY';
-        else if (b.startsWith('OPAL')) newBrand = 'OPAL';
-        else if (b.startsWith('PAIR')) newBrand = 'PAIR EYEWEAR';
-        else if (b.startsWith('POLAR') && !b.startsWith('POLAROID')) newBrand = 'POLAR';
-        else if (b.startsWith('POLAROID')) newBrand = 'POLAROID';
-        else if (b.startsWith('POLO')) newBrand = 'POLO RALPH LAUREN';
-        else if (b.startsWith('PORSCHE')) newBrand = 'PORSCHE DESIGN';
-        else if (b.startsWith('PRADA')) newBrand = 'PRADA';
-        else if (b.startsWith('PUMA')) newBrand = 'PUMA';
-        else if (b.startsWith('RALPH')) newBrand = 'RALPH LAUREN';
-        else if (b.startsWith('SPIN ON8')) newBrand = 'SPIN ON8';
-        else if (b.startsWith('TEMPO')) newBrand = 'TEMPO';
-        else if (b.startsWith('THOM BROW')) newBrand = 'THOM BROWNE';
-        else if (b.startsWith('TOM FORD')) newBrand = 'TOM FORD';
-
-        return newBrand;
-    }
-
     // --- UTILITY & PARSING FUNCTIONS ---
     function extractBrandAndCategory(desc) {
         let category = "OTHERS";
@@ -716,7 +663,55 @@
             let prefix = parts[0].trim().toUpperCase();
             if (prefix === 'S' || prefix === 'O' || prefix === 'OA') {
                 let originalBrand = parts[1].trim();
-                parts[1] = normalizeBrandName(originalBrand);
+                let b = originalBrand.toUpperCase().replace(/\s+/g, ' ').trim();
+                let newBrand = originalBrand;
+
+                if (b.includes('RAYBAN') || b.includes('RAY BAN') || b.includes('RAY-BAN')) newBrand = 'RAY-BAN';
+                else if (b.includes('MIRAFLEX') || b.includes('MIRA FLEX')) newBrand = 'MIRAFLEX';
+                else if (b.startsWith('TRICE')) newBrand = 'TRICE';
+                else if (b.includes('DAVIDBECKHAM') || b.includes('DAVID BECKHAM')) newBrand = 'DAVID BECKHAM';
+                else if (b.includes('ARMANIEXCHANGE') || b.includes('ARMANI EXCHANGE')) newBrand = 'ARMANI EXCHANGE';
+                else if (b.startsWith('DIOR')) newBrand = 'DIOR';
+                else if (b.startsWith("EYE'M") || b.startsWith("EYEM")) newBrand = "EYE'M";
+                else if (b === 'MAU JIM' || b === 'MAUIJIM' || b.includes('MAUI JIM') || b.startsWith('MAUI')) newBrand = 'MAUI JIM';
+                else if (b.includes('OLIVER PEOPL')) newBrand = 'OLIVER PEOPLES';
+                else if (b.includes('SAINT LAUREN') || b.includes('SA.LAURENT') || b.includes('S.LAURENT') || b.includes('SAINT LRNT')) newBrand = 'SAINT LAURENT';
+                else if (b.includes('BURBERRY')) newBrand = 'BURBERRY';
+                else if (b.startsWith('ALEXANDER MCQUE')) newBrand = 'ALEXANDER MCQUEEN';
+                else if (b.startsWith('BOTTEGA')) newBrand = 'BOTTEGA VENETA';
+                else if (b.startsWith('CAROLINE')) newBrand = 'CAROLINE';
+                else if (b.startsWith('CARRERA')) newBrand = 'CARRERA';
+                else if (b.startsWith('CENTRO')) newBrand = 'CENTRO STYLE';
+                else if (b.startsWith('CHROME H')) newBrand = 'CHROME HEARTS';
+                else if (b.startsWith('CUTLER')) newBrand = 'CUTLER AND GROSS';
+                else if (b.startsWith('DIFFUSER')) newBrand = 'DIFFUSER TOKYO';
+                else if (b.startsWith('DITA')) newBrand = 'DITA';
+                else if (b.startsWith('DOLCE')) newBrand = 'DOLCE & GABBANA';
+                else if (b.startsWith('ELEGANCE')) newBrand = 'ELEGANCE';
+                else if (b.startsWith('EMPORIO')) newBrand = 'EMPORIO ARMANI';
+                else if (b.startsWith('ERMENEGILDO')) newBrand = 'ERMENEGILDO ZEGNA';
+                else if (b.startsWith('HAFFMANS')) newBrand = 'HAFFMANS & NEUMEISTER';
+                else if (b.startsWith('JACQUES')) newBrand = 'JACQUES MARIE';
+                else if (b.startsWith('KAREN WAZEN')) newBrand = 'KAREN WAZEN';
+                else if (b.startsWith('LEISURE')) newBrand = 'LEISURE SOCIETY';
+                else if (b.startsWith('MOSLEY TR')) newBrand = 'MOSLEY TRIBES';
+                else if (b.startsWith('MYKITA')) newBrand = 'MYKITA';
+                else if (b.startsWith('OAKLEY')) newBrand = 'OAKLEY';
+                else if (b.startsWith('OPAL')) newBrand = 'OPAL';
+                else if (b.startsWith('PAIR')) newBrand = 'PAIR EYEWEAR';
+                else if (b.startsWith('POLAR') && !b.startsWith('POLAROID')) newBrand = 'POLAR';
+                else if (b.startsWith('POLAROID')) newBrand = 'POLAROID';
+                else if (b.startsWith('POLO')) newBrand = 'POLO RALPH LAUREN';
+                else if (b.startsWith('PORSCHE')) newBrand = 'PORSCHE DESIGN';
+                else if (b.startsWith('PRADA')) newBrand = 'PRADA';
+                else if (b.startsWith('PUMA')) newBrand = 'PUMA';
+                else if (b.startsWith('RALPH')) newBrand = 'RALPH LAUREN';
+                else if (b.startsWith('SPIN ON8')) newBrand = 'SPIN ON8';
+                else if (b.startsWith('TEMPO')) newBrand = 'TEMPO';
+                else if (b.startsWith('THOM BROW')) newBrand = 'THOM BROWNE';
+                else if (b.startsWith('TOM FORD')) newBrand = 'TOM FORD';
+
+                parts[1] = newBrand;
                 return parts.join(';');
             }
         }
@@ -1588,6 +1583,7 @@
         let timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
         let desc = inventory[sku] && inventory[sku].description ? inventory[sku].description : "Unknown Item";
         
+        // Expanded randomizer to completely prevent rapid looping collisions
         let logId = Date.now().toString() + Math.floor(Math.random() * 1000000).toString();
         
         if (!binCounters[currentBin]) binCounters[currentBin] = 0;
@@ -1762,36 +1758,45 @@
         try {
             let headerRowIndex = -1;
             let skuCol = -1, qtyCol = -1, descCol = -1, slocCol = -1, stoCol = -1, merchCol = -1;
+            
             let isRivoli = false;
-            let rivBrandCol = -1, rivSubBrandCol = -1, rivItemNoCol = -1, rivDescCol = -1;
+            let rivBarcodeCol = -1, rivBrandCol = -1, rivSubBrandCol = -1, rivItemNoCol = -1, rivDescCol = -1;
 
             for (let i = 0; i < Math.min(aoa.length, 25); i++) {
                 let cols = aoa[i];
                 if (!cols || !cols.length) continue;
                 
+                let rowHeaders = cols.map(c => String(c).trim().toLowerCase().replace(/['"]/g, ''));
+                
+                if (rowHeaders.includes('barcode') && rowHeaders.includes('qty. on hand') && rowHeaders.includes('sub brand code')) {
+                    isRivoli = true;
+                    rivBarcodeCol = rowHeaders.indexOf('barcode');
+                    qtyCol = rowHeaders.indexOf('qty. on hand');
+                    rivBrandCol = rowHeaders.indexOf('brand name');
+                    rivSubBrandCol = rowHeaders.indexOf('sub brand code');
+                    rivItemNoCol = rowHeaders.indexOf('item no.');
+                    rivDescCol = rowHeaders.indexOf('item description');
+                    headerRowIndex = i;
+                    break;
+                }
+                
                 for (let j = 0; j < cols.length; j++) {
                     if (cols[j] == null) continue;
                     let h = String(cols[j]).trim().toLowerCase().replace(/['"]/g, '');
                     if (h === 'article' || h === 'article #' || h === 'sku' || h === 'material') skuCol = j;
-                    if (h === 'barcode') { skuCol = j; isRivoli = true; }
                     if (h === 'unrestricted' || h === 'p.o. qty.' || h === 'p.o. qty' || h === 'qty' || h === 'quantity' || h === 'in-transit qty.') qtyCol = j;
-                    if (h === 'qty. on hand') qtyCol = j;
                     if (h === 'storage location' || h === 'sloc') slocCol = j;
                     if (h.includes('description') || h === 'desc' || h === 'article description') descCol = j;
-                    if (h === 'item description') rivDescCol = j;
                     if (h === 's.t.o. #' || h === 's.t.o.') stoCol = j;
                     if (h.includes('merch') || h.includes('category')) merchCol = j;
-                    if (h === 'brand name') rivBrandCol = j;
-                    if (h === 'sub brand code') rivSubBrandCol = j;
-                    if (h === 'item no.') rivItemNoCol = j;
                 }
-                if (skuCol !== -1 && qtyCol !== -1) {
+                if (skuCol !== -1 && qtyCol !== -1 && !isRivoli) {
                     headerRowIndex = i;
                     break;
                 }
             }
 
-            let isFallbackMode = (headerRowIndex === -1);
+            let isFallbackMode = (!isRivoli && headerRowIndex === -1);
             let startIndex = isFallbackMode ? 0 : headerRowIndex + 1;
 
             saveState();
@@ -1827,22 +1832,22 @@
                 if (!cols || cols.length < 2) continue;
 
                 let skuRaw = "", qtyRaw = "", descRaw = "", slocRaw = "", stoRaw = "", merchRaw = "";
-                let category = "OTHERS", brand = "UNKNOWN";
 
                 if (isRivoli) {
-                    skuRaw = cols[skuCol] != null ? String(cols[skuCol]).trim() : "";
+                    skuRaw = cols[rivBarcodeCol] != null ? String(cols[rivBarcodeCol]).trim() : "";
                     qtyRaw = cols[qtyCol] != null ? String(cols[qtyCol]).trim() : "";
+                    
                     let bName = rivBrandCol !== -1 && cols[rivBrandCol] != null ? String(cols[rivBrandCol]).trim() : "";
                     let iNo = rivItemNoCol !== -1 && cols[rivItemNoCol] != null ? String(cols[rivItemNoCol]).trim() : "";
                     let iDesc = rivDescCol !== -1 && cols[rivDescCol] != null ? String(cols[rivDescCol]).trim() : "";
-                    descRaw = `${bName} ${iNo} ${iDesc}`.trim();
-
+                    
                     let subCode = rivSubBrandCol !== -1 && cols[rivSubBrandCol] != null ? String(cols[rivSubBrandCol]).trim().toUpperCase() : "";
-                    if (subCode === "E01") category = "SUN";
-                    else if (subCode === "E02") category = "SPX";
-
-                    brand = bName ? bName.toUpperCase() : "UNKNOWN";
-                    merchRaw = category; 
+                    let prefix = "OA";
+                    if (subCode === "E01") prefix = "S";
+                    else if (subCode === "E02") prefix = "O";
+                    
+                    descRaw = `${prefix};${bName};${iNo} ${iDesc}`.trim();
+                    merchRaw = prefix;
                 } else if (!isFallbackMode) {
                     skuRaw = cols[skuCol] != null ? String(cols[skuCol]).trim() : "";
                     qtyRaw = cols[qtyCol] != null ? String(cols[qtyCol]).trim() : "";
@@ -1969,18 +1974,10 @@
                 }
 
                 if (combineBrands) {
-                    if (isRivoli) {
-                        brand = normalizeBrandName(brand);
-                    } else {
-                        descRaw = normalizeDescription(descRaw);
-                    }
+                    descRaw = normalizeDescription(descRaw);
                 }
 
-                if (!isRivoli) {
-                    let extracted = extractBrandAndCategory(descRaw);
-                    category = extracted.category;
-                    brand = extracted.brand;
-                }
+                let { category, brand } = extractBrandAndCategory(descRaw);
 
                 if (stoRaw) uniqueSTOs.add(stoRaw);
                 if (brand !== "UNKNOWN") uniqueBrands.add(brand);
@@ -2105,35 +2102,43 @@
         try {
             let headerRowIndex = -1;
             let skuCol = -1, qtyCol = -1, descCol = -1, slocCol = -1, merchCol = -1;
+            
             let isRivoli = false;
-            let rivBrandCol = -1, rivSubBrandCol = -1, rivItemNoCol = -1, rivDescCol = -1;
+            let rivBarcodeCol = -1, rivBrandCol = -1, rivSubBrandCol = -1, rivItemNoCol = -1, rivDescCol = -1;
 
             for (let i = 0; i < Math.min(aoa.length, 25); i++) {
                 let cols = aoa[i];
                 if (!cols || !cols.length) continue;
                 
+                let rowHeaders = cols.map(c => String(c).trim().toLowerCase().replace(/['"]/g, ''));
+                if (rowHeaders.includes('barcode') && rowHeaders.includes('qty. on hand') && rowHeaders.includes('sub brand code')) {
+                    isRivoli = true;
+                    rivBarcodeCol = rowHeaders.indexOf('barcode');
+                    qtyCol = rowHeaders.indexOf('qty. on hand');
+                    rivBrandCol = rowHeaders.indexOf('brand name');
+                    rivSubBrandCol = rowHeaders.indexOf('sub brand code');
+                    rivItemNoCol = rowHeaders.indexOf('item no.');
+                    rivDescCol = rowHeaders.indexOf('item description');
+                    headerRowIndex = i;
+                    break;
+                }
+                
                 for (let j = 0; j < cols.length; j++) {
                     if (cols[j] == null) continue;
                     let h = String(cols[j]).trim().toLowerCase().replace(/['"]/g, '');
                     if (h === 'article' || h === 'article #' || h === 'sku' || h === 'material') skuCol = j;
-                    if (h === 'barcode') { skuCol = j; isRivoli = true; }
                     if (h === 'unrestricted' || h === 'p.o. qty.' || h === 'p.o. qty' || h === 'qty' || h === 'quantity' || h === 'in-transit qty.') qtyCol = j;
-                    if (h === 'qty. on hand') qtyCol = j;
                     if (h === 'storage location' || h === 'sloc') slocCol = j;
                     if (h.includes('description') || h === 'desc' || h === 'article description') descCol = j;
-                    if (h === 'item description') rivDescCol = j;
                     if (h.includes('merch') || h.includes('category')) merchCol = j;
-                    if (h === 'brand name') rivBrandCol = j;
-                    if (h === 'sub brand code') rivSubBrandCol = j;
-                    if (h === 'item no.') rivItemNoCol = j;
                 }
-                if (skuCol !== -1 && qtyCol !== -1) {
+                if (skuCol !== -1 && qtyCol !== -1 && !isRivoli) {
                     headerRowIndex = i;
                     break;
                 }
             }
 
-            let isFallbackMode = (headerRowIndex === -1);
+            let isFallbackMode = (!isRivoli && headerRowIndex === -1);
             let startIndex = isFallbackMode ? 0 : headerRowIndex + 1;
 
             saveState();
@@ -2146,22 +2151,22 @@
                 if (!cols || cols.length < 2) continue;
 
                 let skuRaw = "", qtyRaw = "", descRaw = "", slocRaw = "", merchRaw = "";
-                let category = "OTHERS", brand = "UNKNOWN";
 
                 if (isRivoli) {
-                    skuRaw = cols[skuCol] != null ? String(cols[skuCol]).trim() : "";
+                    skuRaw = cols[rivBarcodeCol] != null ? String(cols[rivBarcodeCol]).trim() : "";
                     qtyRaw = cols[qtyCol] != null ? String(cols[qtyCol]).trim() : "";
+                    
                     let bName = rivBrandCol !== -1 && cols[rivBrandCol] != null ? String(cols[rivBrandCol]).trim() : "";
                     let iNo = rivItemNoCol !== -1 && cols[rivItemNoCol] != null ? String(cols[rivItemNoCol]).trim() : "";
                     let iDesc = rivDescCol !== -1 && cols[rivDescCol] != null ? String(cols[rivDescCol]).trim() : "";
-                    descRaw = `${bName} ${iNo} ${iDesc}`.trim();
-
+                    
                     let subCode = rivSubBrandCol !== -1 && cols[rivSubBrandCol] != null ? String(cols[rivSubBrandCol]).trim().toUpperCase() : "";
-                    if (subCode === "E01") category = "SUN";
-                    else if (subCode === "E02") category = "SPX";
-
-                    brand = bName ? bName.toUpperCase() : "UNKNOWN";
-                    merchRaw = category;
+                    let prefix = "OA";
+                    if (subCode === "E01") prefix = "S";
+                    else if (subCode === "E02") prefix = "O";
+                    
+                    descRaw = `${prefix};${bName};${iNo} ${iDesc}`.trim();
+                    merchRaw = prefix;
                 } else if (!isFallbackMode) {
                     skuRaw = cols[skuCol] != null ? String(cols[skuCol]).trim() : "";
                     qtyRaw = cols[qtyCol] != null ? String(cols[qtyCol]).trim() : "";
@@ -2276,16 +2281,10 @@
 
                 if (sku === "" || sku === "0" || isNaN(penQty) || penQty === 0) continue;
 
-                if (!isRivoli) descRaw = normalizeDescription(descRaw);
-                else brand = normalizeBrandName(brand);
+                descRaw = normalizeDescription(descRaw);
 
                 let isLens = isExcludedItem(fullRowText, descRaw, merchRaw);
-
-                if (!isRivoli) {
-                    let extracted = extractBrandAndCategory(descRaw);
-                    category = extracted.category;
-                    brand = extracted.brand;
-                }
+                let { category, brand } = extractBrandAndCategory(descRaw);
 
                 pendingRawData.push({
                     sku: sku,
