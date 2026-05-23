@@ -243,18 +243,18 @@
     <div class="custom-modal-box" id="slocModalBox">
         <div class="custom-modal-header">
             <h3>Storage Location Filter</h3>
-            <button class="custom-modal-close" onclick="closeSlocModal()" title="Close without encoding">
+            <button class="custom-modal-close" onclick="closeSlocModal()" title="Close without loading">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
         <div class="custom-modal-body">
-            We detected items from Storage Locations <strong>1000</strong> and/or <strong>4000</strong> in your data. How would you like to encode them?
+            We detected items from Storage Locations <strong>1000</strong> and/or <strong>4000</strong> in your data. How would you like to load them?
         </div>
         <div class="custom-modal-footer">
             <button class="custom-modal-btn" style="background-color: var(--accent-blue); color: #fff;" onclick="finalizeEncoding('ALL')" title="Keep all items">Proceed with ALL (1000 & 4000)</button>
             <button class="custom-modal-btn sloc-btn-filter" onclick="finalizeEncoding('REMOVE_4000')" title="Delete 4000 items from list">Remove 4000 items (Keep 1000)</button>
             <button class="custom-modal-btn sloc-btn-filter" onclick="finalizeEncoding('REMOVE_1000')" title="Delete 1000 items from list">Remove 1000 items (Keep 4000)</button>
-            <button class="sloc-btn-cancel" onclick="closeSlocModal()" title="Cancel and go back">Cancel Encoding</button>
+            <button class="sloc-btn-cancel" onclick="closeSlocModal()" title="Cancel and go back">Cancel Load</button>
         </div>
     </div>
 </div>
@@ -334,23 +334,23 @@
     </div>
 
     <div class="content-panel">
-        <div class="step-title">1. Encode System Data</div>
+        <div class="step-title">1. Load System Data</div>
         
         <div class="tutorial-tip">
             <svg class="tutorial-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
             <div>
-                <strong>How to start:</strong> Paste data directly from your MB52 / ZSTK_IT Excel spreadsheet into the text box below and click <strong>Encode Data</strong>. Alternatively, you can click <strong>Upload File</strong> to upload the saved CSV, XLS, XLSX, or XML file directly. <em>Note: Contact Lenses and Spare Parts are automatically hidden for cleaner auditing.</em>
+                <strong>How to start:</strong> Paste data directly from your MB52 / ZSTK_IT Excel spreadsheet into the text box below and click <strong>Load Data</strong>. Alternatively, you can click <strong>Load File</strong> to load the saved CSV, XLS, XLSX, or XML file directly. <em>Note: Contact Lenses and Spare Parts are automatically hidden for cleaner auditing.</em>
             </div>
         </div>
 
-        <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Copy your columns directly from your MB52 or ZSTK_IT spreadsheet and <b><u>paste them below</u></b>, OR <b><u>you can drag and drop or upload</u></b> the unedited MB52 (/abdou) or ZSTK_IT exported spreadsheet file here:</label>
+        <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">Copy your columns directly from your MB52 or ZSTK_IT spreadsheet and <b><u>paste them below</u></b>, OR <b><u>you can drag and drop or load</u></b> the unedited MB52 (/abdou) or ZSTK_IT exported spreadsheet file here:</label>
         <textarea id="pasteArea" title="Paste your raw Excel data here or drag and drop your file" placeholder="Example format:&#10;&#10;000000000052787002	O;LINDBERG;BASIC145, 53, P10/ P10	EA	1.000&#10;000000000198657001	O;MONOSTROM;MONO206, 53, DBLUE	        EA	1.000&#10;&#10;OR&#10;&#10;94760001	O;RAY BAN;8724, 54, 1000	    1000	1&#10;97697006	O;RAY BAN JUNIOR;1536, 48, 3600	    1000	2"></textarea>
         
         <div style="display: flex; align-items: center; margin-top: 8px; margin-bottom: 0; flex-wrap: wrap; gap: 6px;">
-            <button class="btn btn-encode" onclick="loadPastedData()" title="Encode COPY / PASTED Data" style="margin: 0;">Encode Data</button>
+            <button class="btn btn-encode" onclick="loadPastedData()" title="Load COPY / PASTED Data" style="margin: 0;">Load Data</button>
             <span style="font-weight: 600; color: var(--text-secondary); font-size: 11px; margin: 0 12px;">OR</span>
             <input type="file" id="sysDataUpload" accept=".csv, .xls, .xlsx, .xlsm, .xlsb, .txt, .tsv, .xml, .mhtml, .mht" style="display: none;" onchange="handleFileUpload(event)">
-            <button class="btn btn-encode" style="background-color: var(--accent-green); margin: 0;" onclick="document.getElementById('sysDataUpload').click()" title="Upload ZSTK_IT or MB52 Excel File Instead">Upload File</button>
+            <button class="btn btn-encode" style="background-color: var(--accent-green); margin: 0;" onclick="document.getElementById('sysDataUpload').click()" title="Load ZSTK_IT or MB52 Excel File Instead">Load File</button>
             
             <button class="btn-secondary" id="btnToggleLenses" onclick="toggleLenses()" title="Click to put back the Contact Lenses, Ophthalmic Lenses, and Spare Parts that were removed by the auto-filter" style="margin-left: auto;">Unhide CL & OL</button>
         </div>
@@ -401,7 +401,7 @@
                 </button>
 
                 <input type="file" id="pendingDataUpload" accept=".csv, .xls, .xlsx, .xlsm, .xlsb, .txt, .tsv, .xml, .mhtml, .mht" style="display: none;" onchange="handlePendingUpload(event)">
-                <button class="btn-secondary" onclick="promptPendingUpload()" title="Upload a spreadsheet of items yet to be delivered. The quantities will be added to the Scanned calculation dynamically.">
+                <button class="btn-secondary" onclick="promptPendingUpload()" title="Load a spreadsheet of items yet to be delivered. The quantities will be added to the Scanned calculation dynamically.">
                     <svg viewBox="0 0 24 24" width="12" height="12" stroke="var(--accent-orange)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
@@ -415,7 +415,7 @@
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="16" y1="13" x2="8" y2="13"></line>
                         <line x1="16" y1="17" x2="8" y2="17"></line>
-                        <polyline points="10 9 9 9 8 9"></polyline>
+                        <line x1="10" y1="9" x2="9" y2="9"></line>
                     </svg> Manual Encode
                 </button>
             </div>
@@ -464,7 +464,7 @@
                 </div>
                 <div class="dash-card dash-pending-card" id="dashCardPending" style="display: none;">
                     <h3>Pending</h3>
-                    <p id="dashPending" title="Items pending delivery uploaded via file">0</p>
+                    <p id="dashPending" title="Items pending delivery loaded via file">0</p>
                 </div>
                 <div class="dash-card dash-missing">
                     <h3>Missing</h3>
@@ -1120,6 +1120,23 @@
     function customConfirm(message, title = "Confirmation message") { return openCustomModal({ type: 'confirm', title, message, yesText: 'Yes', noText: 'No' }); }
     function customPrompt(message, defaultValue = "", title = "Input required") { return openCustomModal({ type: 'prompt', title, message, defaultValue, yesText: 'Submit', noText: 'Cancel' }); }
 
+    // --- GHOST MODAL CONTROLLER (SLOC PROMPT) ---
+    function askSlocAction() {
+        return new Promise((resolve) => {
+            document.getElementById('slocModal').style.display = 'flex';
+            
+            window.finalizeEncoding = function(action) {
+                document.getElementById('slocModal').style.display = 'none';
+                resolve(action);
+            };
+            
+            window.closeSlocModal = function() {
+                document.getElementById('slocModal').style.display = 'none';
+                resolve('CANCEL');
+            };
+        });
+    }
+
     function setFilter(filterType, btnElement) {
         currentFilter = filterType;
         document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -1571,7 +1588,7 @@
 
     function updateStickyHeaders() {
         const stickyGroup = document.getElementById('stickyGroup'); if (!stickyGroup) return;
-        const height = stickyGroup.getBoundingClientRect().height; 
+        const height = stickyGroup.getBoundingClientRect().height; 
         document.querySelectorAll('#resultsTable th').forEach(th => th.style.top = (height + 8) + 'px');
     }
 
@@ -1579,7 +1596,7 @@
     function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
 
     /* ========================================================
-       SMART UPLOADER & PARSER (SYSTEM)
+       SMART LOADER & PARSER (SYSTEM)
        ======================================================== */
 
     async function processArrayOfArrays(aoa, event) {
@@ -1670,7 +1687,8 @@
                         }
                     }
                     if (possibleSlocs.length > 0) slocRaw = possibleSlocs[0].val;
-                    possibleSkus = possibleSkus.filter(s => s.val.length !== 4 && s.val !== slocRaw); psort = possibleSkus.sort((a, b) => b.val.length - a.val.length);
+                    possibleSkus = possibleSkus.filter(s => s.val.length !== 4 && s.val !== slocRaw); 
+                    possibleSkus.sort((a, b) => b.val.length - a.val.length);
                     if (possibleSkus.length > 0) skuRaw = possibleSkus[0].val;
 
                     let foundQtyIndex = -1; let skuIndex = possibleSkus.length > 0 ? possibleSkus[0].index : -1; let slocIndex = possibleSlocs.length > 0 ? possibleSlocs[0].index : -1;
@@ -1733,9 +1751,28 @@
             }
 
             if (uploadedRawData.length === 0) {
-                await customAlert(`No valid rows found to encode.`, "Upload Result");
+                await customAlert(`No valid rows found to encode.`, "Load Result");
                 undoStack.pop(); updateUndoRedoButtons();
                 if(event && event.target) event.target.value = ''; return;
+            }
+
+            // GHOST MODAL TRIGGER LOGIC (Wait for user if both SLOCs present)
+            let has1000 = uploadedRawData.some(r => r.sloc === '1000');
+            let has4000 = uploadedRawData.some(r => r.sloc === '4000');
+            
+            if (has1000 && has4000) {
+                let action = await askSlocAction();
+                if (action === 'CANCEL') {
+                    uploadedRawData = [];
+                    undoStack.pop(); updateUndoRedoButtons();
+                    if(event && event.target) event.target.value = '';
+                    return;
+                }
+                if (action === 'REMOVE_4000') {
+                    uploadedRawData = uploadedRawData.filter(r => r.sloc !== '4000');
+                } else if (action === 'REMOVE_1000') {
+                    uploadedRawData = uploadedRawData.filter(r => r.sloc !== '1000');
+                }
             }
 
             document.getElementById('dynamicFilters').style.display = 'flex'; 
@@ -1750,9 +1787,9 @@
                 updateBrandDropdown(); 
             }
             applyDynamicFilters();
-            let msg = `Successfully uploaded and parsed ${uploadedRawData.length} items.`;
+            let msg = `Successfully loaded and parsed ${uploadedRawData.length} items.`;
             if (excludedCount > 0) msg += `<br><br><span style="color:var(--accent-pink); font-weight:bold;">Automatically hid ${excludedCount} Ophthalmic, Contact Lens, and Spare Part items!</span>`;
-            await customAlert(msg, "Upload Success");
+            await customAlert(msg, "Load Success");
             if(event && event.target) event.target.value = '';
         } catch (error) {
             console.error(error); undoStack.pop(); updateUndoRedoButtons();
@@ -1777,15 +1814,15 @@
                     await processArrayOfArrays(aoa, event);
                 } catch(err) {
                     console.error(err); await customAlert("There was an error reading the CSV text.", "File Error");
-                    if(event.target) event.target.value = '';
+                    if(event && event.target) event.target.value = '';
                 }
             };
             reader.readAsText(file); return;
         }
 
         if (typeof XLSX === 'undefined') {
-            await customAlert("The Excel parser library couldn't load. Please upload a .CSV instead.", "Library Blocked");
-            if(event.target) event.target.value = ''; return;
+            await customAlert("The Excel parser library couldn't load. Please load a .CSV instead.", "Library Blocked");
+            if(event && event.target) event.target.value = ''; return;
         }
 
         const reader = new FileReader();
@@ -1804,7 +1841,7 @@
                     }
                 } catch(e2) { console.error(e2); }
                 await customAlert("There was an error parsing the spreadsheet. Ensure the file is not corrupted.", "File Error");
-                if(event.target) event.target.value = '';
+                if(event && event.target) event.target.value = '';
             }
         };
         reader.readAsArrayBuffer(file);
@@ -1883,7 +1920,8 @@
                         }
                     }
                     if (possibleSlocs.length > 0) slocRaw = possibleSlocs[0].val;
-                    possibleSkus = possibleSkus.filter(s => s.val.length !== 4 && s.val !== slocRaw); possibleSkus.sort((a, b) => b.val.length - a.val.length);
+                    possibleSkus = possibleSkus.filter(s => s.val.length !== 4 && s.val !== slocRaw); 
+                    possibleSkus.sort((a, b) => b.val.length - a.val.length);
                     if (possibleSkus.length > 0) skuRaw = possibleSkus[0].val;
 
                     let foundQtyIndex = -1; let skuIndex = possibleSkus.length > 0 ? possibleSkus[0].index : -1; let slocIndex = possibleSlocs.length > 0 ? possibleSlocs[0].index : -1;
@@ -1943,7 +1981,7 @@
             }
 
             if (addedCount === 0) {
-                await customAlert(`No valid rows found to encode as Pending Items.`, "Upload Result");
+                await customAlert(`No valid rows found to load as Pending Items.`, "Load Result");
                 undoStack.pop(); updateUndoRedoButtons();
                 if(event && event.target) event.target.value = ''; return;
             }
@@ -1953,7 +1991,7 @@
                 document.getElementById('mb52Filters').style.display = 'flex'; updateBrandDropdown();
             }
             applyDynamicFilters();
-            await customAlert(`Successfully added pending quantities for ${addedCount} items.`, "Pending Upload Success");
+            await customAlert(`Successfully added pending quantities for ${addedCount} items.`, "Pending Load Success");
             if(event && event.target) event.target.value = '';
         } catch (error) {
             console.error(error); undoStack.pop(); updateUndoRedoButtons();
@@ -1978,15 +2016,15 @@
                     await processPendingArrayOfArrays(aoa, event);
                 } catch(err) {
                     console.error(err); await customAlert("There was an error reading the CSV text.", "File Error");
-                    if(event.target) event.target.value = '';
+                    if(event && event.target) event.target.value = '';
                 }
             };
             reader.readAsText(file); return;
         }
 
         if (typeof XLSX === 'undefined') {
-            await customAlert("The Excel parser library couldn't load. Please save it as a .CSV and try uploading.", "Library Blocked");
-            if(event.target) event.target.value = ''; return;
+            await customAlert("The Excel parser library couldn't load. Please save it as a .CSV and try loading.", "Library Blocked");
+            if(event && event.target) event.target.value = ''; return;
         }
 
         const reader = new FileReader();
@@ -2005,7 +2043,7 @@
                     }
                 } catch(e2) { console.error(e2); }
                 await customAlert("There was an error parsing the spreadsheet. Ensure the file is not corrupted.", "File Error");
-                if(event.target) event.target.value = '';
+                if(event && event.target) event.target.value = '';
             }
         };
         reader.readAsArrayBuffer(file);
@@ -2054,6 +2092,15 @@
             } else {
                 inventory[row.sku].isLens = inventory[row.sku].isLens || row.isLens;
                 if (!inventory[row.sku].description && row.desc) inventory[row.sku].description = row.desc;
+                
+                // NEW LOGIC: Dynamic Concatenation of SLOC strings if an item exists in both 1000 and 4000
+                if (row.sloc && inventory[row.sku].sloc.indexOf(row.sloc) === -1) {
+                    if (inventory[row.sku].sloc && inventory[row.sku].sloc !== "Scanned" && inventory[row.sku].sloc !== "Pending") {
+                        inventory[row.sku].sloc += ", " + row.sloc;
+                    } else {
+                        inventory[row.sku].sloc = row.sloc;
+                    }
+                }
             }
 
             inventory[row.sku].systemQty += row.qty;
@@ -2123,7 +2170,7 @@
     async function processFastScanQueue() {
         if (fastScanQueue.length === 0) { await customAlert("No items in the fast scan queue.", "Empty Queue"); return; }
         saveState(); let errorCount = 0; let successCount = 0;
-        resetFilterUI(); document.getElementById('slocFilterUI').value = '1000'; 
+        resetFilterUI(); document.getElementById('slocFilterUI').value = 'ALL'; 
 
         fastScanQueue.forEach(sku => {
             let isError = false;
@@ -2222,8 +2269,9 @@
 
     async function editQuantity(sku, type) {
         let typeName = type === 'systemQty' ? 'System QTY' : 'Pending QTY';
+        let item = inventory[sku];
+
         if (type === 'systemQty') {
-            let item = inventory[sku];
             if (item.sloc && item.sloc.includes('1000') && item.sloc.includes('4000')) {
                 const confirmed = await customConfirm(`This item is split between 1000 and 4000. Edit to keep breakdown accurate?`); if (!confirmed) return;
                 let new1000 = await customPrompt(`Enter the new SLOC 1000 QTY for SKU ${sku}:`, item.sysQty1000, "Edit 1000 QTY"); if (new1000 === null) return;
@@ -2231,26 +2279,43 @@
 
                 let q1 = Math.round(parseFloat(new1000.replace(/,/g, ''))) || 0; let q4 = Math.round(parseFloat(new4000.replace(/,/g, ''))) || 0;
                 if (q1 >= 0 && q4 >= 0) {
-                    saveState(); inventory[sku].sysQty1000 = q1; inventory[sku].sysQty4000 = q4; inventory[sku].systemQty = q1 + q4;
-                    await saveData(); renderTable();
+                    saveState(); 
+                    
+                    // Core Fix: Modify raw array so edits survive filter toggles
+                    uploadedRawData = uploadedRawData.filter(r => r.sku !== sku);
+                    let ext = extractBrandAndCategory(item.description);
+                    if (q1 > 0) uploadedRawData.push({ sku, qty: q1, desc: item.description, sloc: '1000', sto: "", category: ext.category, brand: ext.brand, isLens: item.isLens });
+                    if (q4 > 0) uploadedRawData.push({ sku, qty: q4, desc: item.description, sloc: '4000', sto: "", category: ext.category, brand: ext.brand, isLens: item.isLens });
+                    
+                    applyDynamicFilters();
                 } else { await customAlert("Invalid quantity entered.", "Error"); }
                 return;
             }
         }
         
-        let currentQty = inventory[sku][type] || 0; const confirmed = await customConfirm(`Are you sure you want to manually edit the ${typeName} for SKU ${sku}?`);
+        let currentQty = item[type] || 0; const confirmed = await customConfirm(`Are you sure you want to manually edit the ${typeName} for SKU ${sku}?`);
         if (confirmed) {
             let newQtyRaw = await customPrompt(`Enter the new ${typeName} for SKU ${sku}:`, currentQty, "Edit Quantity");
             if (newQtyRaw !== null && newQtyRaw.trim() !== "") {
                 let qClean = newQtyRaw.replace(/,/g, ''); let newQty = Math.round(parseFloat(qClean));
                 if (!isNaN(newQty) && newQty >= 0) {
                     saveState(); 
+                    
+                    // Core Fix: Modify raw array so edits survive filter toggles
+                    let ext = extractBrandAndCategory(item.description);
                     if (type === 'systemQty') {
-                        if (inventory[sku].sysQty4000 === 0 && (inventory[sku].sysQtyOther === 0 || !inventory[sku].sysQtyOther)) inventory[sku].sysQty1000 = newQty;
-                        else if (inventory[sku].sysQty1000 === 0 && (inventory[sku].sysQtyOther === 0 || !inventory[sku].sysQtyOther)) inventory[sku].sysQty4000 = newQty;
-                        else { inventory[sku].sysQtyOther = newQty; inventory[sku].sysQty1000 = 0; inventory[sku].sysQty4000 = 0; }
+                        uploadedRawData = uploadedRawData.filter(r => r.sku !== sku);
+                        let singleSloc = item.sloc === '4000' ? '4000' : (item.sloc === '1000' ? '1000' : item.sloc);
+                        if (newQty > 0) {
+                            uploadedRawData.push({ sku, qty: newQty, desc: item.description, sloc: singleSloc, sto: "", category: ext.category, brand: ext.brand, isLens: item.isLens });
+                        }
+                    } else {
+                        pendingRawData = pendingRawData.filter(r => r.sku !== sku);
+                        if (newQty > 0) {
+                            pendingRawData.push({ sku, qty: newQty, desc: item.description, sloc: item.sloc, category: ext.category, brand: ext.brand, isLens: item.isLens });
+                        }
                     }
-                    inventory[sku][type] = newQty; await saveData(); renderTable();
+                    applyDynamicFilters();
                 } else { await customAlert("Invalid quantity.", "Invalid Input"); }
             }
         }
@@ -2259,8 +2324,19 @@
     async function deleteRow(sku) {
         const confirmed = await customConfirm(`Are you sure you want to completely remove SKU ${sku} from the list?`);
         if (confirmed) {
-            saveState(); if (inventory[sku].scannedQty > 0) { if (!binTotals[currentBin]) binTotals[currentBin] = 0; binTotals[currentBin] -= inventory[sku].scannedQty; }
-            delete inventory[sku]; await saveData(); renderTable(); renderAuditTrail();
+            saveState(); 
+            if (inventory[sku] && inventory[sku].scannedQty > 0) { 
+                if (!binTotals[currentBin]) binTotals[currentBin] = 0; 
+                binTotals[currentBin] -= inventory[sku].scannedQty; 
+            }
+            
+            // Core Fix: Purge the removed item completely out of raw memory
+            uploadedRawData = uploadedRawData.filter(r => r.sku !== sku);
+            pendingRawData = pendingRawData.filter(r => r.sku !== sku);
+            delete inventory[sku]; 
+            
+            applyDynamicFilters(); 
+            renderAuditTrail();
         }
     }
 
