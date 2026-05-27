@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictive Clinic WFM - Phase 3</title>
+    <title>Predictive Clinic WFM - Phase 5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,25 +15,24 @@
         .nav-btn.active { background-color: #2563eb; color: white; }
         .shift-select { width: 100%; font-size: 0.75rem; padding: 4px; border: 1px solid #e5e7eb; border-radius: 4px; background: transparent; cursor: pointer; }
         .shift-select:hover { border-color: #3b82f6; }
-        .shift-select:focus { outline: none; border-color: #2563eb; background: #eff6ff; }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <div class="w-64 bg-white shadow-xl h-full flex flex-col z-10">
-        <div class="p-6 text-2xl font-bold text-blue-800 border-b">
-            Predictive WFM <span class="text-sm text-gray-500 block">v3.0 - Smart Edit</span>
+    <div class="w-64 bg-slate-900 text-white shadow-xl h-full flex flex-col z-10">
+        <div class="p-6 text-xl font-bold border-b border-slate-700">
+            Smart WFM <span class="text-xs text-blue-400 block mt-1">v5.0 - Free AI & News</span>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-2">
-            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn active w-full text-left px-4 py-2 rounded font-medium text-gray-700 hover:bg-blue-100 transition">📊 Traffic & Events</button>
-            <button onclick="switchTab('schedule')" id="btn-schedule" class="nav-btn w-full text-left px-4 py-2 rounded font-medium text-gray-700 hover:bg-blue-100 transition">🗓️ Smart Schedule</button>
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn active w-full text-left px-4 py-2 rounded font-medium text-slate-300 hover:bg-slate-800 transition">📊 Intelligence Hub</button>
+            <button onclick="switchTab('schedule')" id="btn-schedule" class="nav-btn w-full text-left px-4 py-2 rounded font-medium text-slate-300 hover:bg-slate-800 transition">🗓️ Smart Schedule</button>
         </div>
     </div>
 
     <div class="flex-1 h-full overflow-y-auto p-8 relative">
         
-        <div id="dashboard" class="tab-content active max-w-5xl mx-auto">
-            <h2 class="text-3xl font-bold mb-6 text-gray-800">Environmental Intelligence</h2>
+        <div id="dashboard" class="tab-content active max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800">Intelligence Hub</h2>
             
             <div class="grid grid-cols-2 gap-6 mb-6">
                 <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
@@ -43,15 +42,15 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow border-l-4 border-emerald-500">
-                    <h3 class="text-xl font-semibold mb-2">2. Fetch Local Context (Qatar)</h3>
+                    <h3 class="text-xl font-semibold mb-2">2. Live OSINT Sync</h3>
                     <div class="space-y-3">
-                        <button onclick="fetchHolidaysAndEvents()" class="w-full bg-emerald-100 text-emerald-800 py-2 rounded font-semibold hover:bg-emerald-200 transition">
-                            Sync Live Holidays & Events
+                        <button onclick="fetchEnvironmentData()" class="w-full bg-emerald-100 text-emerald-800 py-2 rounded font-semibold hover:bg-emerald-200 transition shadow">
+                            Run Free OSINT Sweep (News & Weather)
                         </button>
-                        <div id="apiLog" class="text-xs text-gray-600 h-16 overflow-y-auto bg-gray-50 p-2 border rounded">
+                        <div id="apiLog" class="text-xs text-gray-600 h-28 overflow-y-auto bg-gray-50 p-2 border rounded leading-relaxed font-mono">
                             Awaiting sync...<br>
-                            - Holidays: Nager.Date API<br>
-                            - Events: PredictHQ (Simulated for Demo)
+                            - Module 1: Open-Meteo API (Weather)<br>
+                            - Module 2: Google News RSS via AllOrigins Proxy
                         </div>
                     </div>
                 </div>
@@ -67,11 +66,11 @@
             <div class="flex justify-between items-center mb-4">
                 <div>
                     <h2 class="text-3xl font-bold text-gray-800">Interactive Predictive Schedule</h2>
-                    <p class="text-sm text-gray-500 mt-1">Algorithm suggests shifts based on traffic and events. You can edit any cell manually.</p>
+                    <p class="text-sm text-gray-500 mt-1" id="scheduleStatus">Awaiting Intelligence Sync to generate predictions.</p>
                 </div>
                 <div>
-                    <button onclick="generateSchedule()" class="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">⚡ Generate Suggestions</button>
-                    <button onclick="exportToExcel()" class="px-6 py-2 bg-emerald-600 text-white rounded font-bold shadow hover:bg-emerald-700 ml-2 transition">⬇️ Export to Excel</button>
+                    <button onclick="generateSchedule()" class="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">⚡ Generate Schedule</button>
+                    <button onclick="exportToExcel()" class="px-6 py-2 bg-emerald-600 text-white rounded font-bold shadow hover:bg-emerald-700 ml-2 transition">⬇️ Export</button>
                 </div>
             </div>
             
@@ -85,23 +84,23 @@
                             <th class="px-2 py-2 border text-center">MONDAY</th>
                             <th class="px-2 py-2 border text-center">TUESDAY</th>
                             <th class="px-2 py-2 border text-center">WEDNESDAY</th>
-                            <th class="px-2 py-2 border text-center text-red-600">THURSDAY (Event)</th>
+                            <th class="px-2 py-2 border text-center">THURSDAY</th>
                             <th class="px-2 py-2 border text-center">FRIDAY</th>
                             <th class="px-2 py-2 border text-center">SATURDAY</th>
                         </tr>
                         <tr class="bg-blue-50" id="graphRow">
-                            <td class="px-4 py-2 border text-xs font-semibold text-blue-800" colspan="2">Predicted Footfall</td>
+                            <td class="px-4 py-2 border text-xs font-semibold text-blue-800" colspan="2">Live Traffic Prediction</td>
                             <td class="border p-1"><canvas id="spark-0" height="40"></canvas></td>
                             <td class="border p-1"><canvas id="spark-1" height="40"></canvas></td>
                             <td class="border p-1"><canvas id="spark-2" height="40"></canvas></td>
                             <td class="border p-1"><canvas id="spark-3" height="40"></canvas></td>
-                            <td class="border p-1 bg-red-50"><canvas id="spark-4" height="40"></canvas></td>
+                            <td class="border p-1"><canvas id="spark-4" height="40"></canvas></td>
                             <td class="border p-1"><canvas id="spark-5" height="40"></canvas></td>
                             <td class="border p-1"><canvas id="spark-6" height="40"></canvas></td>
                         </tr>
                     </thead>
                     <tbody id="scheduleBody" class="divide-y divide-gray-200">
-                        <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Run Generation to populate editable matrix.</td></tr>
+                        <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Run Generation to populate matrix.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -116,19 +115,16 @@
             document.getElementById('btn-' + tabId).classList.add('active');
         }
 
-        // --- Data Models ---
-        let baseHourlyTraffic = [0,0,0,0,0,0,0,0,0,5,15,30,25,35,40,45,60,75,85,60,40,20,5,0]; // Fallback if no CSV
-        let contextData = { holidays: [], events: [] };
+        // Base Data
+        let baseHourlyTraffic = [0,0,0,0,0,0,0,0,0,5,15,30,25,35,40,45,60,75,85,60,40,20,5,0]; 
+        let contextData = { weeklyWeather: [], newsEventsDetected: false, eventKeywordsFound: [] }; 
         
         const SHIFT_OPTIONS = [
             "MORNING SHIFT (10:00 AM To 7:00 PM)",
             "MID SHIFT (1:00 PM To 10:00 PM)",
             "EVENING SHIFT (2:00 PM To 11:00 PM)",
             "SPLIT SHIFT (10:00 AM - 2:00 PM) & (6:00 PM - 10:00 PM)",
-            "SPLIT SHIFT (9:00 AM - 1:00 PM) & (5:00 PM - 9:00 PM)",
-            "OFF",
-            "ANNUAL LEAVE",
-            "SICK LEAVE"
+            "OFF", "ANNUAL LEAVE", "SICK LEAVE"
         ];
 
         const staffRoster = [
@@ -168,27 +164,57 @@
             });
         }
 
-        // --- Context Fetching (The "Smart" Internet connection) ---
-        async function fetchHolidaysAndEvents() {
+        // --- OSINT Fetching (Open Source Intelligence) ---
+        async function fetchEnvironmentData() {
             const log = document.getElementById('apiLog');
-            log.innerHTML = "Syncing...<br>";
+            log.innerHTML = "Initiating OSINT Sweep...<br>";
+            contextData.eventKeywordsFound = [];
+            contextData.newsEventsDetected = false;
             
             try {
-                // 1. Fetch Real Holidays from Nager.Date API (Free)
-                const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${new Date().getFullYear()}/QA`);
-                const holidays = await res.json();
-                log.innerHTML += `✅ Fetched ${holidays.length} Holidays from Nager.Date API.<br>`;
+                // 1. Weather Module (Doha)
+                const wxRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.2854&longitude=51.5310&hourly=temperature_2m&timezone=auto');
+                const weatherData = await wxRes.json();
+                contextData.weeklyWeather = [];
+                for(let d = 0; d < 7; d++) { contextData.weeklyWeather.push(weatherData.hourly.temperature_2m.slice(d*24, (d+1)*24)); }
+                log.innerHTML += `✅ Module 1 [Weather]: Fetched 7-Day Temp Forecast.<br>`;
+
+                // 2. Live News RSS Module (Bypassing CORS via AllOrigins)
+                log.innerHTML += `🔄 Module 2 [News]: Scanning Google News for Doha Events...<br>`;
+                const rssUrl = "https://news.google.com/rss/search?q=Doha+events+OR+festival+OR+match+OR+concert&hl=en-US&gl=US&ceid=US:en";
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
                 
-                // 2. Mock Fetch Local Events (Normally via PredictHQ API with a key)
-                log.innerHTML += `✅ Simulated PredictHQ Event: Football Match on Thursday (17:00 - 20:00). Traffic will drop during the match.<br>`;
+                const newsRes = await fetch(proxyUrl);
+                const newsData = await newsRes.json();
                 
-                // Set context variable to influence algorithm
-                contextData.events.push({ dayIndex: 4 /* Thursday */, type: 'football', dropHours: [17, 18, 19] });
+                // Parse the XML String returned by the proxy
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(newsData.contents, "text/xml");
+                const items = xmlDoc.querySelectorAll("item");
                 
-                alert("Environmental Data Synced! The algorithm will now adjust Thursday's predictions based on the football event.");
+                let foundKeywords = [];
+                const triggerWords = ["match", "stadium", "festival", "concert", "championship", "expo"];
+                
+                // Check the top 10 recent news headlines
+                for(let i=0; i<Math.min(10, items.length); i++) {
+                    let title = items[i].querySelector("title").textContent.toLowerCase();
+                    triggerWords.forEach(word => {
+                        if(title.includes(word) && !foundKeywords.includes(word)) foundKeywords.push(word);
+                    });
+                }
+
+                if (foundKeywords.length > 0) {
+                    contextData.newsEventsDetected = true;
+                    contextData.eventKeywordsFound = foundKeywords;
+                    log.innerHTML += `<span class="text-red-500 font-bold">⚠️ Module 2 [News]: EVENT DETECTED! Keywords: ${foundKeywords.join(", ")}. Adjusting traffic algorithms to compensate for local distractions.</span><br>`;
+                    document.getElementById('scheduleStatus').innerHTML = `⚠️ Intelligence Update: High probability of local events (${foundKeywords.join(", ")}). Evening footfall predictions reduced to avoid overstaffing.`;
+                } else {
+                    log.innerHTML += `✅ Module 2 [News]: No major disruptive events detected in the news.<br>`;
+                    document.getElementById('scheduleStatus').innerHTML = `✅ Normal traffic conditions expected.`;
+                }
 
             } catch (err) {
-                log.innerHTML += `❌ API Connection Failed.<br>`;
+                log.innerHTML += `❌ API Connection Failed: ${err.message}. Ensure internet connection is active.<br>`;
             }
         }
 
@@ -197,94 +223,72 @@
             const tbody = document.getElementById('scheduleBody');
             tbody.innerHTML = '';
             
-            // 1. Generate Interactive Rows
             staffRoster.forEach((staff, index) => {
                 let row = `<tr><td class="px-4 py-2 border font-semibold whitespace-nowrap text-xs">${staff.name}</td><td class="px-2 py-2 border text-gray-600 text-xs">${staff.pos}</td>`;
-                
                 for(let day=0; day<7; day++) {
                     let isFriday = (day === 5);
-                    let suggestedIndex = 0; // Default Morning
+                    let suggestedIndex = 0; 
 
-                    // AI Suggestion Logic
-                    if (day === (index % 6)) suggestedIndex = 5; // OFF
-                    else if (isFriday) {
-                        if (staff.pos.includes('Optometrist')) suggestedIndex = 2; // Evening
-                        else suggestedIndex = (index % 2 === 0) ? 1 : 2; // Mid/Evening
-                    }
-                    else if (staff.pos.includes('Manager')) suggestedIndex = 1; // Mid
-                    else if (staff.pos.includes('Sales')) suggestedIndex = staff.arab ? 3 : 0; // Split for Arabic, Morning for non
+                    if (day === (index % 6)) suggestedIndex = 4; // OFF
+                    else if (isFriday) suggestedIndex = staff.pos.includes('Optometrist') ? 2 : 1; 
+                    else if (staff.pos.includes('Manager')) suggestedIndex = 1; 
+                    else if (staff.pos.includes('Sales')) suggestedIndex = staff.arab ? 3 : 0; 
                     
-                    // Build the Dropdown (Select) for editable UI
-                    let selectHTML = `<select class="shift-select ${suggestedIndex === 5 ? 'text-red-500 font-bold' : 'text-gray-800'}">`;
-                    SHIFT_OPTIONS.forEach((opt, i) => {
-                        selectHTML += `<option value="${opt}" ${i === suggestedIndex ? 'selected' : ''}>${opt}</option>`;
-                    });
+                    let selectHTML = `<select class="shift-select ${suggestedIndex === 4 ? 'text-red-500 font-bold' : 'text-gray-800'}">`;
+                    SHIFT_OPTIONS.forEach((opt, i) => { selectHTML += `<option value="${opt}" ${i === suggestedIndex ? 'selected' : ''}>${opt}</option>`; });
                     selectHTML += `</select>`;
-
                     row += `<td class="px-1 py-1 border align-middle">${selectHTML}</td>`;
                 }
                 row += `</tr>`;
                 tbody.innerHTML += row;
             });
-
-            // 2. Generate Inline Predictive Footfall Graphs (Sparklines)
             generateSparklines();
         }
 
         let sparkCharts = [];
         function generateSparklines() {
-            // Destroy old charts to prevent overlapping bugs
             sparkCharts.forEach(c => c.destroy());
             sparkCharts = [];
 
-            // For each day, calculate predicted traffic based on base data + events
             for(let day=0; day<7; day++) {
                 let dailyPrediction = [...baseHourlyTraffic];
+                let bgColorArray = new Array(24).fill('#93c5fd'); 
 
-                // Apply Contextual Modifiers (The "Smart" part)
-                if (day === 5) { // Friday logic
-                    dailyPrediction = dailyPrediction.map((val, hr) => hr < 13 ? 0 : val * 1.5); // Zero before 1pm, busier later
-                }
-                
-                // Check if an event happens today (e.g., our Mocked Thursday Football game)
-                let eventToday = contextData.events.find(e => e.dayIndex === day);
-                let bgColorArray = new Array(24).fill('#93c5fd'); // Default Light Blue
-
-                if (eventToday) {
-                    eventToday.dropHours.forEach(hr => {
-                        dailyPrediction[hr] = dailyPrediction[hr] * 0.4; // 60% drop in traffic during the match
-                        bgColorArray[hr] = '#ef4444'; // Red to indicate event impact
+                // 1. Weather logic
+                if (contextData.weeklyWeather.length > 0) {
+                    let temps = contextData.weeklyWeather[day];
+                    temps.forEach((temp, hr) => {
+                        if (temp > 35 && hr > 9 && hr < 22) {
+                            dailyPrediction[hr] *= 1.3; 
+                            bgColorArray[hr] = '#f59e0b'; 
+                        }
                     });
                 }
 
-                // Render miniature Chart.js in the table header
+                // 2. News/Event Logic
+                if (contextData.newsEventsDetected) {
+                    // If an event is in the news, we assume evening traffic drops (e.g. people are watching a match or at a concert)
+                    for(let hr=17; hr<22; hr++) {
+                        dailyPrediction[hr] *= 0.5; // 50% drop in footfall
+                        bgColorArray[hr] = '#ef4444'; // Red color to indicate event warning
+                    }
+                }
+
+                if (day === 5) dailyPrediction = dailyPrediction.map((val, hr) => hr < 13 ? 0 : val * 1.5); 
+
                 const ctx = document.getElementById(`spark-${day}`).getContext('2d');
                 let chart = new Chart(ctx, {
                     type: 'bar',
-                    data: {
-                        labels: Array.from({length: 24}, (_, i) => i),
-                        datasets: [{ data: dailyPrediction, backgroundColor: bgColorArray, barPercentage: 1.0, categoryPercentage: 1.0 }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                        scales: { x: { display: false }, y: { display: false, beginAtZero: true } },
-                        layout: { padding: 0 }
-                    }
+                    data: { labels: Array.from({length: 24}, (_, i) => i), datasets: [{ data: dailyPrediction, backgroundColor: bgColorArray, barPercentage: 1.0, categoryPercentage: 1.0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, beginAtZero: true } }, layout: { padding: 0 } }
                 });
                 sparkCharts.push(chart);
             }
         }
 
-        // --- Export to Excel ---
         function exportToExcel() {
-            if (document.getElementById('scheduleBody').innerText.includes("Run Generation")) return alert("Generate schedule first.");
-
-            // Create a temporary standard table to export (because SheetJS can't export HTML <select> dropdown values directly)
             let exportTable = document.createElement("table");
             let thead = document.getElementById("scheduleTable").querySelector("thead").cloneNode(true);
-            
-            // Remove the sparkline row from the export
             thead.removeChild(thead.querySelector("#graphRow"));
             exportTable.appendChild(thead);
 
@@ -294,28 +298,20 @@
             rows.forEach(tr => {
                 let newTr = document.createElement("tr");
                 let cells = tr.querySelectorAll("td");
-                
-                // Copy Name and Position
                 newTr.appendChild(cells[0].cloneNode(true));
                 newTr.appendChild(cells[1].cloneNode(true));
-
-                // Extract the value from the <select> dropdowns for the days
                 for(let i=2; i<9; i++) {
                     let td = document.createElement("td");
                     let select = cells[i].querySelector("select");
-                    if (select) {
-                        // Format the text to match Excel template formatting (with line breaks)
-                        let text = select.value.replace(" (", "\n(");
-                        td.innerText = text;
-                    }
+                    if (select) td.innerText = select.value.replace(" (", "\n(");
                     newTr.appendChild(td);
                 }
                 tbody.appendChild(newTr);
             });
             exportTable.appendChild(tbody);
 
-            let wb = XLSX.utils.table_to_book(exportTable, {sheet:"Villaggio Schedule"});
-            XLSX.writeFile(wb, `3761-Villaggio_Predictive_Schedule.xlsx`);
+            let wb = XLSX.utils.table_to_book(exportTable, {sheet:"Schedule Export"});
+            XLSX.writeFile(wb, `Predictive_Schedule.xlsx`);
         }
     </script>
 </body>
