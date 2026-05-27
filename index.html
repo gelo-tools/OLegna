@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predictive Clinic WFM - Phase 6</title>
+    <title>Predictive Clinic WFM - Phase 7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,7 +22,8 @@
 
     <div class="w-64 bg-slate-900 text-white shadow-xl h-full flex flex-col z-10">
         <div class="p-6 text-xl font-bold border-b border-slate-700">
-            Smart WFM <span class="text-xs text-blue-400 block mt-1">v6.0 - Intelligence & Roster</span>
+            Smart WFM <span class="text-xs text-blue-400 block mt-1">v7.0 - Coverage Balancer</span>
+            <a href="#" class="text-[10px] text-slate-400 hover:text-white mt-2 block">Designed by Angelo</a>
         </div>
         <div class="flex-1 overflow-y-auto p-4 space-y-2">
             <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn active w-full text-left px-4 py-3 rounded font-medium text-slate-300 hover:bg-slate-800 transition">📊 Intelligence Hub</button>
@@ -39,21 +40,20 @@
                 <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
                     <h3 class="text-xl font-semibold mb-2">1. Historical Traffic Data</h3>
                     <input type="file" id="trafficCSV" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-2"/>
-                    <p class="text-xs text-gray-500 leading-relaxed">Upload RetailNext 'Traffic Per time.csv'. System parses historical dates to identify patterns (e.g., matching last year's week).</p>
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow border-l-4 border-emerald-500">
                     <h3 class="text-xl font-semibold mb-2">2. Live Environment Sync</h3>
                     <div class="space-y-3">
                         <button onclick="fetchEnvironmentData()" class="w-full bg-emerald-100 text-emerald-800 py-2 rounded font-semibold hover:bg-emerald-200 transition shadow">
-                            Run Free OSINT Sweep (News & Weather)
+                            Run Free OSINT Sweep (Weather)
                         </button>
                         <div id="apiLog" class="text-xs text-gray-600 h-20 overflow-y-auto bg-gray-50 p-2 border rounded font-mono">Awaiting sync...</div>
                     </div>
                 </div>
             </div>
             <div class="bg-white p-6 rounded-lg shadow" id="chartContainer" style="display:none;">
-                <h3 class="text-xl font-semibold mb-4 text-gray-800">Baseline Hourly Traffic (Aggregated)</h3>
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Baseline Hourly Traffic</h3>
                 <canvas id="trafficChart" height="80"></canvas>
             </div>
         </div>
@@ -62,7 +62,6 @@
             <h2 class="text-3xl font-bold mb-6 text-gray-800">Dynamic Staff Roster</h2>
             
             <div class="bg-white p-6 rounded-lg shadow mb-6">
-                <h3 class="text-lg font-semibold mb-4 text-blue-800">Add New Staff Member</h3>
                 <div class="grid grid-cols-4 gap-4 items-end">
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1">Name & SAPID</label>
@@ -99,8 +98,7 @@
                             <th class="px-4 py-3 border text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="staffTableBody" class="divide-y divide-gray-200">
-                        </tbody>
+                    <tbody id="staffTableBody" class="divide-y divide-gray-200"></tbody>
                 </table>
             </div>
         </div>
@@ -108,27 +106,26 @@
         <div id="schedule" class="tab-content max-w-[98%] mx-auto">
             <div class="flex justify-between items-end mb-4">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-800">Interactive Predictive Schedule</h2>
+                    <h2 class="text-3xl font-bold text-gray-800">Intelligent Coverage Schedule</h2>
                     <div class="mt-2 flex items-center space-x-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-600">Select Week Start Date (Sunday):</label>
                             <input type="date" id="weekStartDate" class="border rounded p-1 text-sm bg-white shadow-sm">
                         </div>
-                        <p class="text-xs text-gray-500 max-w-md" id="scheduleStatus">Select a date and click generate. Algorithm will check for salary/payday weeks.</p>
+                        <p class="text-xs text-gray-500 max-w-md" id="scheduleStatus">Select a date. Algorithm balances Optometrists and dynamic Sales splits.</p>
                     </div>
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="generateSchedule()" class="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">⚡ Generate Grid</button>
+                    <button onclick="generateSchedule()" class="px-6 py-2 bg-blue-600 text-white rounded font-bold shadow hover:bg-blue-700 transition">⚡ Run Balancer</button>
                     <button onclick="exportToExcel()" class="px-6 py-2 bg-emerald-600 text-white rounded font-bold shadow hover:bg-emerald-700 transition">⬇️ Export</button>
                 </div>
             </div>
             
             <div class="bg-white rounded-lg shadow overflow-x-auto">
                 <table id="scheduleTable" class="min-w-full text-sm text-left border-collapse">
-                    <thead class="bg-gray-100 text-gray-700 font-bold border-b" id="scheduleHead">
-                        </thead>
+                    <thead class="bg-gray-100 text-gray-700 font-bold border-b" id="scheduleHead"></thead>
                     <tbody id="scheduleBody" class="divide-y divide-gray-200">
-                        <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Run Generation to populate matrix based on staff roster.</td></tr>
+                        <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Run Generation to populate matrix based on coverage rules.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -143,31 +140,30 @@
             document.getElementById('btn-' + tabId).classList.add('active');
         }
 
-        // --- Data Models ---
+        // Data Models
         let baseHourlyTraffic = [0,0,0,0,0,0,0,0,0,5,15,30,25,35,40,45,60,75,85,60,40,20,5,0]; 
-        let contextData = { weeklyWeather: [], newsEventsDetected: false, datesInfo: [] }; 
+        let contextData = { weeklyWeather: [], datesInfo: [] }; 
         
         const SHIFT_OPTIONS = [
-            "MORNING SHIFT (10:00 AM To 7:00 PM)", "MID SHIFT (1:00 PM To 10:00 PM)",
-            "EVENING SHIFT (2:00 PM To 11:00 PM)", "SPLIT SHIFT (10:00 AM - 2:00 PM) & (6:00 PM - 10:00 PM)",
-            "SPLIT SHIFT (9:00 AM - 1:00 PM) & (5:00 PM - 9:00 PM)",
+            "MORNING SHIFT (10:00 AM To 7:00 PM)", 
+            "MID SHIFT (12:00 PM To 9:00 PM)",
+            "EVENING SHIFT (2:00 PM To 11:00 PM)", 
+            "SPLIT SHIFT (10:00 AM - 2:00 PM) & (6:00 PM - 10:00 PM)",
             "OFF", "ANNUAL LEAVE", "SICK LEAVE"
         ];
 
-        // Dynamic Staff Roster Array
+        // Ensure roster reflects the current team
         let staffRoster = [
-            {name: "3491- Kamal H Heddi", pos: "Store Manager", arab: true},
+            {name: "3491- Kamal H Heddi", pos: "Senior Store Manager", arab: true},
             {name: "3393 - Angelo B Dacanay", pos: "Senior Optometrist", arab: false},
             {name: "12128- Oussama Ouesslati", pos: "Sales Associate", arab: true},
             {name: "12137 - Margaret W Gatito", pos: "Sales Associate", arab: false}
         ];
 
-        // Set default date to next Sunday
         let d = new Date();
         d.setDate(d.getDate() + (7 - d.getDay()));
         document.getElementById('weekStartDate').valueAsDate = d;
 
-        // --- Staff Manager Logic ---
         function renderStaffTable() {
             const tbody = document.getElementById('staffTableBody');
             tbody.innerHTML = '';
@@ -178,7 +174,7 @@
                     <td class="px-4 py-2 border text-gray-600">${staff.pos}</td>
                     <td class="px-4 py-2 border">${staff.arab ? '✅ Yes' : '❌ No'}</td>
                     <td class="px-4 py-2 border text-center">
-                        <button onclick="removeStaff(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-1 bg-red-50 rounded">Remove</button>
+                        <button onclick="removeStaff(${index})" class="text-red-500 font-bold px-2 py-1 bg-red-50 rounded">Remove</button>
                     </td>
                 </tr>`;
             });
@@ -188,10 +184,9 @@
             const name = document.getElementById('newStaffName').value;
             const pos = document.getElementById('newStaffPos').value;
             const arab = document.getElementById('newStaffArab').value === 'true';
-            
             if(!name) return alert("Please enter a name.");
             staffRoster.push({name, pos, arab});
-            document.getElementById('newStaffName').value = ''; // clear
+            document.getElementById('newStaffName').value = ''; 
             renderStaffTable();
         }
 
@@ -200,63 +195,52 @@
             renderStaffTable();
         }
 
-        renderStaffTable(); // Init render
+        renderStaffTable();
 
-        // --- Traffic Parsing (Date Aware) ---
+        // CSV Parsing
         document.getElementById('trafficCSV').addEventListener('change', function(e) {
             Papa.parse(e.target.files[0], {
                 header: true, skipEmptyLines: true,
                 complete: function(results) { 
                     let map = new Array(24).fill(0);
-                    // Phase 6: Foundation for Historical date mapping. 
-                    // Currently aggregates all, but can now filter by `row.Date`
                     results.data.forEach(row => {
                         let hour = parseInt(row.Time.split(':')[0]);
                         if(!isNaN(hour)) map[hour] += parseInt(row['Traffic In']) || 0;
                     });
                     baseHourlyTraffic = map;
-                    renderMainChart();
-                    alert("Data ingested. The algorithm is now ready to cross-reference this history against your selected calendar dates.");
+                    document.getElementById('chartContainer').style.display = 'block';
+                    new Chart(document.getElementById('trafficChart').getContext('2d'), {
+                        type: 'bar',
+                        data: { labels: Array.from({length: 24}, (_, i) => `${i}:00`), datasets: [{ label: 'Avg Traffic', data: baseHourlyTraffic, backgroundColor: '#3b82f6' }] },
+                        options: { maintainAspectRatio: false }
+                    });
                 }
             });
         });
 
-        function renderMainChart() {
-            document.getElementById('chartContainer').style.display = 'block';
-            new Chart(document.getElementById('trafficChart').getContext('2d'), {
-                type: 'bar',
-                data: { labels: Array.from({length: 24}, (_, i) => `${i}:00`), datasets: [{ label: 'Average Traffic', data: baseHourlyTraffic, backgroundColor: '#3b82f6' }] },
-                options: { maintainAspectRatio: false }
-            });
-        }
-
         async function fetchEnvironmentData() {
-            const log = document.getElementById('apiLog');
-            log.innerHTML = "Fetching Weather...<br>";
             try {
                 const wxRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=25.2854&longitude=51.5310&hourly=temperature_2m&timezone=auto');
                 const weatherData = await wxRes.json();
                 contextData.weeklyWeather = [];
                 for(let d = 0; d < 7; d++) { contextData.weeklyWeather.push(weatherData.hourly.temperature_2m.slice(d*24, (d+1)*24)); }
-                log.innerHTML += `✅ Weather OSINT synced.`;
-            } catch (err) { log.innerHTML += `❌ OSINT sync failed.`; }
+                document.getElementById('apiLog').innerHTML = `✅ Weather OSINT synced.`;
+            } catch (err) { }
         }
 
-        // --- Core Algorithm & Table Generation ---
+        // --- PHASE 7: The Coverage Balancer Algorithm ---
         function generateSchedule() {
-            if (staffRoster.length === 0) return alert("Please add staff in the Staff Manager tab first!");
-            
+            if (staffRoster.length === 0) return alert("Add staff first!");
             const startDateStr = document.getElementById('weekStartDate').value;
-            if(!startDateStr) return alert("Please select a Week Start Date.");
+            if(!startDateStr) return alert("Select a date.");
             
             const startDate = new Date(startDateStr);
             const thead = document.getElementById('scheduleHead');
             const tbody = document.getElementById('scheduleBody');
             
-            // 1. Generate Header with Intelligent Dates
+            // Generate Headers
             let headHTML = `<tr><th class="px-4 py-3 border w-48">EMP NAME</th><th class="px-2 py-3 border w-32">POSITION</th>`;
             let graphHTML = `<tr class="bg-blue-50" id="graphRow"><td class="px-4 py-2 border text-xs font-semibold text-blue-800" colspan="2">Live Traffic Prediction</td>`;
-            
             contextData.datesInfo = [];
             let isPaydayWeek = false;
 
@@ -265,53 +249,86 @@
             for(let i=0; i<7; i++) {
                 let colDate = new Date(startDate);
                 colDate.setDate(colDate.getDate() + i);
-                
                 let dayOfMonth = colDate.getDate();
-                let monthName = colDate.toLocaleString('default', { month: 'short' });
-                
-                // PAYDAY LOGIC (GCC usually pays 25th to 28th. Spike traffic from 25th to 5th)
                 let isPayday = (dayOfMonth >= 25 || dayOfMonth <= 5);
                 if (isPayday) isPaydayWeek = true;
 
                 contextData.datesInfo.push({ date: colDate, isPayday: isPayday });
-
                 let headerColor = isPayday ? 'text-emerald-600' : 'text-gray-700';
-                let paydayBadge = isPayday ? `<br><span class="text-[10px] bg-emerald-100 text-emerald-800 px-1 rounded">💰 Salary Drop</span>` : '';
-
-                headHTML += `<th class="px-2 py-2 border text-center leading-tight ${headerColor}">${dayNames[i]}<br><span class="text-xs font-normal">${monthName} ${dayOfMonth}</span>${paydayBadge}</th>`;
+                headHTML += `<th class="px-2 py-2 border text-center ${headerColor}">${dayNames[i]}<br><span class="text-xs font-normal">${colDate.toLocaleString('default', { month: 'short' })} ${dayOfMonth}</span></th>`;
                 graphHTML += `<td class="border p-1"><canvas id="spark-${i}" height="40"></canvas></td>`;
             }
-            headHTML += `</tr>` + graphHTML + `</tr>`;
-            thead.innerHTML = headHTML;
+            thead.innerHTML = headHTML + `</tr>` + graphHTML + `</tr>`;
 
-            // Status Update
-            if(isPaydayWeek) {
-                document.getElementById('scheduleStatus').innerHTML = `<span class="text-emerald-600 font-bold">💰 Salary Week Detected!</span> Footfall algorithm is surging predictions by 30%. Advise utilizing split shifts.`;
-            } else {
-                document.getElementById('scheduleStatus').innerHTML = `📅 Standard Week selected. Applying historical averages.`;
+            // Initialize Grid Array to store indices before rendering HTML
+            let grid = [];
+            staffRoster.forEach(s => grid.push(new Array(7).fill(0)));
+
+            // BALANCING ALGORITHM
+            for(let day=0; day<7; day++) {
+                let isFriday = (day === 5);
+                let dayNeedsSurge = contextData.datesInfo[day].isPayday; // High traffic requires splits
+                
+                let optomsToday = [];
+                let salesToday = [];
+
+                // Step 1: Assign Days Off & Categorize Working Staff
+                staffRoster.forEach((staff, index) => {
+                    let offDay = (index % 5) + 1; // Stagger Mon-Thu mostly
+                    if (day === offDay) {
+                        grid[index][day] = 4; // OFF
+                    } else {
+                        if (staff.pos.includes('Optometrist')) optomsToday.push(index);
+                        else if (staff.pos.includes('Sales')) salesToday.push(index);
+                        else grid[index][day] = 1; // Manager defaults to Mid
+                    }
+                });
+
+                // Step 2: Optometrist Floor Coverage Logic
+                if (isFriday) {
+                    // Fridays eye tests start late, all optoms go to Evening
+                    optomsToday.forEach(idx => grid[idx][day] = 2); 
+                } else {
+                    if (optomsToday.length === 1) {
+                        // Only 1 Optometrist working today! Mid shift is the safest clinical coverage.
+                        grid[optomsToday[0]][day] = 1; 
+                    } else if (optomsToday.length > 1) {
+                        // Multiple Optometrists: Stagger them to cover 10am to 10pm
+                        optomsToday.forEach((idx, iter) => {
+                            grid[idx][day] = (iter % 2 === 0) ? 0 : 2; // Morning, then Evening
+                        });
+                    }
+                }
+
+                // Step 3: Dynamic Sales Split Logic
+                salesToday.forEach((idx, iter) => {
+                    let staff = staffRoster[idx];
+                    if (isFriday) {
+                        grid[idx][day] = (iter % 2 === 0) ? 1 : 2; // Mid/Evening on Friday
+                    } else if (dayNeedsSurge && staff.arab) {
+                        // High traffic day AND Arabic speaker = Trigger Split Shift for peak coverage
+                        grid[idx][day] = 3;
+                    } else {
+                        // Standard traffic = Stagger straight shifts (Morning/Evening)
+                        grid[idx][day] = (iter % 2 === 0) ? 0 : 2;
+                    }
+                });
             }
 
-            // 2. Generate Staff Rows
+            // Render HTML
             tbody.innerHTML = '';
-            staffRoster.forEach((staff, index) => {
+            staffRoster.forEach((staff, staffIndex) => {
                 let row = `<tr><td class="px-4 py-2 border font-semibold whitespace-nowrap text-xs">${staff.name}</td><td class="px-2 py-2 border text-gray-600 text-xs">${staff.pos}</td>`;
                 for(let day=0; day<7; day++) {
-                    let isFriday = (day === 5);
-                    let suggestedIndex = 0; 
-
-                    if (day === (index % 6)) suggestedIndex = 5; // OFF
-                    else if (isFriday) suggestedIndex = staff.pos.includes('Optometrist') ? 2 : 1; 
-                    else if (staff.pos.includes('Manager')) suggestedIndex = 1; 
-                    else if (staff.pos.includes('Sales')) suggestedIndex = staff.arab ? 3 : 0; 
-                    
-                    let selectHTML = `<select class="shift-select ${suggestedIndex === 5 ? 'text-red-500 font-bold' : 'text-gray-800'}">`;
+                    let suggestedIndex = grid[staffIndex][day];
+                    let selectHTML = `<select class="shift-select ${suggestedIndex === 4 ? 'text-red-500 font-bold' : 'text-gray-800'}">`;
                     SHIFT_OPTIONS.forEach((opt, i) => { selectHTML += `<option value="${opt}" ${i === suggestedIndex ? 'selected' : ''}>${opt}</option>`; });
                     selectHTML += `</select>`;
                     row += `<td class="px-1 py-1 border align-middle">${selectHTML}</td>`;
                 }
-                row += `</tr>`;
-                tbody.innerHTML += row;
+                tbody.innerHTML += row + `</tr>`;
             });
+
             generateSparklines();
         }
 
@@ -319,63 +336,29 @@
         function generateSparklines() {
             sparkCharts.forEach(c => c.destroy());
             sparkCharts = [];
-
             for(let day=0; day<7; day++) {
                 let dailyPrediction = [...baseHourlyTraffic];
                 let bgColorArray = new Array(24).fill('#93c5fd'); 
-                
-                let dayInfo = contextData.datesInfo[day];
-
-                // 1. Salary Week Modifier (Increases baseline across the day)
-                if (dayInfo && dayInfo.isPayday) {
+                if (contextData.datesInfo[day].isPayday) {
                     dailyPrediction = dailyPrediction.map(val => val * 1.3);
-                    bgColorArray = bgColorArray.map(color => '#34d399'); // Emerald color for Payday
+                    bgColorArray = bgColorArray.map(color => '#34d399'); 
                 }
-
-                // 2. Weather Logic Overlay
-                if (contextData.weeklyWeather.length > 0) {
-                    let temps = contextData.weeklyWeather[day];
-                    if (temps) {
-                        temps.forEach((temp, hr) => {
-                            if (temp > 35 && hr > 9 && hr < 22) {
-                                dailyPrediction[hr] *= 1.2; 
-                                bgColorArray[hr] = '#f59e0b'; // Amber for Heat Spike
-                            }
-                        });
-                    }
-                }
-
-                // Friday late start
                 if (day === 5) dailyPrediction = dailyPrediction.map((val, hr) => hr < 13 ? 0 : val * 1.5); 
-
                 const ctx = document.getElementById(`spark-${day}`).getContext('2d');
-                let chart = new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels: Array.from({length: 24}, (_, i) => i), datasets: [{ data: dailyPrediction, backgroundColor: bgColorArray, barPercentage: 1.0, categoryPercentage: 1.0 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, beginAtZero: true } }, layout: { padding: 0 } }
-                });
+                let chart = new Chart(ctx, { type: 'bar', data: { labels: Array.from({length: 24}, (_, i) => i), datasets: [{ data: dailyPrediction, backgroundColor: bgColorArray, barPercentage: 1.0, categoryPercentage: 1.0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false, beginAtZero: true } }, layout: { padding: 0 } } });
                 sparkCharts.push(chart);
             }
         }
 
         function exportToExcel() {
             if (!document.getElementById('scheduleHead').innerText.includes("SUNDAY")) return alert("Generate schedule first.");
-
             let exportTable = document.createElement("table");
             let thead = document.getElementById("scheduleTable").querySelector("thead").cloneNode(true);
             thead.removeChild(thead.querySelector("#graphRow"));
-            
-            // Clean up the header text (remove HTML badges for Excel)
-            thead.querySelectorAll('th').forEach(th => {
-                let lines = th.innerText.split('\n');
-                th.innerText = lines.length > 1 ? `${lines[0]}\n${lines[1]}` : lines[0]; 
-            });
+            thead.querySelectorAll('th').forEach(th => { let lines = th.innerText.split('\n'); th.innerText = lines.length > 1 ? `${lines[0]}\n${lines[1]}` : lines[0]; });
             exportTable.appendChild(thead);
-
             let tbody = document.createElement("tbody");
-            let rows = document.getElementById("scheduleBody").querySelectorAll("tr");
-            
-            rows.forEach(tr => {
+            document.getElementById("scheduleBody").querySelectorAll("tr").forEach(tr => {
                 let newTr = document.createElement("tr");
                 let cells = tr.querySelectorAll("td");
                 newTr.appendChild(cells[0].cloneNode(true));
@@ -389,9 +372,7 @@
                 tbody.appendChild(newTr);
             });
             exportTable.appendChild(tbody);
-
-            let wb = XLSX.utils.table_to_book(exportTable, {sheet:"Dynamic Schedule"});
-            XLSX.writeFile(wb, `Predictive_Schedule_Export.xlsx`);
+            XLSX.writeFile(XLSX.utils.table_to_book(exportTable, {sheet:"Schedule"}), `Smart_Schedule_Export.xlsx`);
         }
     </script>
 </body>
