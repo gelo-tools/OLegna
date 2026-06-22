@@ -1251,6 +1251,7 @@
                             <option value="ALL">All</option>
                             <option value="SUN">Sunglasses (S;)</option>
                             <option value="SPX">Frames (O;)</option>
+                            <option value="LENS">Ophthalmic Lenses</option>
                             <option value="OTHERS">Others (OA; etc.)</option>
                         </select>
                     </div>
@@ -1316,7 +1317,7 @@
 </div>
 
 <div class="footer">
-     <p style="margin: 2px 0;">For any comments and suggestions <a href="#">email me</a>. - <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" style="font-weight: 600; color: var(--accent-blue);">gelotools</a></p>
+     <p style="margin: 2px 0;">For any comments and suggestions <a href="mailto:3393@magrabi.com">email me</a>. - <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" style="font-weight: 600; color: var(--accent-blue);">gelotools</a></p>
 </div>
 
 <div class="action-buttons-wrapper">
@@ -1345,6 +1346,8 @@
 </div>
 
 <script>
+    // Database Core - Added IndexedDB to handle unlimited session persistence 
+    // This circumvents the 5MB browser localStorage crash with large files.
     const DB_NAME = 'StockCheckDB';
     const STORE_NAME = 'sessions';
     let dbInstance = null;
@@ -1660,7 +1663,7 @@
         if (upperDescription.startsWith('S;') || upperDescription.startsWith('O;') || upperDescription.startsWith('OA;')) {
             return false;
         }
-        if (upperMerchandise.startsWith('LL') || upperMerchandise.startsWith('CL') || upperMerchandise.includes('CONTACT') || upperMerchandise.includes('LENS')) {
+        if (upperMerchandise.startsWith('LL') || upperMerchandise.startsWith('LO') || upperMerchandise.startsWith('LF') || upperMerchandise.startsWith('CL') || upperMerchandise.includes('CONTACT') || upperMerchandise.includes('LENS')) {
             return true;
         }
         
@@ -2322,6 +2325,7 @@
     async function saveData() {
         let operationalStateDump = getCurrentState();
         try {
+            // Replaces legacy localstorage calls with high-capacity indexedDB wrapper
             await saveToDB('posInventoryState', operationalStateDump);
         } catch (e) {
             console.warn("Failed to stream state tree into persistent volume.", e);
@@ -2351,6 +2355,7 @@
             console.warn("IndexedDB load pipeline exception handled.", e);
         }
 
+        // Automatic fallback and migration from old storage schema limits
         if (!masterBackupStateNode) {
             const rawSerializedStateString = localStorage.getItem('posInventoryState') || localStorage.getItem('legacyInventoryState');
             if (rawSerializedStateString) {
@@ -3235,6 +3240,11 @@
                 let selectedCategoryKey = matchingStructuralExtraction.category; 
                 let selectedBrandKey = matchingStructuralExtraction.brand;
 
+                let upperMerchStr = MERCH_FieldRaw.toUpperCase().trim();
+                if (upperMerchStr.startsWith('LO') || upperMerchStr.startsWith('LL') || upperMerchStr.startsWith('LF')) {
+                    selectedCategoryKey = 'LENS';
+                }
+
                 if (STO_FieldRaw) dynamicSetOfUniqueStos.add(STO_FieldRaw);
                 if (selectedBrandKey !== "UNKNOWN") dynamicSetOfUniqueBrands.add(selectedBrandKey);
 
@@ -3572,6 +3582,11 @@
                 let selectedCategoryKey = matchingStructuralExtraction.category; 
                 let selectedBrandKey = matchingStructuralExtraction.brand;
 
+                let upperMerchStr = MERCH_FieldRaw.toUpperCase().trim();
+                if (upperMerchStr.startsWith('LO') || upperMerchStr.startsWith('LL') || upperMerchStr.startsWith('LF')) {
+                    selectedCategoryKey = 'LENS';
+                }
+
                 let cleanLocationLabel = SLOC_FieldRaw;
                 if (cleanLocationLabel === "Scanned" || cleanLocationLabel === "Pending") {
                     cleanLocationLabel = "";
@@ -3736,7 +3751,7 @@
                 }
                 
                 if (dataRow.sloc && !inventory[dataRow.sku].sloc.split(', ').includes(dataRow.sloc)) {
-                    if (inventory[dataRow.sku].sloc && inventory[dataRow.sku].sloc !== "Scanned" && inventory[dataNode].sloc !== "Pending") {
+                    if (inventory[dataRow.sku].sloc && inventory[dataRow.sku].sloc !== "Scanned" && inventory[dataRow.sku].sloc !== "Pending") {
                         inventory[dataRow.sku].sloc += ", " + dataRow.sloc;
                     } else {
                         inventory[dataRow.sku].sloc = dataRow.sloc;
