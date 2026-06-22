@@ -971,16 +971,31 @@
 </div>
 
 <div id="manualEncodeModal" class="modal-overlay" style="display: none;">
-    <div class="custom-modal-box" id="manualEncodeBox" style="width: 450px;">
+    <div class="custom-modal-box" id="manualEncodeBox" style="width: 600px; max-width: 95%;">
         <div class="custom-modal-header">
             <h3>Manual Encode Barcodes</h3>
             <button class="custom-modal-close" onclick="closeManualEncode()" title="Close without saving">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
-        <div class="custom-modal-body">
-            <p style="margin-top: 0; color: var(--text-secondary);">Paste barcodes here, one per line. You can optionally add a space or tab and a quantity (e.g. "982132222 4"). They will be immediately added to your <strong>Scanned QTY</strong>.</p>
-            <textarea id="manualEncodeInput" style="height: 180px;" placeholder="Example:&#10;982132222&#10;982132222  98&#10;938382122  3&#10;938382121      921"></textarea>
+        <div class="custom-modal-body" style="padding-bottom: 8px;">
+            <p style="margin-top: 0; color: var(--text-secondary); margin-bottom: 8px;">Enter items manually or click the first box and <strong>paste columns directly from a spreadsheet</strong>. Empty QTY defaults to 1. Empty SLOC defaults to 1000.</p>
+            
+            <div style="max-height: 350px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--surface-color);">
+                <table style="width: 100%; border-collapse: collapse; margin: 0;">
+                    <thead style="position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border-color);">
+                        <tr>
+                            <th style="width: 45%; padding: 6px 8px;">Barcode (SKU)</th>
+                            <th style="width: 20%; padding: 6px 8px;">QTY</th>
+                            <th style="width: 25%; padding: 6px 8px;">Storage Loc.</th>
+                            <th style="width: 10%; text-align: center;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="manualEncodeTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-secondary" onclick="addManualEncodeRow()" style="margin-top: 8px; width: 100%; font-weight: 600;">+ Add Row</button>
         </div>
         <div class="custom-modal-footer">
             <button class="custom-modal-btn" style="background-color: var(--accent-blue); color: #fff;" onclick="submitManualEncode()">Encode into Scanned QTY</button>
@@ -1002,6 +1017,7 @@
                 <thead style="position: sticky; top: 0; z-index: 10;">
                     <tr>
                         <th>No.</th>
+                        <th>Invoice #</th>
                         <th>Item # (SKU)</th>
                         <th>Description</th>
                         <th>Pending Qty</th>
@@ -1009,7 +1025,7 @@
                     </tr>
                 </thead>
                 <tbody id="pendingTableBody">
-                    </tbody>
+                </tbody>
             </table>
         </div>
         <div class="custom-modal-footer" style="justify-content: space-between; flex-shrink: 0; flex-direction: row !important;">
@@ -1300,7 +1316,7 @@
 </div>
 
 <div class="footer">
-     <p style="margin: 2px 0;">For any comments and suggestions <a href="mailto:3393@magrabi.com">email me</a>. - <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" style="font-weight: 600; color: var(--accent-blue);">gelotools</a></p>
+     <p style="margin: 2px 0;">For any comments and suggestions <a href="#">email me</a>. - <a href="https://www.linkedin.com/in/angelodacan-eye/" target="_blank" style="font-weight: 600; color: var(--accent-blue);">gelotools</a></p>
 </div>
 
 <div class="action-buttons-wrapper">
@@ -1329,8 +1345,6 @@
 </div>
 
 <script>
-    // Database Core - Added IndexedDB to handle unlimited session persistence 
-    // This circumvents the 5MB browser localStorage crash with large files.
     const DB_NAME = 'StockCheckDB';
     const STORE_NAME = 'sessions';
     let dbInstance = null;
@@ -1880,7 +1894,6 @@
     let lastScanTime = 0;
 
     function openCamera() {
-        // Plug memory leak: check if active instance already exists before tearing down UI
         if (html5QrcodeScanner) return;
         
         document.getElementById('cameraModal').style.display = 'flex';
@@ -1920,15 +1933,78 @@
 
     function openManualEncode() {
         document.getElementById('manualEncodeModal').style.display = 'flex';
-        document.getElementById('manualEncodeInput').value = '';
-        setTimeout(() => document.getElementById('manualEncodeInput').focus(), 100);
+        const tbody = document.getElementById('manualEncodeTableBody');
+        tbody.innerHTML = '';
+        
+        for(let i=0; i<6; i++) {
+            addManualEncodeRow();
+        }
+        
+        setTimeout(() => {
+            const firstInput = tbody.querySelector('.manual-enc-sku');
+            if (firstInput) firstInput.focus();
+        }, 100);
+    }
+
+    function addManualEncodeRow(sku = '', qty = '', sloc = '') {
+        const tbody = document.getElementById('manualEncodeTableBody');
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid #f3f4f6";
+        
+        tr.innerHTML = `
+            <td style="padding: 0;"><input type="text" class="manual-enc-sku" value="${sku}" placeholder="Type or Paste SKU" style="height: 28px; border: none; border-radius: 0; background: transparent; box-shadow: none; font-weight: 500;"></td>
+            <td style="padding: 0; border-left: 1px solid #f3f4f6;"><input type="text" class="manual-enc-qty" value="${qty}" placeholder="1" style="height: 28px; border: none; border-radius: 0; background: transparent; box-shadow: none; color: var(--accent-orange); font-weight: 600;"></td>
+            <td style="padding: 0; border-left: 1px solid #f3f4f6;"><input type="text" class="manual-enc-sloc" value="${sloc}" placeholder="1000" style="height: 28px; border: none; border-radius: 0; background: transparent; box-shadow: none; color: var(--accent-green); font-weight: 600;"></td>
+            <td style="padding: 0; border-left: 1px solid #f3f4f6; text-align: center; vertical-align: middle;">
+                <button class="btn-delete" onclick="this.closest('tr').remove()" title="Remove Row" style="height: 22px; width: 22px; padding: 2px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </td>
+        `;
+        
+        const inputs = tr.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('paste', handleManualEncodePaste);
+        });
+        
+        tbody.appendChild(tr);
+    }
+
+    function handleManualEncodePaste(e) {
+        e.preventDefault();
+        let pasteData = (e.clipboardData || window.clipboardData).getData('text');
+        if (!pasteData) return;
+
+        let rows = pasteData.split(/\r?\n/);
+        const tbody = document.getElementById('manualEncodeTableBody');
+        
+        const existingRows = Array.from(tbody.querySelectorAll('tr'));
+        existingRows.forEach(row => {
+            let sku = row.querySelector('.manual-enc-sku').value.trim();
+            if (!sku) row.remove();
+        });
+
+        rows.forEach(rowText => {
+            rowText = rowText.trim();
+            if (!rowText) return;
+            
+            let cols = rowText.split('\t');
+            if (cols.length === 1) cols = rowText.split(/[,]+/); 
+            
+            let sku = cols[0] ? cols[0].trim() : '';
+            let qty = cols[1] ? cols[1].trim() : '';
+            let sloc = cols[2] ? cols[2].trim() : '';
+            
+            if (sku) addManualEncodeRow(sku, qty, sloc);
+        });
+        
+        addManualEncodeRow();
     }
 
     function closeManualEncode() {
         document.getElementById('manualEncodeModal').style.display = 'none';
     }
 
-    // PENDING EDITOR LOGIC
     function openPendingEditor() {
         document.getElementById('pendingEditorModal').style.display = 'flex';
         renderPendingTable();
@@ -1944,7 +2020,7 @@
         tbody.innerHTML = '';
 
         if (pendingRawData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">No pending items loaded.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">No pending items loaded.</td></tr>';
             document.getElementById('btnCrossCheckPending').style.display = 'none';
             return;
         }
@@ -1956,6 +2032,7 @@
             let tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="color: var(--text-secondary);">${index + 1}</td>
+                <td style="font-weight: 600; color: var(--accent-blue);">${item.invoice || 'N/A'}</td>
                 <td style="font-weight: 500;">${item.sku}</td>
                 <td style="color: var(--text-secondary);">${item.desc || ''}</td>
                 <td><span style="font-weight: 600; color: var(--accent-orange);">${item.qty}</span></td>
@@ -1996,54 +2073,65 @@
         renderTable();
         renderAuditTrail();
     }
-    // END PENDING EDITOR LOGIC
 
     async function submitManualEncode() {
-        let manualInputText = document.getElementById('manualEncodeInput').value;
-        if (!manualInputText.trim()) {
-            closeManualEncode();
-            return;
-        }
+        const tbody = document.getElementById('manualEncodeTableBody');
+        const rows = tbody.querySelectorAll('tr');
         
-        saveState();
-        let individualInputLines = manualInputText.split(/\r?\n/);
         let absoluteAddedItemsTotal = 0;
         let baselineErrorCount = 0;
+        let hasDataToProcess = false;
 
-        individualInputLines.forEach(lineText => {
-            lineText = lineText.trim();
-            if (!lineText) return;
+        saveState();
+
+        rows.forEach(row => {
+            let skuNode = row.querySelector('.manual-enc-sku').value.trim().replace(/^0+/, '') || '0';
+            if (!skuNode || skuNode === "0") return;
             
-            let structuredSubTokens = lineText.split(/[\t\s,]+/);
-            let targetSkuNode = structuredSubTokens[0].replace(/^0+/, '') || '0';
-            if (targetSkuNode === "" || targetSkuNode === "0") return;
+            hasDataToProcess = true;
 
-            let parsedItemQuantity = 1;
-            if (structuredSubTokens.length > 1) {
-                for (let idx = 1; idx < structuredSubTokens.length; idx++) {
-                    let internalLineValue = parseInt(structuredSubTokens[idx].replace(/,/g, ''));
-                    if (!isNaN(internalLineValue) && internalLineValue > 0) {
-                        parsedItemQuantity = internalLineValue;
-                        break;
+            let qtyInput = row.querySelector('.manual-enc-qty').value.replace(/,/g, '').trim();
+            let parsedItemQuantity = 1; 
+            if (qtyInput !== "" && !isNaN(qtyInput) && parseInt(qtyInput) > 0) {
+                parsedItemQuantity = parseInt(qtyInput);
+            }
+
+            let slocInput = row.querySelector('.manual-enc-sloc').value.trim();
+            let parsedSloc = "1000"; 
+            if (slocInput !== "") {
+                parsedSloc = slocInput; 
+            }
+
+            if (!inventory[skuNode]) {
+                let resolvedBackgroundDescription = backgroundMasterSkuMap[skuNode] ? backgroundMasterSkuMap[skuNode] : "Manually Encoded (Unknown Item)";
+                inventory[skuNode] = { 
+                    description: resolvedBackgroundDescription, systemQty: 0, sysQty1000: 0, sysQty4000: 0, 
+                    sysQtyOther: 0, scannedQty: 0, pendingQty: 0, sloc: parsedSloc, isLens: false, bins: []
+                };
+                baselineErrorCount++;
+                appendAuditLog(skuNode, true, parsedItemQuantity);
+            } else {
+                appendAuditLog(skuNode, false, parsedItemQuantity);
+                
+                if (inventory[skuNode].sloc && !inventory[skuNode].sloc.includes(parsedSloc)) {
+                    if (inventory[skuNode].sloc === "Scanned" || inventory[skuNode].sloc === "Pending") {
+                        inventory[skuNode].sloc = parsedSloc;
+                    } else {
+                        inventory[skuNode].sloc += ", " + parsedSloc;
                     }
                 }
             }
-
-            if (!inventory[targetSkuNode]) {
-                let resolvedBackgroundDescription = backgroundMasterSkuMap[targetSkuNode] ? backgroundMasterSkuMap[targetSkuNode] : "Manually Encoded (Unknown Item)";
-                inventory[targetSkuNode] = { 
-                    description: resolvedBackgroundDescription, systemQty: 0, sysQty1000: 0, sysQty4000: 0, 
-                    sysQtyOther: 0, scannedQty: 0, pendingQty: 0, sloc: 'Scanned', isLens: false, bins: []
-                };
-                baselineErrorCount++;
-                appendAuditLog(targetSkuNode, true, parsedItemQuantity);
-            } else {
-                appendAuditLog(targetSkuNode, false, parsedItemQuantity);
-            }
             
-            inventory[targetSkuNode].scannedQty += parsedItemQuantity;
+            inventory[skuNode].scannedQty += parsedItemQuantity;
             absoluteAddedItemsTotal += parsedItemQuantity;
         });
+
+        if (!hasDataToProcess) {
+            undoStack.pop();
+            updateUndoRedoButtons();
+            closeManualEncode();
+            return;
+        }
 
         closeManualEncode();
         await saveData();
@@ -2455,7 +2543,6 @@
         renderTable();
         updateUndoRedoButtons();
 
-        // Ensure pending editor is refreshed dynamically if it's currently open
         if (document.getElementById('pendingEditorModal') && document.getElementById('pendingEditorModal').style.display === 'flex') {
             renderPendingTable();
         }
@@ -3286,7 +3373,7 @@
     async function processPendingArrayOfArrays(parsedRows, structuralTriggerEvent) {
         try {
             let confirmedHeaderRowIndex = -1;
-            let skuCol = -1, qtyCol = -1, descCol = -1, slocCol = -1, merchCol = -1;
+            let skuCol = -1, qtyCol = -1, descCol = -1, slocCol = -1, merchCol = -1, invoiceCol = -1;
             let isRivoliVendorFormat = false;
             let rivBarcodeCol = -1, rivBrandCol = -1, rivSubBrandCol = -1, rivItemNoCol = -1, rivDescCol = -1;
 
@@ -3316,6 +3403,7 @@
                     if (normalizedHeaderString === 'storage location' || normalizedHeaderString === 'sloc') slocCol = cellIdx;
                     if (normalizedHeaderString.includes('description') || normalizedHeaderString === 'desc' || normalizedHeaderString === 'article description' || normalizedHeaderString === 'item description') descCol = cellIdx;
                     if (normalizedHeaderString.includes('merch') || normalizedHeaderString.includes('category')) merchCol = cellIdx;
+                    if (normalizedHeaderString.includes('invoice') || normalizedHeaderString.includes('document') || normalizedHeaderString === 'doc' || normalizedHeaderString === 'doc no' || normalizedHeaderString === 'ref' || normalizedHeaderString.includes('reference')) invoiceCol = cellIdx;
                 }
                 if (skuCol !== -1 && qtyCol !== -1 && !isRivoliVendorFormat) { 
                     confirmedHeaderRowIndex = idx; 
@@ -3334,7 +3422,7 @@
                 let columnsCollection = parsedRows[idx]; 
                 if (!columnsCollection || columnsCollection.length < 2) continue;
                 
-                let SKU_FieldRaw = "", QTY_FieldRaw = "", DESC_FieldRaw = "", SLOC_FieldRaw = "", MERCH_FieldRaw = "";
+                let SKU_FieldRaw = "", QTY_FieldRaw = "", DESC_FieldRaw = "", SLOC_FieldRaw = "", MERCH_FieldRaw = "", INVOICE_FieldRaw = "";
 
                 if (isRivoliVendorFormat) {
                     SKU_FieldRaw = columnsCollection[rivBarcodeCol] != null ? String(columnsCollection[rivBarcodeCol]).trim() : "";
@@ -3350,12 +3438,14 @@
                     
                     DESC_FieldRaw = `${systemRowPrefix};${parsedBrandToken};${parsedItemNumberToken} ${parsedDescriptionToken}`.trim(); 
                     MERCH_FieldRaw = systemRowPrefix;
+                    INVOICE_FieldRaw = invoiceCol !== -1 && columnsCollection[invoiceCol] != null ? String(columnsCollection[invoiceCol]).trim() : "";
                 } else if (!isDataFallbackActive) {
                     SKU_FieldRaw = columnsCollection[skuCol] != null ? String(columnsCollection[skuCol]).trim() : "";
                     QTY_FieldRaw = columnsCollection[qtyCol] != null ? String(columnsCollection[qtyCol]).trim() : "";
                     DESC_FieldRaw = descCol !== -1 && columnsCollection[descCol] != null ? String(columnsCollection[descCol]).trim() : "";
                     SLOC_FieldRaw = slocCol !== -1 && columnsCollection[slocCol] != null ? String(columnsCollection[slocCol]).trim() : "";
                     MERCH_FieldRaw = merchCol !== -1 && columnsCollection[merchCol] != null ? String(columnsCollection[merchCol]).trim() : "";
+                    INVOICE_FieldRaw = invoiceCol !== -1 && columnsCollection[invoiceCol] != null ? String(columnsCollection[invoiceCol]).trim() : "";
                 } else {
                     let internalPotentialSkusList = []; 
                     let internalPotentialSlocsList = []; 
@@ -3489,7 +3579,7 @@
 
                 pendingRawData.push({ 
                     sku: processedItemSkuKey, qty: structuralPendingValueInt, desc: DESC_FieldRaw, sloc: cleanLocationLabel, 
-                    category: selectedCategoryKey, brand: selectedBrandKey, isLens: classificationAsLensFlag 
+                    category: selectedCategoryKey, brand: selectedBrandKey, isLens: classificationAsLensFlag, invoice: INVOICE_FieldRaw 
                 });
                 absoluteAddedItemsTotal++;
             }
@@ -3646,7 +3736,7 @@
                 }
                 
                 if (dataRow.sloc && !inventory[dataRow.sku].sloc.split(', ').includes(dataRow.sloc)) {
-                    if (inventory[dataRow.sku].sloc && inventory[dataRow.sku].sloc !== "Scanned" && inventory[dataRow.sku].sloc !== "Pending") {
+                    if (inventory[dataRow.sku].sloc && inventory[dataRow.sku].sloc !== "Scanned" && inventory[dataNode].sloc !== "Pending") {
                         inventory[dataRow.sku].sloc += ", " + dataRow.sloc;
                     } else {
                         inventory[dataRow.sku].sloc = dataRow.sloc;
@@ -3854,7 +3944,6 @@
         };
         
         try {
-            // Replaces the deprecated and memory-limited btoa(unescape(encodeURIComponent)) workflow
             const encodeBase64Large = async (obj) => {
                 const jsonStr = JSON.stringify(obj);
                 const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -3904,7 +3993,6 @@
                 
                 if (regexMetadataExtractionMatch && regexMetadataExtractionMatch[1]) {
                     try { 
-                        // Safely decode the base64 metadata payload using native Fetch API 
                         const b64Str = regexMetadataExtractionMatch[1].replace(/[\r\n"',\s]/g, "").trim();
                         const fetchRes = await fetch(`data:application/json;base64,${b64Str}`);
                         systematicallyExtractedMetaMap = await fetchRes.json();
@@ -4038,7 +4126,6 @@
         structuralTableBody.innerHTML = ''; 
         structuralTableHead.innerHTML = ''; 
         
-        // Show or hide Pending Editor Entry button globally anytime the table draws
         if (pendingRawData.length > 0) {
             document.getElementById('btnCrossCheckPending').style.display = 'inline-flex';
         } else {
