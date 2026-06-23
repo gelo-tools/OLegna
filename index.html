@@ -2866,557 +2866,207 @@
         textBufferReader.readAsText(targetingUploadFileNode);
     }
 
-    async function processArrayOfArrays(parsedRows, structuralTriggerEvent) {
-        try {
-            let confirmedHeaderRowIndex = -1;
-            let skuCol = -1, qtyCol = -1, descCol = -1, slocCol = -1, stoCol = -1, merchCol = -1;
-            let isRivoliVendorFormat = false;
-            let rivBarcodeCol = -1, rivBrandCol = -1, rivSubBrandCol = -1, rivItemNoCol = -1, rivDescCol = -1;
-
-            for (let idx = 0; idx < Math.min(parsedRows.length, 25); idx++) {
-                let columnCells = parsedRows[idx]; 
-                if (!columnCells || !columnCells.length) continue;
-                
-                let lowercasedHeadersArray = columnCells.map(cell => String(cell).trim().toLowerCase().replace(/['"]/g, ''));
-                if (lowercasedHeadersArray.includes('barcode') && lowercasedHeadersArray.includes('qty. on hand') && lowercasedHeadersArray.includes('sub brand code')) {
-                    isRivoliVendorFormat = true;
-                    rivBarcodeCol = lowercasedHeadersArray.indexOf('barcode');
-                    qtyCol = lowercasedHeadersArray.indexOf('qty. on hand');
-                    rivBrandCol = lowercasedHeadersArray.indexOf('brand name');
-                    rivSubBrandCol = lowercasedHeadersArray.indexOf('sub brand code');
-                    rivItemNoCol = lowercasedHeadersArray.indexOf('item no.');
-                    rivDescCol = lowercasedHeadersArray.indexOf('item description');
-                    confirmedHeaderRowIndex = idx;
-                    break;
-                }
-                
-                for (let cellIdx = 0; cellIdx < columnCells.length; cellIdx++) {
-                    if (columnCells[cellIdx] == null) continue;
-                    let normalizedHeaderString = String(columnCells[cellIdx]).trim().toLowerCase().replace(/['"]/g, '');
-                    
-                    if (normalizedHeaderString === 'article' || normalizedHeaderString === 'article #' || normalizedHeaderString === 'sku' || normalizedHeaderString === 'material' || normalizedHeaderString === 'item number') skuCol = cellIdx;
-                    if (normalizedHeaderString === 'unrestricted' || normalizedHeaderString === 'p.o. qty.' || normalizedHeaderString === 'p.o. qty' || normalizedHeaderString === 'qty' || normalizedHeaderString === 'quantity' || normalizedHeaderString === 'in-transit qty.') qtyCol = cellIdx;
-                    if (normalizedHeaderString === 'storage location' || normalizedHeaderString === 'sloc') slocCol = cellIdx;
-                    if (normalizedHeaderString.includes('description') || normalizedHeaderString === 'desc' || normalizedHeaderString === 'article description' || normalizedHeaderString === 'item description') descCol = cellIdx;
-                    if (normalizedHeaderString === 's.t.o. #' || normalizedHeaderString === 's.t.o.') stoCol = cellIdx;
-                    if (normalizedHeaderString.includes('merch') || normalizedHeaderString.includes('category')) merchCol = cellIdx;
-                }
-                if (skuCol !== -1 && qtyCol !== -1 && !isRivoliVendorFormat) { 
-                    confirmedHeaderRowIndex = idx; 
-                    break; 
-                }
-            }
-
-            let isDataFallbackActive = (!isRivoliVendorFormat && confirmedHeaderRowIndex === -1);
-            let absoluteDataStartIdx = isDataFallbackActive ? 0 : confirmedHeaderRowIndex + 1;
-
-            saveState(); 
-            uploadedRawData = []; 
-            currentFileType = (stoCol !== -1) ? 'INTRANSIT' : 'MB52';
-            let requestBrandCombiningNormalization = false; 
-            let detectedSapmB52Signatures = currentFileType === 'MB52';
-            
-            if (isDataFallbackActive) {
-                for (let idx = absoluteDataStartIdx; idx < Math.min(parsedRows.length, absoluteDataStartIdx + 20); idx++) {
-                    if (!parsedRows[idx]) continue;
-                    let comprehensiveRowString = parsedRows[idx].join(' ').toUpperCase();
-                    if (comprehensiveRowString.includes('S;') || comprehensiveRowString.includes('O;') || comprehensiveRowString.includes('OA;')) { 
-                        detectedSapmB52Signatures = true; 
-                        break; 
-                    }
-                }
-            }
-
-            if (detectedSapmB52Signatures || isRivoliVendorFormat) {
-                requestBrandCombiningNormalization = await customConfirm("Do you want to combine similar brand names and fix misspellings?", "Confirmation message");
-            }
-            await new Promise(resolveCallback => setTimeout(resolveCallback, 50));
-
-            let dynamicSetOfUniqueStos = new Set(); 
-            let dynamicSetOfUniqueBrands = new Set(); 
-            let selfFilteredExclusionsCounter = 0;
-
-            for (let idx = absoluteDataStartIdx; idx < parsedRows.length; idx++) {
-                let columnsCollection = parsedRows[idx]; 
-                if (!columnsCollection || columnsCollection.length < 2) continue;
-                
-                let SKU_FieldRaw = "", QTY_FieldRaw = "", DESC_FieldRaw = "", SLOC_FieldRaw = "", STO_FieldRaw = "", MERCH_FieldRaw = "";
-
-                if (isRivoliVendorFormat) {
-                    SKU_FieldRaw = columnsCollection[rivBarcodeCol] != null ? String(columnsCollection[rivBarcodeCol]).trim() : "";
-                    QTY_FieldRaw = columnsCollection[qtyCol] != null ? String(columnsCollection[qtyCol]).trim() : "";
-                    
-                    let parsedBrandToken = rivBrandCol !== -1 && columnsCollection[rivBrandCol] != null ? String(columnsCollection[rivBrandCol]).trim() : "";
-                    let parsedItemNumberToken = rivItemNoCol !== -1 && columnsCollection[rivItemNoCol] != null ? String(columnsCollection[rivItemNoCol]).trim() : "";
-                    let parsedDescriptionToken = rivDescCol !== -1 && columnsCollection[rivDescCol] != null ? String(columnsCollection[rivDescCol]).trim() : "";
-                    let processedSubBrandCode = rivSubBrandCol !== -1 && columnsCollection[rivSubBrandCol] != null ? String(columnsCollection[rivSubBrandCol]).trim().toUpperCase() : "";
-                    
-                    let systemRowPrefix = "OA"; 
-                    if (processedSubBrandCode === "E01") systemRowPrefix = "S"; 
-                    else if (processedSubBrandCode === "E02") systemRowPrefix = "O";
-                    
-                    DESC_FieldRaw = `${systemRowPrefix};${parsedBrandToken};${parsedItemNumberToken} ${parsedDescriptionToken}`.trim(); 
-                    MERCH_FieldRaw = systemRowPrefix;
-                } else if (!isDataFallbackActive) {
-                    SKU_FieldRaw = columnsCollection[skuCol] != null ? String(columnsCollection[skuCol]).trim() : "";
-                    QTY_FieldRaw = columnsCollection[qtyCol] != null ? String(columnsCollection[qtyCol]).trim() : "";
-                    DESC_FieldRaw = descCol !== -1 && columnsCollection[descCol] != null ? String(columnsCollection[descCol]).trim() : "";
-                    SLOC_FieldRaw = slocCol !== -1 && columnsCollection[slocCol] != null ? String(columnsCollection[slocCol]).trim() : "";
-                    STO_FieldRaw = stoCol !== -1 && columnsCollection[stoCol] != null ? String(columnsCollection[stoCol]).trim() : "";
-                    MERCH_FieldRaw = merchCol !== -1 && columnsCollection[merchCol] != null ? String(columnsCollection[merchCol]).trim() : "";
-                } else {
-                    let internalPotentialSkusList = []; 
-                    let internalPotentialSlocsList = []; 
-                    let matchingUomColumnIdx = -1; 
-                    let structuralUomKeywords = ['PAK', 'EA', 'PC', 'ST', 'PR', 'PAC', 'BOX'];
-                    
-                    for (let cellIdx = 0; cellIdx < columnsCollection.length; cellIdx++) {
-                        if (columnsCollection[cellIdx] == null) continue;
-                        let structuralCellValue = String(columnsCollection[cellIdx]).trim(); 
-                        if (!structuralCellValue) continue;
-                        
-                        if (structuralUomKeywords.includes(structuralCellValue.toUpperCase())) {
-                            matchingUomColumnIdx = cellIdx;
-                        }
-                        
-                        let localizedCleanValue = structuralCellValue.replace(/,/g, '');
-                        if (/^\d+$/.test(localizedCleanValue)) {
-                            if (["1000", "2000", "3000", "4000", "5000"].includes(localizedCleanValue)) {
-                                internalPotentialSlocsList.push({val: localizedCleanValue, index: cellIdx});
-                            } else if (localizedCleanValue.length >= 5) {
-                                internalPotentialSkusList.push({val: localizedCleanValue, index: cellIdx});
-                            }
-                        }
-                    }
-                    
-                    if (internalPotentialSlocsList.length > 0) {
-                        SLOC_FieldRaw = internalPotentialSlocsList[0].val;
-                    }
-                    
-                    internalPotentialSkusList = internalPotentialSkusList.filter(item => item.val.length !== 4 && item.val !== SLOC_FieldRaw); 
-                    internalPotentialSkusList.sort((lower, higher) => higher.val.length - lower.val.length);
-                    if (internalPotentialSkusList.length > 0) {
-                        SKU_FieldRaw = internalPotentialSkusList[0].val;
-                    }
-
-                    let processingQtyIndex = -1; 
-                    let evaluatedSkuIndex = internalPotentialSkusList.length > 0 ? internalPotentialSkusList[0].index : -1; 
-                    let evaluatedSlocIndex = internalPotentialSlocsList.length > 0 ? internalPotentialSlocsList[0].index : -1;
-                    
-                    if (matchingUomColumnIdx !== -1) {
-                        for (let cellIdx = matchingUomColumnIdx + 1; cellIdx < columnsCollection.length; cellIdx++) {
-                            if (columnsCollection[cellIdx] == null) continue;
-                            let processedCountString = String(columnsCollection[cellIdx]).trim().replace(/,/g, '');
-                            if (processedCountString !== "" && !isNaN(processedCountString)) { 
-                                QTY_FieldRaw = processedCountString; 
-                                processingQtyIndex = cellIdx; 
-                                break; 
-                            }
-                        }
-                    }
-                    
-                    if (processingQtyIndex === -1 && evaluatedSkuIndex !== -1) {
-                        let structuralQuantityCandidates = [];
-                        for (let cellIdx = evaluatedSkuIndex + 1; cellIdx < columnsCollection.length; cellIdx++) {
-                            if (columnsCollection[cellIdx] == null) continue;
-                            let structuralCellValue = String(columnsCollection[cellIdx]).trim(); 
-                            let localizedCleanValue = structuralCellValue.replace(/,/g, '');
-                            let signNormalizedCheckString = localizedCleanValue.endsWith('-') ? '-' + localizedCleanValue.slice(0, -1) : localizedCleanValue;
-                            
-                            if (signNormalizedCheckString !== "" && !isNaN(signNormalizedCheckString)) {
-                                let satisfiesVendorShape = /^\d+$/.test(signNormalizedCheckString) && signNormalizedCheckString.length >= 7 && signNormalizedCheckString.length <= 10 && structuralCellValue.startsWith("000");
-                                let satisfiesStoreShape = /^\d+$/.test(signNormalizedCheckString) && signNormalizedCheckString.length === 4;
-                                let satisfiesSlocShape = ["1000", "2000", "3000", "4000", "5000"].includes(signNormalizedCheckString);
-                                
-                                if (!satisfiesVendorShape && !satisfiesStoreShape && !satisfiesSlocShape && cellIdx !== evaluatedSlocIndex) {
-                                    structuralQuantityCandidates.push({ val: signNormalizedCheckString, index: cellIdx, isFloat: signNormalizedCheckString.includes('.') });
-                                }
-                            }
-                        }
-                        if (structuralQuantityCandidates.length > 0) {
-                            let higherPriorityFloatMatch = structuralQuantityCandidates.find(item => item.isFloat);
-                            if (higherPriorityFloatMatch) { 
-                                QTY_FieldRaw = higherPriorityFloatMatch.val; 
-                                processingQtyIndex = higherPriorityFloatMatch.index; 
-                            } else { 
-                                QTY_FieldRaw = structuralQuantityCandidates[0].val; 
-                                processingQtyIndex = structuralQuantityCandidates[0].index; 
-                            }
-                        }
-                    }
-                    
-                    let inlineDescriptionTokens = [];
-                    if (evaluatedSkuIndex !== -1) {
-                        let finalTokenBoundaryIdx = matchingUomColumnIdx !== -1 ? matchingUomColumnIdx : (processingQtyIndex !== -1 ? processingQtyIndex : columnsCollection.length);
-                        for (let cellIdx = evaluatedSkuIndex + 1; cellIdx < finalTokenBoundaryIdx; cellIdx++) {
-                            if (columnsCollection[cellIdx] == null || cellIdx === processingQtyIndex || cellIdx === evaluatedSlocIndex) continue;
-                            let structuralCellValue = String(columnsCollection[cellIdx]).trim(); 
-                            let localizedCleanValue = structuralCellValue.replace(/,/g, '');
-                            if (structuralCellValue === "" || (!isNaN(localizedCleanValue) && !structuralCellValue.includes(';'))) continue; 
-                            inlineDescriptionTokens.push(structuralCellValue);
-                        }
-                        DESC_FieldRaw = inlineDescriptionTokens.join(' ');
-                    }
-                    
-                    if (!DESC_FieldRaw) {
-                        for (let cellIdx = 0; cellIdx < columnsCollection.length; cellIdx++) { 
-                            if (columnsCollection[cellIdx] && String(columnsCollection[cellIdx]).includes(';')) { 
-                                DESC_FieldRaw = String(columnsCollection[cellIdx]).trim(); 
-                                break; 
-                            } 
-                        }
-                    }
-                }
-
-                let fallbackRowTextContentSnapshot = columnsCollection.join(' '); 
-                let processedItemSkuKey = SKU_FieldRaw.replace(/^0+/, '') || '0';
-                let structuralQuantityValueInt = 0;
-                
-                try {
-                    if (QTY_FieldRaw.trim() !== "") {
-                        structuralQuantityValueInt = Math.round(parseFloat(QTY_FieldRaw.replace(/,/g, ''))); 
-                    }
-                } catch (quantityParseError) {}
-                
-                if (structuralQuantityValueInt < 0) {
-                    structuralQuantityValueInt = Math.abs(structuralQuantityValueInt); 
-                }
-                
-                if (processedItemSkuKey === "" || processedItemSkuKey === "0" || isNaN(structuralQuantityValueInt) || structuralQuantityValueInt === 0) continue;
-
-                let classificationAsLensFlag = isExcludedItem(fallbackRowTextContentSnapshot, DESC_FieldRaw, MERCH_FieldRaw); 
-                if (classificationAsLensFlag) selfFilteredExclusionsCounter++;
-                
-                if (requestBrandCombiningNormalization) {
-                    DESC_FieldRaw = normalizeDescription(DESC_FieldRaw);
-                }
-
-                let matchingStructuralExtraction = extractBrandAndCategory(DESC_FieldRaw);
-                let selectedCategoryKey = matchingStructuralExtraction.category; 
-                let selectedBrandKey = matchingStructuralExtraction.brand;
-
-                let upperMerchStr = MERCH_FieldRaw.toUpperCase().trim();
-                if (upperMerchStr.startsWith('LO') || upperMerchStr.startsWith('LL') || upperMerchStr.startsWith('LF')) {
-                    selectedCategoryKey = 'LENS';
-                }
-
-                if (STO_FieldRaw) dynamicSetOfUniqueStos.add(STO_FieldRaw);
-                if (selectedBrandKey !== "UNKNOWN") dynamicSetOfUniqueBrands.add(selectedBrandKey);
-
-                uploadedRawData.push({ 
-                    sku: processedItemSkuKey, qty: structuralQuantityValueInt, desc: DESC_FieldRaw, sloc: SLOC_FieldRaw, 
-                    sto: STO_FieldRaw, category: selectedCategoryKey, brand: selectedBrandKey, isLens: classificationAsLensFlag 
-                });
-            }
-
-            if (uploadedRawData.length === 0) {
-                await customAlert("No valid rows found to encode.", "Confirmation message");
-                undoStack.pop(); 
-                updateUndoRedoButtons();
-                if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = ''; 
-                return;
-            }
-
-            let fileContainsSloc1000Records = uploadedRawData.some(item => item.sloc === '1000');
-            let fileContainsSloc4000Records = uploadedRawData.some(item => item.sloc === '4000');
-            
-            if (fileContainsSloc1000Records && fileContainsSloc4000Records) {
-                let explicitSlocActionResolution = await askSlocAction();
-                if (explicitSlocActionResolution === 'CANCEL') {
-                    uploadedRawData = [];
-                    undoStack.pop(); 
-                    updateUndoRedoButtons();
-                    if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
-                    return;
-                }
-                if (explicitSlocActionResolution === 'REMOVE_4000') {
-                    uploadedRawData = uploadedRawData.filter(item => item.sloc !== '4000');
-                } else if (explicitSlocActionResolution === 'REMOVE_1000') {
-                    uploadedRawData = uploadedRawData.filter(item => item.sloc !== '1000');
-                }
-            }
-
-            document.getElementById('dynamicFilters').style.display = 'flex'; 
-            itemsPerPage = '100'; 
-            document.getElementById('pageSize').value = '100';
-            currentPage = 1;
-
-            if (currentFileType === 'INTRANSIT') {
-                document.getElementById('intransitFilters').style.display = 'flex'; 
-                document.getElementById('mb52Filters').style.display = 'none';
-                
-                let stoSelectorElement = document.getElementById('stoDropdown'); 
-                stoSelectorElement.innerHTML = '<option value="ALL">All STO Inbound Documents</option>';
-                Array.from(dynamicSetOfUniqueStos).sort().forEach(stoNumber => {
-                    stoSelectorElement.innerHTML += `<option value="${stoNumber}">${stoNumber}</option>`;
-                });
-            } else {
-                document.getElementById('intransitFilters').style.display = 'none'; 
-                document.getElementById('mb52Filters').style.display = 'flex';
-                updateBrandDropdown(); 
-            }
-            
-            applyDynamicFilters();
-            
-            let systemLoadResultMessage = `Import complete: ${uploadedRawData.length} records parsed successfully.`;
-            if (selfFilteredExclusionsCounter > 0) {
-                systemLoadResultMessage += `<br><br><span style="color:var(--accent-pink); font-weight:bold;">Hidden ${selfFilteredExclusionsCounter} Contact Lens items from the list automatically.</span>`;
-            }
-            await customAlert(systemLoadResultMessage, "Confirmation message");
-            if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
-            
-        } catch (parsingError) {
-            console.error(parsingError); 
-            undoStack.pop(); 
-            updateUndoRedoButtons();
-            await customAlert("System failed to execute parsing engine rules over selection: " + parsingError.message, "Confirmation message");
-            if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
+    function renderTable() {
+        const structuralTableHead = document.querySelector('#resultsTable thead'); 
+        const structuralTableBody = document.querySelector('#resultsTable tbody');
+        structuralTableBody.innerHTML = ''; 
+        structuralTableHead.innerHTML = ''; 
+        
+        if (pendingRawData.length > 0) {
+            document.getElementById('btnCrossCheckPending').style.display = 'inline-flex';
+        } else {
+            document.getElementById('btnCrossCheckPending').style.display = 'none';
         }
-    }
+        
+        let localAccumulatedSystemTotal = 0; 
+        let localAccumulatedScannedTotal = 0; 
+        let localAccumulatedMissingTotal = 0; 
+        let localAccumulatedExtraTotal = 0; 
+        let localAccumulatedPendingTotal = 0;
+        
+        let visualToggleDescriptionColumn = false; 
+        let visualToggleSlocColumn = false; 
+        let visualTogglePendingColumn = false;
+        const internalFilteredCollectionList = []; 
+        let activeSlocFilterDropdownValue = document.getElementById('slocFilterUI').value;
+        let fileHasValidSlocData = false; 
+        let systemHasScannedItemsData = false;
+        let isIntransitFileFormatActive = (currentFileType === 'INTRANSIT');
 
-    async function processPendingArrayOfArrays(parsedRows, structuralTriggerEvent) {
-        try {
-            let confirmedHeaderRowIndex = -1;
-            let skuCol = -1, qtyCol = -1, descCol = -1, slocCol = -1, merchCol = -1, invoiceCol = -1;
-            let isRivoliVendorFormat = false;
-            let rivBarcodeCol = -1, rivBrandCol = -1, rivSubBrandCol = -1, rivItemNoCol = -1, rivDescCol = -1;
-
-            for (let idx = 0; idx < Math.min(parsedRows.length, 25); idx++) {
-                let columnCells = parsedRows[idx]; 
-                if (!columnCells || !columnCells.length) continue;
-                
-                let lowercasedHeadersArray = columnCells.map(cell => String(cell).trim().toLowerCase().replace(/['"]/g, ''));
-                if (lowercasedHeadersArray.includes('barcode') && lowercasedHeadersArray.includes('qty. on hand') && lowercasedHeadersArray.includes('sub brand code')) {
-                    isRivoliVendorFormat = true;
-                    rivBarcodeCol = lowercasedHeadersArray.indexOf('barcode');
-                    qtyCol = lowercasedHeadersArray.indexOf('qty. on hand');
-                    rivBrandCol = lowercasedHeadersArray.indexOf('brand name');
-                    rivSubBrandCol = lowercasedHeadersArray.indexOf('sub brand code');
-                    rivItemNoCol = lowercasedHeadersArray.indexOf('item no.');
-                    rivDescCol = lowercasedHeadersArray.indexOf('item description');
-                    confirmedHeaderRowIndex = idx;
-                    break;
-                }
-                
-                for (let cellIdx = 0; cellIdx < columnCells.length; cellIdx++) {
-                    if (columnCells[cellIdx] == null) continue;
-                    let normalizedHeaderString = String(columnCells[cellIdx]).trim().toLowerCase().replace(/['"]/g, '');
-                    
-                    if (normalizedHeaderString === 'article' || normalizedHeaderString === 'article #' || normalizedHeaderString === 'sku' || normalizedHeaderString === 'material' || normalizedHeaderString === 'item number') skuCol = cellIdx;
-                    if (normalizedHeaderString === 'unrestricted' || normalizedHeaderString === 'p.o. qty.' || normalizedHeaderString === 'p.o. qty' || normalizedHeaderString === 'qty' || normalizedHeaderString === 'quantity' || normalizedHeaderString === 'in-transit qty.') qtyCol = cellIdx;
-                    if (normalizedHeaderString === 'storage location' || normalizedHeaderString === 'sloc') slocCol = cellIdx;
-                    if (normalizedHeaderString.includes('description') || normalizedHeaderString === 'desc' || normalizedHeaderString === 'article description' || normalizedHeaderString === 'item description') descCol = cellIdx;
-                    if (normalizedHeaderString.includes('merch') || normalizedHeaderString.includes('category')) merchCol = cellIdx;
-                    if (normalizedHeaderString.includes('invoice') || normalizedHeaderString.includes('document') || normalizedHeaderString === 'doc' || normalizedHeaderString === 'doc no' || normalizedHeaderString === 'ref' || normalizedHeaderString.includes('reference')) invoiceCol = cellIdx;
-                }
-                if (skuCol !== -1 && qtyCol !== -1 && !isRivoliVendorFormat) { 
-                    confirmedHeaderRowIndex = idx; 
-                    break; 
-                }
+        for (let skuKey in inventory) {
+            if (isLensesFilterActive && inventory[skuKey].isLens) continue; 
+            if (inventory[skuKey].sloc && inventory[skuKey].sloc !== "" && inventory[skuKey].sloc !== "Scanned" && inventory[skuKey].sloc !== "Pending") { 
+                fileHasValidSlocData = true; 
+                visualToggleSlocColumn = true; 
+            } else if (isIntransitFileFormatActive && inventory[skuKey].systemQty > 0) {
+                fileHasValidSlocData = true;
+                visualToggleSlocColumn = true;
             }
+            if (inventory[skuKey].pendingQty && inventory[skuKey].pendingQty > 0) visualTogglePendingColumn = true;
+            if (inventory[skuKey].scannedQty && inventory[skuKey].scannedQty > 0) systemHasScannedItemsData = true;
+        }
+        
+        document.getElementById('slocFilterUI').style.display = (fileHasValidSlocData && !isIntransitFileFormatActive) ? 'inline-block' : 'none';
+        if (!fileHasValidSlocData || isIntransitFileFormatActive) activeSlocFilterDropdownValue = 'ALL';
 
-            let isDataFallbackActive = (!isRivoliVendorFormat && confirmedHeaderRowIndex === -1);
-            let absoluteDataStartIdx = isDataFallbackActive ? 0 : confirmedHeaderRowIndex + 1;
+        for (let skuKey in inventory) {
+            let activeItemNode = inventory[skuKey]; 
+            if (isLensesFilterActive && activeItemNode.isLens) continue;
 
-            saveState(); 
-            await new Promise(resolveCallback => setTimeout(resolveCallback, 50));
-            let absoluteAddedItemsTotal = 0;
+            let calculatedVarianceValue = (activeItemNode.scannedQty + (activeItemNode.pendingQty || 0)) - activeItemNode.systemQty;
+            localAccumulatedSystemTotal += activeItemNode.systemQty; 
+            localAccumulatedScannedTotal += activeItemNode.scannedQty; 
+            localAccumulatedPendingTotal += (activeItemNode.pendingQty || 0);
+            
+            if (calculatedVarianceValue < 0) localAccumulatedMissingTotal += Math.abs(calculatedVarianceValue);
+            if (calculatedVarianceValue > 0) localAccumulatedExtraTotal += calculatedVarianceValue;
 
-            for (let idx = absoluteDataStartIdx; idx < parsedRows.length; idx++) {
-                let columnsCollection = parsedRows[idx]; 
-                if (!columnsCollection || columnsCollection.length < 2) continue;
-                
-                let SKU_FieldRaw = "", QTY_FieldRaw = "", DESC_FieldRaw = "", SLOC_FieldRaw = "", MERCH_FieldRaw = "", INVOICE_FieldRaw = "";
-
-                if (isRivoliVendorFormat) {
-                    SKU_FieldRaw = columnsCollection[rivBarcodeCol] != null ? String(columnsCollection[rivBarcodeCol]).trim() : "";
-                    QTY_FieldRaw = columnsCollection[qtyCol] != null ? String(columnsCollection[qtyCol]).trim() : "";
-                    let parsedBrandToken = rivBrandCol !== -1 && columnsCollection[rivBrandCol] != null ? String(columnsCollection[rivBrandCol]).trim() : "";
-                    let parsedItemNumberToken = rivItemNoCol !== -1 && columnsCollection[rivItemNoCol] != null ? String(columnsCollection[rivItemNoCol]).trim() : "";
-                    let parsedDescriptionToken = rivDescCol !== -1 && columnsCollection[rivDescCol] != null ? String(columnsCollection[rivDescCol]).trim() : "";
-                    let processedSubBrandCode = rivSubBrandCol !== -1 && columnsCollection[rivSubBrandCol] != null ? String(columnsCollection[rivSubBrandCol]).trim().toUpperCase() : "";
-                    
-                    let systemRowPrefix = "OA"; 
-                    if (processedSubBrandCode === "E01") systemRowPrefix = "S"; 
-                    else if (processedSubBrandCode === "E02") systemRowPrefix = "O";
-                    
-                    DESC_FieldRaw = `${systemRowPrefix};${parsedBrandToken};${parsedItemNumberToken} ${parsedDescriptionToken}`.trim(); 
-                    MERCH_FieldRaw = systemRowPrefix;
-                    INVOICE_FieldRaw = invoiceCol !== -1 && columnsCollection[invoiceCol] != null ? String(columnsCollection[invoiceCol]).trim() : "";
-                } else if (!isDataFallbackActive) {
-                    SKU_FieldRaw = columnsCollection[skuCol] != null ? String(columnsCollection[skuCol]).trim() : "";
-                    QTY_FieldRaw = columnsCollection[qtyCol] != null ? String(columnsCollection[qtyCol]).trim() : "";
-                    DESC_FieldRaw = descCol !== -1 && columnsCollection[descCol] != null ? String(columnsCollection[descCol]).trim() : "";
-                    SLOC_FieldRaw = slocCol !== -1 && columnsCollection[slocCol] != null ? String(columnsCollection[slocCol]).trim() : "";
-                    MERCH_FieldRaw = merchCol !== -1 && columnsCollection[merchCol] != null ? String(columnsCollection[merchCol]).trim() : "";
-                    INVOICE_FieldRaw = invoiceCol !== -1 && columnsCollection[invoiceCol] != null ? String(columnsCollection[invoiceCol]).trim() : "";
-                } else {
-                    let internalPotentialSkusList = []; 
-                    let internalPotentialSlocsList = []; 
-                    let matchingUomColumnIdx = -1; 
-                    let structuralUomKeywords = ['PAK', 'EA', 'PC', 'ST', 'PR', 'PAC', 'BOX'];
-                    
-                    for (let cellIdx = 0; cellIdx < columnsCollection.length; cellIdx++) {
-                        if (columnsCollection[cellIdx] == null) continue;
-                        let structuralCellValue = String(columnsCollection[cellIdx]).trim(); 
-                        if (!structuralCellValue) continue;
-                        
-                        if (structuralUomKeywords.includes(structuralCellValue.toUpperCase())) {
-                            matchingUomColumnIdx = cellIdx;
-                        }
-                        
-                        let localizedCleanValue = structuralCellValue.replace(/,/g, '');
-                        if (/^\d+$/.test(localizedCleanValue)) {
-                            if (["1000", "2000", "3000", "4000", "5000"].includes(localizedCleanValue)) {
-                                internalPotentialSlocsList.push({val: localizedCleanValue, index: cellIdx});
-                            } else if (localizedCleanValue.length >= 5) {
-                                internalPotentialSkusList.push({val: localizedCleanValue, index: cellIdx});
-                            }
-                        }
-                    }
-                    
-                    if (internalPotentialSlocsList.length > 0) {
-                        SLOC_FieldRaw = internalPotentialSlocsList[0].val;
-                    }
-                    
-                    internalPotentialSkusList = internalPotentialSkusList.filter(item => item.val.length !== 4 && item.val !== SLOC_FieldRaw); 
-                    internalPotentialSkusList.sort((lower, higher) => higher.val.length - lower.val.length);
-                    if (internalPotentialSkusList.length > 0) {
-                        SKU_FieldRaw = internalPotentialSkusList[0].val;
-                    }
-
-                    let processingQtyIndex = -1; 
-                    let evaluatedSkuIndex = internalPotentialSkusList.length > 0 ? internalPotentialSkusList[0].index : -1; 
-                    let evaluatedSlocIndex = internalPotentialSlocsList.length > 0 ? internalPotentialSlocsList[0].index : -1;
-                    
-                    if (matchingUomColumnIdx !== -1) {
-                        for (let cellIdx = matchingUomColumnIdx + 1; cellIdx < columnsCollection.length; cellIdx++) {
-                            if (columnsCollection[cellIdx] == null) continue;
-                            let processedCountString = String(columnsCollection[cellIdx]).trim().replace(/,/g, '');
-                            if (processedCountString !== "" && !isNaN(processedCountString)) { 
-                                QTY_FieldRaw = processedCountString; 
-                                processingQtyIndex = cellIdx; 
-                                break; 
-                            }
-                        }
-                    }
-                    
-                    if (processingQtyIndex === -1 && evaluatedSkuIndex !== -1) {
-                        let structuralQuantityCandidates = [];
-                        for (let cellIdx = evaluatedSkuIndex + 1; cellIdx < columnsCollection.length; cellIdx++) {
-                            if (columnsCollection[cellIdx] == null) continue;
-                            let structuralCellValue = String(columnsCollection[cellIdx]).trim(); 
-                            let localizedCleanValue = structuralCellValue.replace(/,/g, '');
-                            let signNormalizedCheckString = localizedCleanValue.endsWith('-') ? '-' + localizedCleanValue.slice(0, -1) : localizedCleanValue;
-                            
-                            if (signNormalizedCheckString !== "" && !isNaN(signNormalizedCheckString)) {
-                                let satisfiesVendorShape = /^\d+$/.test(signNormalizedCheckString) && signNormalizedCheckString.length >= 7 && signNormalizedCheckString.length <= 10 && structuralCellValue.startsWith("000");
-                                let satisfiesStoreShape = /^\d+$/.test(signNormalizedCheckString) && signNormalizedCheckString.length === 4;
-                                let satisfiesSlocShape = ["1000", "2000", "3000", "4000", "5000"].includes(signNormalizedCheckString);
-                                
-                                if (!satisfiesVendorShape && !satisfiesStoreShape && !satisfiesSlocShape && cellIdx !== evaluatedSlocIndex) {
-                                    structuralQuantityCandidates.push({ val: signNormalizedCheckString, index: cellIdx, isFloat: signNormalizedCheckString.includes('.') });
-                                }
-                            }
-                        }
-                        if (structuralQuantityCandidates.length > 0) {
-                            let higherPriorityFloatMatch = structuralQuantityCandidates.find(item => item.isFloat);
-                            if (higherPriorityFloatMatch) { 
-                                QTY_FieldRaw = higherPriorityFloatMatch.val; 
-                                processingQtyIndex = higherPriorityFloatMatch.index; 
-                            } else { 
-                                QTY_FieldRaw = structuralQuantityCandidates[0].val; 
-                                processingQtyIndex = structuralQuantityCandidates[0].index; 
-                            }
-                        }
-                    }
-                    
-                    let inlineDescriptionTokens = [];
-                    if (evaluatedSkuIndex !== -1) {
-                        let finalTokenBoundaryIdx = matchingUomColumnIdx !== -1 ? matchingUomColumnIdx : (processingQtyIndex !== -1 ? processingQtyIndex : columnsCollection.length);
-                        for (let cellIdx = evaluatedSkuIndex + 1; cellIdx < finalTokenBoundaryIdx; cellIdx++) {
-                            if (columnsCollection[cellIdx] == null || cellIdx === processingQtyIndex || cellIdx === evaluatedSlocIndex) continue;
-                            let structuralCellValue = String(columnsCollection[cellIdx]).trim(); 
-                            let localizedCleanValue = structuralCellValue.replace(/,/g, '');
-                            if (structuralCellValue === "" || (!isNaN(localizedCleanValue) && !structuralCellValue.includes(';'))) continue; 
-                            inlineDescriptionTokens.push(structuralCellValue);
-                        }
-                        DESC_FieldRaw = inlineDescriptionTokens.join(' ');
-                    }
-                    
-                    if (!DESC_FieldRaw) {
-                        for (let cellIdx = 0; cellIdx < columnsCollection.length; cellIdx++) { 
-                            if (columnsCollection[cellIdx] && String(columnsCollection[cellIdx]).includes(';')) { 
-                                DESC_FieldRaw = String(columnsCollection[cellIdx]).trim(); 
-                                break; 
-                            } 
-                        }
-                    }
-                }
-
-                let fallbackRowTextContentSnapshot = columnsCollection.join(' '); 
-                let processedItemSkuKey = SKU_FieldRaw.replace(/^0+/, '') || '0';
-                let structuralPendingValueInt = 0;
-                
-                try {
-                    if (QTY_FieldRaw.trim() !== "") {
-                        structuralPendingValueInt = Math.round(parseFloat(QTY_FieldRaw.replace(/,/g, ''))); 
-                    }
-                } catch (quantityParseError) {}
-                
-                if (structuralPendingValueInt < 0) {
-                    structuralPendingValueInt = Math.abs(structuralPendingValueInt); 
-                }
-                
-                if (processedItemSkuKey === "" || processedItemSkuKey === "0" || isNaN(structuralPendingValueInt) || structuralPendingValueInt === 0) continue;
-
-                DESC_FieldRaw = normalizeDescription(DESC_FieldRaw);
-                let classificationAsLensFlag = isExcludedItem(fallbackRowTextContentSnapshot, DESC_FieldRaw, MERCH_FieldRaw);
-                let matchingStructuralExtraction = extractBrandAndCategory(DESC_FieldRaw);
-                let selectedCategoryKey = matchingStructuralExtraction.category; 
-                let selectedBrandKey = matchingStructuralExtraction.brand;
-
-                let upperMerchStr = MERCH_FieldRaw.toUpperCase().trim();
-                if (upperMerchStr.startsWith('LO') || upperMerchStr.startsWith('LL') || upperMerchStr.startsWith('LF')) {
-                    selectedCategoryKey = 'LENS';
-                }
-
-                let cleanLocationLabel = SLOC_FieldRaw;
-                if (cleanLocationLabel === "Scanned" || cleanLocationLabel === "Pending") {
-                    cleanLocationLabel = "";
-                }
-
-                pendingRawData.push({ 
-                    sku: processedItemSkuKey, qty: structuralPendingValueInt, desc: DESC_FieldRaw, sloc: cleanLocationLabel, 
-                    category: selectedCategoryKey, brand: selectedBrandKey, isLens: classificationAsLensFlag, invoice: INVOICE_FieldRaw 
-                });
-                absoluteAddedItemsTotal++;
-            }
-
-            if (absoluteAddedItemsTotal === 0) {
-                await customAlert("No valid rows found to load as Pending Items.", "Confirmation message");
-                undoStack.pop(); 
-                updateUndoRedoButtons();
-                if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = ''; 
-                return;
-            }
-
-            document.getElementById('dynamicFilters').style.display = 'flex';
-            if (currentFileType !== 'INTRANSIT') {
-                document.getElementById('mb52Filters').style.display = 'flex'; 
-                updateBrandDropdown();
+            if (activeSlocFilterDropdownValue !== 'ALL') { 
+                let structuralItemSlocString = activeItemNode.sloc || ""; 
+                if (structuralItemSlocString !== "Scanned" && structuralItemSlocString !== "Pending" && !structuralItemSlocString.split(', ').includes(activeSlocFilterDropdownValue)) continue; 
             }
             
-            applyDynamicFilters();
-            await customAlert(`Successfully added pending quantities for ${absoluteAddedItemsTotal} items.`, "Confirmation message");
-            if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
-        } catch (parsingError) {
-            console.error(parsingError); 
-            undoStack.pop(); 
-            updateUndoRedoButtons();
-            await customAlert("An error occurred while parsing the pending data: " + parsingError.message, "Confirmation message");
-            if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
+            if (currentFilter === 'DISCREPANCIES' && calculatedVarianceValue === 0) continue;
+            if (currentFilter === 'MISSING' && calculatedVarianceValue >= 0) continue;
+            if (currentFilter === 'EXTRA' && calculatedVarianceValue <= 0) continue;
+            if (currentFilter === 'NOT_IN_SYSTEM' && activeItemNode.systemQty > 0) continue;
+            
+            if (currentSearchQuery !== '') {
+                let structuralSkuLowercase = skuKey.toLowerCase(); 
+                let structuralDescriptionLowercase = (activeItemNode.description || '').toLowerCase();
+                if (!structuralSkuLowercase.includes(currentSearchQuery) && !structuralDescriptionLowercase.includes(currentSearchQuery)) continue; 
+            }
+
+            internalFilteredCollectionList.push({ sku: skuKey, diff: calculatedVarianceValue, ...activeItemNode });
+            if (activeItemNode.description && activeItemNode.description.trim() !== "") visualToggleDescriptionColumn = true;
         }
+
+        if (systemDataEncoded) { 
+            document.getElementById('dashSystem').innerText = localAccumulatedSystemTotal; 
+        } else { 
+            document.getElementById('dashSystem').innerHTML = '<span style="font-size: 11px; color: var(--accent-red); font-weight: 600; line-height: 24px; display: inline-block;">No system data</span>'; 
+        }
+        
+        document.getElementById('dashScanned').innerText = localAccumulatedScannedTotal; 
+        document.getElementById('dashMissing').innerText = localAccumulatedMissingTotal; 
+        document.getElementById('dashExtra').innerText = localAccumulatedExtraTotal;
+        
+        if (visualTogglePendingColumn) { 
+            document.getElementById('dashCardPending').style.display = 'flex'; 
+            document.getElementById('dashPending').innerText = localAccumulatedPendingTotal; 
+        } else { 
+            document.getElementById('dashCardPending').style.display = 'none'; 
+        }
+
+        let structuralHeaderRowElement = document.createElement('tr');
+        structuralHeaderRowElement.innerHTML = `
+            <th style="border-radius: var(--radius-lg) 0 0 0;">NO.</th>
+            <th>Item # (SKU)</th>
+            ${visualToggleDescriptionColumn ? '<th>Description</th>' : ''}
+            ${visualToggleSlocColumn ? '<th>SLOC</th>' : ''}
+            <th>System QTY</th>
+            <th>Scanned QTY</th>
+            ${systemHasScannedItemsData ? '<th>Bins</th>' : ''}
+            ${visualTogglePendingColumn ? '<th>Pending QTY</th>' : ''}
+            <th>Variance</th>
+            <th>Status</th>
+            <th style="text-align: center; border-radius: 0 var(--radius-lg) 0 0;">Action</th>
+        `;
+        structuralTableHead.appendChild(structuralHeaderRowElement);
+
+        let filteredCollectionItemsTotal = internalFilteredCollectionList.length; 
+        let calculatedTotalPagesCount = Math.ceil(filteredCollectionItemsTotal / (itemsPerPage === 'All' ? filteredCollectionItemsTotal || 1 : parseInt(itemsPerPage))) || 1;
+        let targetPaginatedSliceCollection = internalFilteredCollectionList;
+
+        if (itemsPerPage !== 'All') {
+            let sequentialViewLimit = parseInt(itemsPerPage); 
+            if (currentPage > calculatedTotalPagesCount) currentPage = calculatedTotalPagesCount; 
+            if (currentPage < 1) currentPage = 1;
+            let dynamicSliceStartIdx = (currentPage - 1) * sequentialViewLimit; 
+            targetPaginatedSliceCollection = internalFilteredCollectionList.slice(dynamicSliceStartIdx, dynamicSliceStartIdx + sequentialViewLimit);
+        }
+
+        currentTotalPages = calculatedTotalPagesCount;
+        document.getElementById('pageInfoText').innerText = `Page ${currentPage} of ${calculatedTotalPagesCount} (${filteredCollectionItemsTotal} items)`;
+        document.getElementById('btnPrevPage').disabled = currentPage === 1;
+        document.getElementById('btnNextPage').disabled = currentPage === calculatedTotalPagesCount || calculatedTotalPagesCount === 0;
+
+        let sequentialRowIdCounter = itemsPerPage === 'All' ? 1 : ((currentPage - 1) * parseInt(itemsPerPage)) + 1;
+        const renderingDocumentFragment = document.createDocumentFragment();
+
+        targetPaginatedSliceCollection.forEach(item => {
+            let targetedVisualRowClass = ''; 
+            let localizedStatusLabelText = ''; 
+            let targetStatusHexColor = 'var(--text-primary)'; 
+            
+            if (item.diff === 0) { 
+                targetedVisualRowClass = 'match'; 
+                localizedStatusLabelText = 'Matched'; 
+                targetStatusHexColor = 'var(--accent-green)'; 
+            } else if (item.diff < 0) { 
+                targetedVisualRowClass = 'short'; 
+                localizedStatusLabelText = 'Missing Stock'; 
+                targetStatusHexColor = 'var(--accent-red)'; 
+            } else if (item.diff > 0) { 
+                targetedVisualRowClass = 'over'; 
+                localizedStatusLabelText = item.systemQty === 0 ? 'Not in system' : 'Extra Stock'; 
+                targetStatusHexColor = 'var(--accent-blue)'; 
+            }
+
+            let systematicCountsCellHtml = ''; 
+            let localizedInnerHtmlStringsList = []; 
+            let qtyInSloc1000 = item.sysQty1000 || 0; 
+            let qtyInSloc4000 = item.sysQty4000 || 0; 
+            let qtyInOtherSloc = item.sysQtyOther || 0;
+            
+            if (qtyInSloc1000 === 0 && qtyInSloc4000 === 0 && qtyInOtherSloc === 0 && item.systemQty > 0) {
+                if (item.sloc === '1000') qtyInSloc1000 = item.systemQty; 
+                else if (item.sloc === '4000') qtyInSloc4000 = item.systemQty; 
+                else qtyInOtherSloc = item.systemQty;
+            }
+            if (qtyInSloc1000 > 0) localizedInnerHtmlStringsList.push(`<span style="color: var(--accent-green); font-weight: 600;">${qtyInSloc1000}</span>`);
+            if (qtyInSloc4000 > 0) localizedInnerHtmlStringsList.push(`<span style="color: var(--accent-red); font-weight: 600;">${qtyInSloc4000}</span>`);
+            if (qtyInOtherSloc > 0) localizedInnerHtmlStringsList.push(`<span style="color: var(--text-primary); font-weight: 600;">${qtyInOtherSloc}</span>`);
+            if (localizedInnerHtmlStringsList.length === 0) systematicCountsCellHtml = `<span style="color: var(--text-primary); font-weight: 600;">0</span>`;
+            else systematicCountsCellHtml = localizedInnerHtmlStringsList.join(' <span style="color:var(--text-secondary); font-size:10px; font-weight:600;">+</span> ');
+
+            let structuralLocationLabelString = item.sloc || "";
+            if (structuralLocationLabelString === "" && isIntransitFileFormatActive && item.systemQty > 0) {
+                structuralLocationLabelString = "In-Transit";
+            }
+
+            let localizedFormattedSlocStrings = structuralLocationLabelString.split(', ').map(locToken => {
+                if (locToken === '1000') return '<span style="color: var(--accent-green); font-weight: 600;">1000</span>';
+                if (locToken === '4000') return '<span style="color: var(--accent-red); font-weight: 600;">4000</span>';
+                return locToken;
+            }).join('<span style="color: var(--text-secondary);">, </span>');
+
+            let processedPendingCountDisplayValue = item.pendingQty || 0;
+            let dynamicPhysicalBinLinksHtml = systemHasScannedItemsData ? (item.bins && item.bins.length > 0 ? item.bins.sort((lower, higher)=>lower-higher).map(binId => `<a href="javascript:void(0)" onclick="filterHistoryBySkuAndBin('${item.sku}', ${binId})" style="color:var(--accent-blue); text-decoration:none; font-weight:600; padding:2px; display:inline-block;">(${getBinName(binId)})</a>`).join(' ') : `<span style="color:var(--text-secondary); font-size: 10px;">--</span>`) : '';
+
+            let structuralRowElement = document.createElement('tr'); 
+            structuralRowElement.className = targetedVisualRowClass; 
+            structuralRowElement.id = `row-${item.sku}`; 
+            
+            structuralRowElement.innerHTML = `
+                <td style="color: var(--text-secondary);">${sequentialRowIdCounter}</td>
+                <td style="font-weight: 500;">${item.sku}</td>
+                ${visualToggleDescriptionColumn ? `<td style="color: var(--text-secondary);">${item.description || ''}</td>` : ''}
+                ${visualToggleSlocColumn ? `<td>${localizedFormattedSlocStrings}</td>` : ''}
+                <td><div class="qty-container"><span>${systematicCountsCellHtml}</span><button class="btn-edit" onclick="editQuantity('${item.sku}', 'systemQty')"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button></div></td>
+                <td><div class="qty-container"><span style="font-weight:600;">${item.scannedQty}</span></div></td>
+                ${systemHasScannedItemsData ? `<td>${dynamicPhysicalBinLinksHtml}</td>` : ''}
+                ${visualTogglePendingColumn ? `<td><div class="qty-container"><span style="font-weight:600; color:var(--accent-orange);">${processedPendingCountDisplayValue}</span><button class="btn-edit" onclick="editQuantity('${item.sku}', 'pendingQty')"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button></div></td>` : ''}
+                <td><button style="border:none; background:transparent; font-weight:bold; color: ${item.diff === 0 ? 'var(--accent-green)' : item.diff < 0 ? 'var(--accent-red)' : 'var(--accent-blue)'};">${item.diff}</button></td>
+                <td><strong style="color: ${targetStatusHexColor}; font-weight: 600;">${localizedStatusLabelText}</strong></td>
+                <td style="text-align: center;"><button class="btn-delete" onclick="deleteRow('${item.sku}')"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></td>
+            `;
+            renderingDocumentFragment.appendChild(structuralRowElement); 
+            sequentialRowIdCounter++;
+        });
+
+        structuralTableBody.appendChild(renderingDocumentFragment);
+        setTimeout(updateStickyHeaders, 10);
     }
 </script>
 </body>
