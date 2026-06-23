@@ -992,7 +992,7 @@
                         </tr>
                     </thead>
                     <tbody id="manualEncodeTableBody">
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
             <button class="btn-secondary" onclick="addManualEncodeRow()" style="margin-top: 8px; width: 100%; font-weight: 600;">+ Add Row</button>
@@ -1025,7 +1025,7 @@
                     </tr>
                 </thead>
                 <tbody id="pendingTableBody">
-                </tbody>
+                    </tbody>
             </table>
         </div>
         <div class="custom-modal-footer" style="justify-content: space-between; flex-shrink: 0; flex-direction: row !important;">
@@ -1346,6 +1346,8 @@
 </div>
 
 <script>
+    // Database Core - Added IndexedDB to handle unlimited session persistence 
+    // This circumvents the 5MB browser localStorage crash with large files.
     const DB_NAME = 'StockCheckDB';
     const STORE_NAME = 'sessions';
     let dbInstance = null;
@@ -1661,6 +1663,7 @@
         if (upperDescription.startsWith('S;') || upperDescription.startsWith('O;') || upperDescription.startsWith('OA;')) {
             return false;
         }
+        // ONLY Contact Lenses trigger this automatic exclusion upon loading system data
         if (upperMerchandise.startsWith('CL') || upperMerchandise.includes('CONTACT')) {
             return true;
         }
@@ -1672,10 +1675,12 @@
         }
 
         let excludedKeywords = [
-            'acuvue', 'trueye', 'oasys', 'dailies', 'contact lens', 'contact lenses',
+            'acuvue', 'trueye', 'oasys', 'dailies',
+            'contact lens', 'contact lenses',
             'air optix', 'airoptix', 'freshlook', 'alcon', 'bausch', 'soflens', 
             'opti-free', 'optifree', 'biotrue', 'clariti', 'myday', 'biofinity', 
-            'bella', 'johnson', 'acu1d', 'cl;', 'clcp', 'clsp'
+            'bella', 'johnson', 'acu1d',
+            'cl;', 'clcp', 'clsp'
         ];
 
         for (let keyword of excludedKeywords) {
@@ -2000,75 +2005,6 @@
         document.getElementById('manualEncodeModal').style.display = 'none';
     }
 
-    function openPendingEditor() {
-        document.getElementById('pendingEditorModal').style.display = 'flex';
-        renderPendingTable();
-    }
-
-    function closePendingEditor() {
-        document.getElementById('pendingEditorModal').style.display = 'none';
-        renderTable(); 
-    }
-
-    function renderPendingTable() {
-        const tbody = document.getElementById('pendingTableBody');
-        tbody.innerHTML = '';
-
-        if (pendingRawData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">No pending items loaded.</td></tr>';
-            document.getElementById('btnCrossCheckPending').style.display = 'none';
-            return;
-        }
-
-        document.getElementById('btnCrossCheckPending').style.display = 'inline-flex';
-
-        let fragment = document.createDocumentFragment();
-        pendingRawData.forEach((item, index) => {
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color: var(--text-secondary);">${index + 1}</td>
-                <td style="font-weight: 600; color: var(--accent-blue);">${item.invoice || 'N/A'}</td>
-                <td style="font-weight: 500;">${item.sku}</td>
-                <td style="color: var(--text-secondary);">${item.desc || ''}</td>
-                <td><span style="font-weight: 600; color: var(--accent-orange);">${item.qty}</span></td>
-                <td style="text-align: center;">
-                    <button class="btn-delete" onclick="deletePendingRow(${index})" title="Remove this pending item">
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-                    </button>
-                </td>
-            `;
-            fragment.appendChild(tr);
-        });
-        tbody.appendChild(fragment);
-    }
-
-    async function deletePendingRow(index) {
-        const confirmed = await customConfirm("Remove this row from pending items? This will deduct the quantity from the main list.", "Delete Pending Row");
-        if (!confirmed) return;
-
-        saveState();
-        let removedItem = pendingRawData.splice(index, 1)[0];
-        let sku = removedItem.sku;
-
-        if (inventory[sku]) {
-            inventory[sku].pendingQty -= removedItem.qty;
-            if (inventory[sku].pendingQty < 0) inventory[sku].pendingQty = 0;
-
-            if (inventory[sku].systemQty === 0 && inventory[sku].scannedQty === 0 && inventory[sku].pendingQty === 0) {
-                delete inventory[sku];
-            }
-        }
-
-        if (pendingRawData.length === 0) {
-            document.getElementById('btnCrossCheckPending').style.display = 'none';
-        }
-
-        await saveData();
-        renderPendingTable();
-        renderTable();
-        renderAuditTrail();
-    }
-
     async function submitManualEncode() {
         const tbody = document.getElementById('manualEncodeTableBody');
         const rows = tbody.querySelectorAll('tr');
@@ -2143,6 +2079,75 @@
                 await customAlert(`Successfully added ${absoluteAddedItemsTotal} total quantity.`, "Manual Encode Results");
             }
         }
+    }
+
+    function openPendingEditor() {
+        document.getElementById('pendingEditorModal').style.display = 'flex';
+        renderPendingTable();
+    }
+
+    function closePendingEditor() {
+        document.getElementById('pendingEditorModal').style.display = 'none';
+        renderTable(); 
+    }
+
+    function renderPendingTable() {
+        const tbody = document.getElementById('pendingTableBody');
+        tbody.innerHTML = '';
+
+        if (pendingRawData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 20px;">No pending items loaded.</td></tr>';
+            document.getElementById('btnCrossCheckPending').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('btnCrossCheckPending').style.display = 'inline-flex';
+
+        let fragment = document.createDocumentFragment();
+        pendingRawData.forEach((item, index) => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color: var(--text-secondary);">${index + 1}</td>
+                <td style="font-weight: 600; color: var(--accent-blue);">${item.invoice || 'N/A'}</td>
+                <td style="font-weight: 500;">${item.sku}</td>
+                <td style="color: var(--text-secondary);">${item.desc || ''}</td>
+                <td><span style="font-weight: 600; color: var(--accent-orange);">${item.qty}</span></td>
+                <td style="text-align: center;">
+                    <button class="btn-delete" onclick="deletePendingRow(${index})" title="Remove this pending item">
+                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                </td>
+            `;
+            fragment.appendChild(tr);
+        });
+        tbody.appendChild(fragment);
+    }
+
+    async function deletePendingRow(index) {
+        const confirmed = await customConfirm("Remove this row from pending items? This will deduct the quantity from the main list.", "Delete Pending Row");
+        if (!confirmed) return;
+
+        saveState();
+        let removedItem = pendingRawData.splice(index, 1)[0];
+        let sku = removedItem.sku;
+
+        if (inventory[sku]) {
+            inventory[sku].pendingQty -= removedItem.qty;
+            if (inventory[sku].pendingQty < 0) inventory[sku].pendingQty = 0;
+
+            if (inventory[sku].systemQty === 0 && inventory[sku].scannedQty === 0 && inventory[sku].pendingQty === 0) {
+                delete inventory[sku];
+            }
+        }
+
+        if (pendingRawData.length === 0) {
+            document.getElementById('btnCrossCheckPending').style.display = 'none';
+        }
+
+        await saveData();
+        renderPendingTable();
+        renderTable();
+        renderAuditTrail();
     }
 
     async function promptPendingUpload() {
@@ -2338,7 +2343,6 @@
             }
         });
     }
-
     async function loadData() {
         let masterBackupStateNode = null;
         
@@ -3617,6 +3621,67 @@
         }
     }
 
+    async function handlePendingUpload(structuralTriggerEvent) {
+        const targetingUploadFileNode = structuralTriggerEvent.target.files ? structuralTriggerEvent.target.files[0] : null; 
+        if (!targetingUploadFileNode) return;
+        const shortExtensionLabel = targetingUploadFileNode.name.toLowerCase();
+
+        if (shortExtensionLabel.endsWith('.csv') || shortExtensionLabel.endsWith('.txt') || shortExtensionLabel.endsWith('.tsv')) {
+            const documentTextReader = new FileReader();
+            documentTextReader.onload = async function(evt) {
+                try {
+                    let internalRawText = evt.target.result; 
+                    let lineSplitsCollection = []; 
+                    let systematicFileLines = internalRawText.split(/\r?\n/);
+                    let internalDelimiterChar = internalRawText.indexOf('\t') !== -1 ? '\t' : ',';
+                    
+                    for (let idx = 0; idx < systematicFileLines.length; idx++) {
+                        if (!systematicFileLines[idx].trim()) continue; 
+                        lineSplitsCollection.push(parseCSVLine(systematicFileLines[idx], internalDelimiterChar));
+                    }
+                    await processPendingArrayOfArrays(lineSplitsCollection, structuralTriggerEvent);
+                } catch(fileReadError) {
+                    console.error(fileReadError); 
+                    await customAlert("There was an error reading the CSV text.", "Confirmation message");
+                    if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
+                }
+            };
+            documentTextReader.readAsText(targetingUploadFileNode); 
+            return;
+        }
+
+        if (typeof XLSX === 'undefined') {
+            await customAlert("The Excel parser library couldn't load. Please save it as a .CSV and try loading.", "Confirmation message");
+            if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
+            return;
+        }
+
+        const libraryBufferReader = new FileReader();
+        libraryBufferReader.onload = async function(evt) {
+            try {
+                const absoluteBinaryArray = new Uint8Array(evt.target.result); 
+                const binaryWorkbookNode = XLSX.read(absoluteBinaryArray, {type: 'array'});
+                const doubleDimensionRowsArray = XLSX.utils.sheet_to_json(binaryWorkbookNode.Sheets[binaryWorkbookNode.SheetNames[0]], {header: 1, defval: ""}); 
+                await processPendingArrayOfArrays(doubleDimensionRowsArray, structuralTriggerEvent);
+            } catch (workbookParseError) {
+                try {
+                    let dynamicDecodedString = new TextDecoder("utf-8").decode(new Uint8Array(evt.target.result));
+                    if (dynamicDecodedString.includes('<table') || dynamicDecodedString.includes('\t') || dynamicDecodedString.includes(',')) {
+                         const binaryWorkbookNode = XLSX.read(dynamicDecodedString, {type: 'string'});
+                         const doubleDimensionRowsArray = XLSX.utils.sheet_to_json(binaryWorkbookNode.Sheets[binaryWorkbookNode.SheetNames[0]], {header: 1, defval: ""});
+                         await processPendingArrayOfArrays(doubleDimensionRowsArray, structuralTriggerEvent); 
+                         return;
+                    }
+                } catch(nestedFallbackError) { 
+                    console.error(nestedFallbackError); 
+                }
+                await customAlert("There was an error parsing the spreadsheet. Ensure the file is not corrupted.", "Confirmation message");
+                if (structuralTriggerEvent && structuralTriggerEvent.target) structuralTriggerEvent.target.value = '';
+            }
+        };
+        libraryBufferReader.readAsArrayBuffer(targetingUploadFileNode);
+    }
+
     function updateBrandDropdown() {
         let activeCategoryKey = document.getElementById('categoryDropdown').value;
         let brandSelectElement = document.getElementById('brandDropdown');
@@ -3892,6 +3957,7 @@
         };
         
         try {
+            // Replaces the deprecated and memory-limited btoa(unescape(encodeURIComponent)) workflow
             const encodeBase64Large = async (obj) => {
                 const jsonStr = JSON.stringify(obj);
                 const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -3941,6 +4007,7 @@
                 
                 if (regexMetadataExtractionMatch && regexMetadataExtractionMatch[1]) {
                     try { 
+                        // Safely decode the base64 metadata payload using native Fetch API 
                         const b64Str = regexMetadataExtractionMatch[1].replace(/[\r\n"',\s]/g, "").trim();
                         const fetchRes = await fetch(`data:application/json;base64,${b64Str}`);
                         systematicallyExtractedMetaMap = await fetchRes.json();
@@ -4067,7 +4134,6 @@
         };
         textBufferReader.readAsText(targetingUploadFileNode);
     }
-
     function renderTable() {
         const structuralTableHead = document.querySelector('#resultsTable thead'); 
         const structuralTableBody = document.querySelector('#resultsTable tbody');
