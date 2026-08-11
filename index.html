@@ -1,3 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Privacy Policy for the Daily Closing Report Chrome extension.">
+    <meta name="color-scheme" content="light dark">
+    <title>Privacy Policy | Daily Closing Report</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #f3f6fa;
+        --surface: #ffffff;
+        --text: #172033;
+        --muted: #5e6b82;
+        --border: #dbe2ec;
+        --accent: #1f64d1;
+        --accent-soft: #eaf2ff;
+        --shadow: 0 18px 50px rgba(25, 42, 70, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+      }
+
+      a {
+        color: var(--accent);
+      }
+
+      .page {
+        width: min(920px, calc(100% - 32px));
+        margin: 40px auto;
+      }
+
+      .hero {
+        padding: 42px clamp(24px, 6vw, 58px);
+        border-radius: 24px 24px 0 0;
+        background: linear-gradient(135deg, #0f315a, #1f64d1);
+        color: #ffffff;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: #cfe0ff;
+        font-size: 0.78rem;
+        font-weight: 750;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.25rem);
+        line-height: 1.12;
+        letter-spacing: -0.035em;
+      }
+
+      .effective-date {
+        display: inline-block;
+        margin: 20px 0 0;
+        padding: 7px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        font-size: 0.92rem;
+      }
+
+      main {
+        padding: clamp(26px, 6vw, 58px);
+        border: 1px solid var(--border);
+        border-top: 0;
+        border-radius: 0 0 24px 24px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .intro {
+        margin-top: 0;
+        color: #334059;
+        font-size: 1.08rem;
+      }
+
+      section {
+        padding: 28px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      section:first-of-type {
+        margin-top: 30px;
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        color: #173d70;
+        font-size: 1.28rem;
+        line-height: 1.3;
+      }
+
+      p {
+        margin: 0 0 14px;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 14px 0 0;
+        padding-left: 1.35rem;
+      }
+
+      li {
+        margin: 8px 0;
+        padding-left: 4px;
+      }
+
+      .notice {
+        padding: 20px 22px;
+        border: 1px solid #bfd3f6;
+        border-radius: 14px;
+        background: var(--accent-soft);
+      }
+
+      footer {
+        padding: 24px 12px 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+        text-align: center;
+      }
+
+      @media (max-width: 600px) {
+        .page {
+          width: min(100% - 20px, 920px);
+          margin: 10px auto 28px;
+        }
+
+        .hero {
+          border-radius: 18px 18px 0 0;
+        }
+
+        main {
+          border-radius: 0 0 18px 18px;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --background: #0f1420;
+          --surface: #171e2c;
+          --text: #edf2fb;
+          --muted: #aab6ca;
+          --border: #2c374a;
+          --accent: #8db8ff;
+          --accent-soft: #1b2d49;
+          --shadow: none;
+        }
+
+        .intro {
+          color: #c9d4e6;
+        }
+
+        h2 {
+          color: #a9caff;
+        }
+
+        .notice {
+          border-color: #345683;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <p class="eyebrow">Daily Closing Report</p>
+        <h1>Privacy Policy</h1>
+        <p class="effective-date">Effective date: 11 August 2026</p>
+      </header>
+
+      <main>
+        <p class="intro">Daily Closing Report is a Chrome extension intended for authorized Magrabi Optical personnel. It automates the preparation of a store’s daily closing report using information available to the authorized user through Magrabi POS, RetailNext, and Google Maps.</p>
+
+        <section aria-labelledby="information-handled">
+          <h2 id="information-handled">Information handled</h2>
+          <p>The extension may handle the following information when necessary to generate the report:</p>
+          <ul>
+            <li>Magrabi POS and RetailNext usernames and passwords entered by the user</li>
+            <li>Monthly budget settings</li>
+            <li>Store sales, invoice, discount, delivery, pending-order, and product information</li>
+            <li>Customer identification numbers and invoice relationships needed for the second-pair calculation</li>
+            <li>Completed EyeTest result rows needed to calculate the completed EyeTest count</li>
+            <li>RetailNext store traffic values</li>
+            <li>Public Google review timestamps</li>
+            <li>The completed report and privacy-safe troubleshooting information</li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="information-use">
+          <h2 id="information-use">How information is used</h2>
+          <p>Information is used only to authenticate the authorized user, access the specified report pages, generate and validate the daily closing report, display progress, and provide privacy-safe troubleshooting details when a required field cannot be verified.</p>
+        </section>
+
+        <section aria-labelledby="local-storage">
+          <h2 id="local-storage">Local storage and retention</h2>
+          <p>Remembering credentials is optional. When enabled, credentials are encrypted using AES-GCM and stored in <code>chrome.storage.local</code> inside the current Chrome profile. The cryptographic key is non-exportable and stored locally in IndexedDB.</p>
+          <p>The monthly budget and Remember preferences are also stored locally. The budget resets to zero when the effective business month changes.</p>
+          <p>Credentials and settings remain until the user disables remembering, clears the extension’s stored data, changes Chrome profiles, or removes the extension. Report information is processed locally and is not retained by a developer-operated server. A report is saved as a text file only when the user selects Download TXT.</p>
+        </section>
+
+        <section aria-labelledby="transmission">
+          <h2 id="transmission">Information transmission</h2>
+          <p>Login information is submitted only to the corresponding Magrabi POS or RetailNext HTTPS login page to authenticate the authorized user. Website information is processed locally in the browser. The extension does not send credentials, report information, customer information, traffic values, or usage information to the developer or to a developer-operated server.</p>
+        </section>
+
+        <section aria-labelledby="sharing">
+          <h2 id="sharing">Information sharing</h2>
+          <p>The developer does not sell, rent, share, or transfer user information to third parties. The extension contains no advertising, behavioral profiling, analytics, or telemetry. It does not use information for creditworthiness, lending, advertising, or any purpose unrelated to generating the daily closing report.</p>
+        </section>
+
+        <section aria-labelledby="security">
+          <h2 id="security">Security</h2>
+          <p>All declared website access uses HTTPS. Remembered credentials are encrypted locally. Credentials are not displayed in generated reports, downloaded reports, progress messages, or troubleshooting logs.</p>
+          <p>Users remain responsible for securing their Windows account, Chrome profile, work laptop, and downloaded reports, and for following their employer’s policies regarding account access and business or customer information.</p>
+        </section>
+
+        <section aria-labelledby="control-deletion">
+          <h2 id="control-deletion">User control and deletion</h2>
+          <p>Users may disable either Remember checkbox to remove the corresponding saved credentials. Users may remove all locally stored extension information by clearing the extension’s site data or uninstalling the extension.</p>
+        </section>
+
+        <section aria-labelledby="limited-use">
+          <div class="notice">
+            <h2 id="limited-use">Limited Use disclosure</h2>
+            <p>Daily Closing Report’s use and transfer of information received from websites and Chrome APIs complies with the Chrome Web Store User Data Policy, including the Limited Use requirements. Information is used only to provide the extension’s disclosed report-generation functionality. It is not sold, used for advertising, transferred for unrelated purposes, or used to determine creditworthiness or for lending.</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="changes">
+          <h2 id="changes">Changes</h2>
+          <p>This policy may be updated if the extension’s functionality or data-handling practices change. Any material change will be reflected in the published privacy policy and applicable Chrome Web Store disclosures.</p>
+        </section>
+
+        <section aria-labelledby="contact">
+          <h2 id="contact">Contact</h2>
+          <p>For privacy questions, contact the developer through the support email shown on the Daily Closing Report Chrome Web Store listing.</p>
+        </section>
+      </main>
+
+      <footer>
+        <p>&copy; 2026 Daily Closing Report. Privacy policy for the Chrome extension.</p>
+      </footer>
+    </div>
+  </body>
+</html>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
